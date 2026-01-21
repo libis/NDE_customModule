@@ -78,21 +78,34 @@ The NDE Customization package is currently available exclusively to Primo custom
 
 There are two options for setting up your local development environment: configuring a proxy or using parameter on your NDE URL.
 
-- **Option 1: Update `proxy.const.mjs` Configuration**:
-  - Set the URL of the server you want to test your code with by modifying the proxy.const.mjs file in the ./proxy directory:
-    ```javascript
-    // Configuration for the development proxy
-    const environments = {
-      'example': 'https://myPrimoVE.com',
+- **Option 1: Update `package.json` Configuration**:
+  - Set the URL of the server you want to test your code with by modifying the `nde` section in package.json:
+    ```json
+    "nde": {
+      "addonName": "",
+      "assetBaseUrl": "",
+      "environments": {
+        "production": {
+          "host": "https://my-production-primo.com",
+          "institution": "MY_INST",
+          "view": "MY_VIEW"
+        },
+        "sandbox": {
+          "host": "https://my-sandbox-primo.com",
+          "institution": "MY_INST",
+          "view": "MY_VIEW"
+        }
+      },
+      "defaultEnvironment": "sandbox",
+      "customization": { ... }
     }
-
-    export const PROXY_TARGET = environments['example'];
     ```
+  - The `defaultEnvironment` determines which environment is used for proxying and building.
   - Start the development server with the configured proxy by running:
     ```bash
     npm run start:proxy
     ```
-  - Open your browser on port 4201 to see your changes. e.g: http://localhost:4201/nde/home?vid=EXLDEV1_INST:NDE&lang=en
+  - Open your browser on port 4201 to see your changes. e.g: http://localhost:4201/nde/home?vid=MY_INST:MY_VIEW&lang=en
 
   
 - **Option 2: Parameter on NDE URL**:

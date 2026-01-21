@@ -1,6 +1,29 @@
-import {PROXY_TARGET} from "./proxy.const.mjs";
-import {customizationConfigOverride} from "./customization_config_override.mjs";
 import {deepMerge} from "./proxy-utils.mjs";
+import {readFileSync} from 'fs';
+import {fileURLToPath} from 'url';
+import {dirname, join} from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJsonPath = join(__dirname, '..', 'package.json');
+const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+const ndeConfig = packageJson.nde;
+
+if (!ndeConfig) {
+    console.error("Error: 'nde' section not found in package.json!");
+    process.exit(1);
+}
+
+const defaultEnv = ndeConfig.defaultEnvironment;
+const envConfig = ndeConfig.environments[defaultEnv];
+
+if (!envConfig) {
+    console.error(`Error: Environment '${defaultEnv}' not found in package.json nde.environments!`);
+    process.exit(1);
+}
+
+const PROXY_TARGET = envConfig.host;
+const customizationConfigOverride = ndeConfig.customization;
 
 
 
