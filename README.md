@@ -1,5 +1,8 @@
 # CustomModule
-
+```bash
+#create component
+npm run nde generate component dot --position before --target search-bar
+```
 ## ✨ New Feature (9th November 2025): Support for all customization files in assets folder:
 All files that are you are able to customize through the assets folder of your customization package are now supported for preview when using the custom module in proxy mode.
 

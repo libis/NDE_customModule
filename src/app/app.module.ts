@@ -1,6 +1,5 @@
 import {ApplicationRef, DoBootstrap, Injector, NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
-import {AppComponent} from './app.component';
 import {createCustomElement, NgElementConstructor} from "@angular/elements";
 import {Router} from "@angular/router";
 import {selectorComponentMap} from "./custom1-module/customComponentMappings";
@@ -9,12 +8,9 @@ import { CommonModule } from '@angular/common';
 import { AutoAssetSrcDirective } from './services/auto-asset-src.directive';
 import {SHELL_ROUTER} from "./injection-tokens";
 
-
-
 export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter: Router}) => {
    @NgModule({
     declarations: [
-      AppComponent,
       AutoAssetSrcDirective
     ],
     exports: [AutoAssetSrcDirective],
@@ -35,8 +31,13 @@ export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter:
 
     ngDoBootstrap(appRef: ApplicationRef) {
       for (const [key, value] of selectorComponentMap) {
-        const customElement = createCustomElement(value, {injector: this.injector});
-        this.webComponentSelectorMap.set(key, customElement);
+        try {
+          const customElement = createCustomElement(value, {injector: this.injector});
+          this.webComponentSelectorMap.set(key, customElement);
+          console.log(`[AppModule] Registered custom element: ${key}`);
+        } catch (error) {
+          console.warn(`[AppModule] Failed to register custom element: ${key}`, error);
+        }
       }
     }
 
