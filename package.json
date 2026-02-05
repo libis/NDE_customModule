@@ -12,6 +12,7 @@
       }
     },
     "defaultEnvironment": "kuleuven",
+    "proxyUrlTemplate": "/nde/home?vid={institution}:{view}&lang=en",
     "customization": {
       "favIcon": "custom/MOCKINST-MOCKVID/assets/images/favicon.ico",
       "libraryLogo": "custom/MOCKINST-MOCKVID/assets/images/library-logo.png",

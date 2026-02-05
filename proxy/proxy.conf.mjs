@@ -2,6 +2,7 @@ import {deepMerge} from "./proxy-utils.mjs";
 import {readFileSync} from 'fs';
 import {fileURLToPath} from 'url';
 import {dirname, join} from 'path';
+import {exec} from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -24,6 +25,23 @@ if (!envConfig) {
 
 const PROXY_TARGET = envConfig.host;
 const customizationConfigOverride = ndeConfig.customization;
+
+// Resolve configurable proxy URL template
+const defaultTemplate = '/nde/home?vid={institution}:{view}&lang=en';
+const proxyUrlTemplate = ndeConfig.proxyUrlTemplate || defaultTemplate;
+const resolvedPath = proxyUrlTemplate
+    .replace(/{institution}/g, envConfig.institution)
+    .replace(/{view}/g, envConfig.view);
+
+const proxyUrl = `http://localhost:4201${resolvedPath}`;
+console.log(`\n  NDE Proxy URL: ${proxyUrl}\n`);
+
+// Auto-open browser after a short delay to let the dev server start
+setTimeout(() => {
+    const platform = process.platform;
+    const cmd = platform === 'darwin' ? 'open' : platform === 'win32' ? 'start' : 'xdg-open';
+    exec(`${cmd} "${proxyUrl}"`);
+}, 5000);
 
 
 

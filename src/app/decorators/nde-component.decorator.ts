@@ -218,6 +218,7 @@ export const NDE_SLOTS = {
   // Search related
   SEARCH_BAR: 'nde-search-bar',
   SEARCH_RESULTS: 'nde-search-results',
+  TOP_BAR: 'nde-top-bar',
   
   // Record display
   BRIEF_RESULT: 'nde-brief-result',
@@ -232,4 +233,12 @@ export const NDE_SLOTS = {
 
   //LOGO
   LOGO: 'nde-logo',
+} as const;
+
+export const NDE_POSITION = {
+  AFTER: 'after',
+  BEFORE: 'before',
+  TOP: 'top',
+  BOTTOM: 'bottom',
+  REPLACE: ''
 } as const;
