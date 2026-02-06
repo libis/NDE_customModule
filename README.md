@@ -119,31 +119,433 @@ Because Module Federation marks `@ngrx/store` as a **singleton**, both the host 
 
 The [`@libis/primo-shared-state`](https://github.com/libis/primo-shared-state) library provides type-safe services that wrap the NgRx store. Instead of writing raw selectors, you inject a service and call its methods.
 
-Three services are available:
+Three services are available: **SearchStateService**, **UserStateService**, and **FilterStateService**. Each service offers two access patterns:
 
-| Service | Data it exposes |
-|---|---|
-| `SearchStateService` | Search results (documents), search parameters, metadata, loading status, total result count |
-| `UserStateService` | Login status, JWT token, user settings, user name, user group |
-| `FilterStateService` | Applied include/exclude filters, multi-select filters, resource type filter, filter panel state |
+- **Reactive (Observable)** — method names end with `$`. Your component updates automatically whenever the underlying data changes. Best for templates using the `| async` pipe or for components that need to react in real time.
+- **Snapshot (Promise)** — one-time reads of the current value. Useful in lifecycle hooks, click handlers, or anywhere you just need the value right now.
 
-Each service offers two patterns:
+> **Tip:** If you are new to Observables, see the [RxJS guide](https://rxjs.dev/guide/overview). For NgRx, see the [NgRx Store documentation](https://ngrx.io/guide/store).
 
-**Reactive (Observable streams)** — your component updates automatically when data changes:
+---
+
+### SearchStateService
+
+Provides access to search results, search parameters, metadata, and loading status.
+
+| Method | Returns | Description |
+|---|---|---|
+| `selectAllDocs$()` | `Observable<Doc[]>` | All search result documents |
+| `selectDocById$(id)` | `Observable<Doc \| undefined>` | A specific document by its ID |
+| `selectSearchParams$()` | `Observable<SearchParams \| null>` | Current search parameters (query, scope, sort, tab, ...) |
+| `selectSearchMetaData$()` | `Observable<SearchMetaData \| null>` | Search metadata (facets, highlights, did-you-mean, ...) |
+| `selectSearchStatus$()` | `Observable<LoadingStatus>` | Loading status: `'pending'` · `'loading'` · `'success'` · `'fail'` |
+| `selectTotalResults$()` | `Observable<number>` | Total number of results |
+| `selectPageSize$()` | `Observable<number \| null>` | Current page size |
+| `selectIsLoading$()` | `Observable<boolean>` | `true` while a search is in progress |
+| `getAllDocs()` | `Promise<Doc[]>` | Snapshot of all documents |
+| `getDocById(id)` | `Promise<Doc \| undefined>` | Snapshot of a single document |
+| `getSearchParams()` | `Promise<SearchParams \| null>` | Snapshot of current search parameters |
+
+#### Example — Display search results with loading state
+
 ```typescript
-// Subscribe to search results — updates whenever a new search completes
-this.searchState.selectAllDocs$()
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Subject, takeUntil } from 'rxjs';
+import { NDEComponent, NDE_SLOTS, NDE_POSITION } from '../../decorators/nde-component.decorator';
+import { SearchStateService, Doc, LoadingStatus } from '@libis/primo-shared-state';
+
+@NDEComponent({ selector: NDE_SLOTS.SEARCH_RESULTS, position: NDE_POSITION.BEFORE })
+@Component({
+  selector: 'custom-result-banner',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div *ngIf="status === 'loading'" class="loading">Searching...</div>
+    <div *ngIf="status === 'success'" class="result-count">
+      Found {{ totalResults }} results for "{{ query }}"
+    </div>
+  `
+})
+export class ResultBannerComponent implements OnInit, OnDestroy {
+  status: LoadingStatus = 'pending';
+  totalResults = 0;
+  query = '';
+  private destroy$ = new Subject<void>();
+
+  constructor(private searchState: SearchStateService) {}
+
+  ngOnInit() {
+    this.searchState.selectSearchStatus$()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(status => this.status = status);
+
+    this.searchState.selectTotalResults$()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(total => this.totalResults = total);
+
+    this.searchState.selectSearchParams$()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => this.query = params?.q ?? '');
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}
+```
+
+#### Example — Get a single document by ID (snapshot)
+
+```typescript
+async showDocumentDetails(docId: string) {
+  const doc = await this.searchState.getDocById(docId);
+  if (doc) {
+    console.log('Title:', doc.pnx?.display?.title);
+    console.log('Context:', doc.context);       // 'L' (local), 'PC' (Primo Central), etc.
+    console.log('Delivery:', doc.delivery);      // Physical/electronic delivery info
+  }
+}
+```
+
+#### Example — Access search metadata (facets, did-you-mean)
+
+```typescript
+this.searchState.selectSearchMetaData$()
   .pipe(takeUntil(this.destroy$))
-  .subscribe(docs => this.documents = docs);
+  .subscribe(meta => {
+    if (meta?.facets) {
+      console.log('Available facets:', meta.facets);
+    }
+    if (meta?.did_u_mean) {
+      console.log('Did you mean:', meta.did_u_mean);
+    }
+    if (meta?.highlights) {
+      console.log('Highlighted terms:', meta.highlights);
+    }
+  });
 ```
 
-**Snapshot (Promise)** — read the current value once:
+#### Key data shapes
+
 ```typescript
-// Get the current JWT token
-const jwt = await this.userState.getJwt();
+// SearchParams — what the user searched for
+interface SearchParams {
+  q: string;               // Search query text
+  scope: string;           // Search scope
+  tab?: string;            // Active tab
+  sort?: string;           // Sort field
+  offset?: number;         // Pagination offset
+  limit?: number;          // Page size
+  qInclude?: string[];     // Include filters as query terms
+  qExclude?: string[];     // Exclude filters as query terms
+  multiFacets?: string[];  // Multi-facet selections
+  lang?: string;           // Language code
+  mode?: string;           // Search mode
+  inst?: string;           // Institution
+  // ... additional parameters
+}
+
+// Doc — a single search result
+interface Doc {
+  '@id': string;             // Document ID
+  context: Context;          // 'L' | 'PC' | 'SP' | 'U' | 'NP'
+  adaptor: Adaptor;          // Data source
+  pnx: Pnx;                 // PNX record (display, search, delivery fields)
+  delivery?: DocDelivery;    // Delivery/availability information
+  enrichment?: Enrichment;   // Virtual browse enrichment
+  expired?: boolean;         // Whether the document has expired
+}
+
+type LoadingStatus = 'pending' | 'loading' | 'success' | 'fail';
 ```
 
-If you are new to Observables, see the [RxJS guide](https://rxjs.dev/guide/overview). For NgRx, see the [NgRx Store documentation](https://ngrx.io/guide/store).
+---
+
+### UserStateService
+
+Provides access to user authentication, JWT tokens, and user preferences.
+
+| Method | Returns | Description |
+|---|---|---|
+| `selectUserState$()` | `Observable<UserState>` | The entire user state object |
+| `selectJwt$()` | `Observable<string \| undefined>` | Raw JWT token string |
+| `selectDecodedJwt$()` | `Observable<DecodedJwt \| undefined>` | Decoded JWT (user name, group, campus status, ...) |
+| `selectIsLoggedIn$()` | `Observable<boolean>` | Whether the user is authenticated |
+| `selectUserSettings$()` | `Observable<UserSettings \| undefined>` | User preferences (language, page size, email, ...) |
+| `selectUserName$()` | `Observable<string \| undefined>` | User name (from decoded JWT) |
+| `selectUserGroup$()` | `Observable<string>` | User group (defaults to `'GUEST'` when not logged in) |
+| `getJwt()` | `Promise<string \| undefined>` | Snapshot of JWT token |
+| `isLoggedIn()` | `Promise<boolean>` | Snapshot of login status |
+| `getUserSettings()` | `Promise<UserSettings \| undefined>` | Snapshot of user settings |
+
+#### Example — Show a personalized greeting
+
+```typescript
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { NDEComponent, NDE_SLOTS, NDE_POSITION } from '../../decorators/nde-component.decorator';
+import { UserStateService } from '@libis/primo-shared-state';
+
+@NDEComponent({ selector: NDE_SLOTS.HEADER, position: NDE_POSITION.BOTTOM })
+@Component({
+  selector: 'custom-user-greeting',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="user-greeting" *ngIf="isLoggedIn$ | async">
+      <span>Welcome, {{ userName$ | async }}!</span>
+      <span class="badge">{{ userGroup$ | async }}</span>
+    </div>
+    <div class="guest-banner" *ngIf="(isLoggedIn$ | async) === false">
+      <span>Sign in to access personalized features</span>
+    </div>
+  `
+})
+export class UserGreetingComponent {
+  isLoggedIn$ = this.userState.selectIsLoggedIn$();
+  userName$ = this.userState.selectUserName$();
+  userGroup$ = this.userState.selectUserGroup$();
+
+  constructor(private userState: UserStateService) {}
+}
+```
+
+#### Example — Use JWT for API calls (snapshot)
+
+```typescript
+async callExternalApi() {
+  const jwt = await this.userState.getJwt();
+  if (!jwt) {
+    console.warn('User is not logged in');
+    return;
+  }
+
+  const response = await fetch('https://my-api.example.com/data', {
+    headers: { 'Authorization': `Bearer ${jwt}` }
+  });
+  // ...
+}
+```
+
+#### Example — Read decoded JWT details
+
+```typescript
+this.userState.selectDecodedJwt$()
+  .pipe(takeUntil(this.destroy$))
+  .subscribe(decoded => {
+    if (decoded) {
+      console.log('User:', decoded.userName);
+      console.log('Display name:', decoded.displayName);
+      console.log('Group:', decoded.userGroup);
+      console.log('On campus:', decoded.onCampus);
+      console.log('Auth profile:', decoded.authenticationProfile);
+    }
+  });
+```
+
+#### Example — Read user settings
+
+```typescript
+this.userState.selectUserSettings$()
+  .pipe(takeUntil(this.destroy$))
+  .subscribe(settings => {
+    if (settings) {
+      console.log('Preferred language:', settings.language);
+      console.log('Results per page:', settings.resultsBulkSize);
+      console.log('Email:', settings.email);
+    }
+  });
+```
+
+#### Key data shapes
+
+```typescript
+interface UserState {
+  jwt: string | undefined;                   // Raw JWT token
+  decodedJwt: DecodedJwt | undefined;       // Parsed JWT payload
+  status: LoadingStatus;                     // Loading status
+  isLoggedIn: boolean;                       // Authentication flag
+  userSettings: UserSettings | undefined;    // User preferences
+  userSettingsStatus: LoadingStatus;         // Settings loading status
+  logoutReason: LogoutReason | undefined;    // 'user' | 'timeout'
+}
+
+interface DecodedJwt {
+  userName: string;              // Login username
+  displayName: string;           // Human-readable name
+  userGroup: string;             // Group/role (e.g., 'STAFF', 'STUDENT')
+  onCampus: boolean;             // Whether user is on campus network
+  signedIn: boolean;             // Signed-in flag
+  authenticationProfile: string; // Authentication profile used
+  user: string;                  // User identifier
+}
+
+interface UserSettings {
+  resultsBulkSize?: string;   // Page size preference
+  language?: string;          // UI language
+  email?: string;             // User email
+  saveSearchHistory?: string; // Save search history flag
+  [key: string]: string | undefined;  // Custom settings
+}
+
+type LogoutReason = 'user' | 'timeout';
+```
+
+---
+
+### FilterStateService
+
+Provides access to applied filters, multi-select filters, resource type filters, and filter panel UI state.
+
+| Method | Returns | Description |
+|---|---|---|
+| `selectFilterState$()` | `Observable<FilterState>` | The entire filter state object |
+| `selectIncludedFilters$()` | `Observable<selectedFilters[] \| null>` | Filters that narrow results (include) |
+| `selectExcludedFilters$()` | `Observable<selectedFilters[] \| null>` | Filters that remove results (exclude) |
+| `selectMultiSelectedFilters$()` | `Observable<MultiSelectedFilter[] \| null>` | Filters with multiple selected values |
+| `selectResourceTypeFilter$()` | `Observable<ResourceTypeFilterModel \| null>` | Active resource type filter |
+| `selectIsFiltersOpen$()` | `Observable<boolean>` | Whether the filter panel is open |
+| `selectIsRememberAll$()` | `Observable<boolean>` | Whether "Remember All" filters is active |
+| `getIncludedFilters()` | `Promise<selectedFilters[] \| null>` | Snapshot of included filters |
+| `getExcludedFilters()` | `Promise<selectedFilters[] \| null>` | Snapshot of excluded filters |
+| `getMultiSelectedFilters()` | `Promise<MultiSelectedFilter[] \| null>` | Snapshot of multi-selected filters |
+
+#### Example — Display active filters
+
+```typescript
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { NDEComponent, NDE_SLOTS, NDE_POSITION } from '../../decorators/nde-component.decorator';
+import { FilterStateService } from '@libis/primo-shared-state';
+
+@NDEComponent({ selector: NDE_SLOTS.FACETS, position: NDE_POSITION.BEFORE })
+@Component({
+  selector: 'custom-active-filters',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="active-filters" *ngIf="includedFilters$ | async as filters">
+      <h4 *ngIf="filters.length">Active filters:</h4>
+      <div *ngFor="let filter of filters" class="filter-chip">
+        <strong>{{ filter.name }}:</strong>
+        <span *ngFor="let value of filter.values">{{ value }}</span>
+      </div>
+    </div>
+    <div *ngIf="resourceType$ | async as rt" class="resource-type">
+      Showing: {{ rt.resourceType }} ({{ rt.count }})
+    </div>
+  `
+})
+export class ActiveFiltersComponent {
+  includedFilters$ = this.filterState.selectIncludedFilters$();
+  resourceType$ = this.filterState.selectResourceTypeFilter$();
+
+  constructor(private filterState: FilterStateService) {}
+}
+```
+
+#### Example — Show excluded filters
+
+```typescript
+this.filterState.selectExcludedFilters$()
+  .pipe(takeUntil(this.destroy$))
+  .subscribe(excluded => {
+    if (excluded?.length) {
+      console.log('Excluded filters:');
+      excluded.forEach(f => {
+        console.log(`  ${f.name}: ${f.values.join(', ')}`);
+      });
+    }
+  });
+```
+
+#### Example — Work with multi-selected filters
+
+```typescript
+this.filterState.selectMultiSelectedFilters$()
+  .pipe(takeUntil(this.destroy$))
+  .subscribe(multiFilters => {
+    multiFilters?.forEach(filter => {
+      console.log(`Filter: ${filter.name}`);
+      filter.values.forEach(v => {
+        console.log(`  ${v.value} (${v.filterType})`); // 'include' or 'exclude'
+      });
+    });
+  });
+```
+
+#### Example — React to filter panel state
+
+```typescript
+this.filterState.selectIsFiltersOpen$()
+  .pipe(takeUntil(this.destroy$))
+  .subscribe(isOpen => {
+    console.log('Filter panel is', isOpen ? 'open' : 'closed');
+  });
+
+this.filterState.selectIsRememberAll$()
+  .pipe(takeUntil(this.destroy$))
+  .subscribe(rememberAll => {
+    console.log('"Remember All" is', rememberAll ? 'enabled' : 'disabled');
+  });
+```
+
+#### Example — Get filters as a snapshot (e.g., for analytics)
+
+```typescript
+async trackFilterUsage() {
+  const included = await this.filterState.getIncludedFilters();
+  const excluded = await this.filterState.getExcludedFilters();
+  const multi = await this.filterState.getMultiSelectedFilters();
+
+  const filterCount =
+    (included?.length ?? 0) +
+    (excluded?.length ?? 0) +
+    (multi?.length ?? 0);
+
+  console.log(`User has ${filterCount} active filter(s)`);
+}
+```
+
+#### Key data shapes
+
+```typescript
+interface FilterState {
+  status: LoadingStatus;                           // Loading status
+  isRememberAll: boolean;                          // "Remember All" toggle
+  previousSearchQuery: {
+    searchTerm: string | undefined;
+    scope: string | undefined;
+  };
+  includedFilter: selectedFilters[] | null;        // Include-type filters
+  excludedFilter: selectedFilters[] | null;        // Exclude-type filters
+  multiSelectedFilter: MultiSelectedFilter[] | null;
+  resourceTypeFilter: ResourceTypeFilterModel | null;
+  isFiltersOpen: boolean;                          // Filter panel visibility
+}
+
+interface selectedFilters {
+  name: string;      // Filter facet name (e.g., 'creator', 'lang')
+  values: string[];  // Selected values (e.g., ['English', 'French'])
+}
+
+interface MultiSelectedFilter {
+  name: string;                         // Filter facet name
+  values: MultiSelectedFilterValue[];   // Values with include/exclude type
+}
+
+interface MultiSelectedFilterValue {
+  value: string;           // The filter value
+  filterType: FilterType;  // 'include' | 'exclude'
+}
+
+interface ResourceTypeFilterModel {
+  resourceType: string;  // Resource type name (e.g., 'Books', 'Articles')
+  count: number;         // Number of results of this type
+}
+```
 
 ---
 
