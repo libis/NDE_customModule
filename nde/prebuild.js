@@ -1,11 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 
-const packageJsonPath = path.resolve(__dirname, 'package.json');
-const bootstrapPath = path.resolve(__dirname, 'src/bootstrap.ts');
-const mainPath = path.resolve(__dirname, 'src/main.ts');
-const webpackConfigPath = path.resolve(__dirname, 'webpack.config.js');
-const assetBaseOutPath = path.resolve(__dirname, 'src/app/state/asset-base.generated.ts');
+const projectRoot = path.resolve(__dirname, '..');
+const packageJsonPath = path.resolve(projectRoot, 'package.json');
+const bootstrapPath = path.resolve(projectRoot, 'src/bootstrap.ts');
+const mainPath = path.resolve(projectRoot, 'src/main.ts');
+const webpackConfigPath = path.resolve(projectRoot, 'webpack.config.js');
+const assetBaseOutPath = path.resolve(projectRoot, 'src/app/state/asset-base.generated.ts');
 
 if (!fs.existsSync(packageJsonPath)) {
     console.error("Error: package.json file not found!");
@@ -23,7 +24,7 @@ if (!ndeConfig) {
 const addonName = ndeConfig.addonName;
 
 if (addonName) {
-    const newBootstrapPath = path.resolve(__dirname, `src/bootstrap${addonName}.ts`);
+    const newBootstrapPath = path.resolve(projectRoot, `src/bootstrap${addonName}.ts`);
 
     // Restore bootstrap.ts from previous version if needed
     if (!fs.existsSync(bootstrapPath) && fs.existsSync(newBootstrapPath)) {

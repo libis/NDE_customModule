@@ -2,7 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
 
-const packageJsonPath = path.join(__dirname, 'package.json');
+const projectRoot = path.join(__dirname, '..');
+const packageJsonPath = path.join(projectRoot, 'package.json');
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 const ndeConfig = packageJson.nde;
 
@@ -19,9 +20,9 @@ if (!envConfig) {
     process.exit(1);
 }
 
-const distPath = path.join(__dirname, 'dist', 'custom-module');
-const targetPath = path.join(__dirname, 'dist', `${envConfig.institution}-${envConfig.view}`);
-const zipPath = path.join(__dirname, 'dist', `${envConfig.institution}-${envConfig.view}.zip`);
+const distPath = path.join(projectRoot, 'dist', 'custom-module');
+const targetPath = path.join(projectRoot, 'dist', `${envConfig.institution}-${envConfig.view}`);
+const zipPath = path.join(projectRoot, 'dist', `${envConfig.institution}-${envConfig.view}.zip`);
 
 function removeDirectory(directory, callback) {
     fs.rm(directory, { recursive: true, force: true }, callback);

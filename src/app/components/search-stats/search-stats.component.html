@@ -1,1 +1,28 @@
-<p>search-stats works!</p>
+<ng-container *ngIf="status$ | async as status">
+  <div class="search-stats">
+    <span *ngIf="status === 'loading'" class="loading">Loading...</span>
+
+    <ng-container *ngIf="status === 'success'">
+      <span class="total-results">
+        {{ totalResults$ | async | number }} results found
+      </span>
+      <span *ngIf="searchParams$ | async as params" class="query">
+        for "{{ params.q }}"
+      </span>
+      <span class="docs-loaded">
+        ({{ (docs$ | async)?.length }} loaded)
+      </span>
+      <ng-container *ngIf="metaData$ | async as meta">
+        <span *ngIf="meta.timelog" class="timing">
+          in {{ meta.timelog.COMBINED_SEARCH_TIME }}ms
+          <span class="timing-detail"
+            title="Local: {{ meta.timelog.PRIMA_LOCAL_SEARCH_TOTAL }}ms | PC: {{ meta.timelog.PC_SEARCH_TIME_TOTAL }}ms | Blend: {{ meta.timelog.BUILD_BLEND_AND_CACHE_RESULTS }}ms">
+            &#9432;
+          </span>
+        </span>
+      </ng-container>
+    </ng-container>
+
+    <span *ngIf="status === 'fail'" class="error">Search failed</span>
+  </div>
+</ng-container>
