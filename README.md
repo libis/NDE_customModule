@@ -566,6 +566,41 @@ interface ResourceTypeFilterModel {
 
 ---
 
+### Host Component Instance
+
+In addition to the shared state services above, you can access the **host component instance** directly. When the NDE host injects your custom component into the DOM, it passes a reference to the host component via an Angular `@Input()` property. This gives you direct access to the host component's public properties and methods.
+
+```typescript
+import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { NDEComponent, NDE_SLOTS, NDE_POSITION } from '../../decorators/nde-component.decorator';
+
+@NDEComponent({ selector: NDE_SLOTS.BRIEF_RESULT, position: NDE_POSITION.BOTTOM })
+@Component({
+  selector: 'custom-brief-result-actions',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="custom-actions" *ngIf="hostComponent">
+      <button (click)="logHostData()">Log host data</button>
+    </div>
+  `
+})
+export class BriefResultActionsComponent {
+  @Input() hostComponent!: any;
+
+  logHostData() {
+    // The host component instance — explore it in DevTools to see available properties
+    console.log('Host component:', this.hostComponent);
+  }
+}
+```
+
+> **When to use this vs shared state services:**
+> The shared state services (`SearchStateService`, `UserStateService`, `FilterStateService`) should be your **first choice** — they provide typed, reactive access to application-wide data. Use `hostComponent` when you need something specific to the host component instance that isn't exposed through the shared state, for example, calling a method on the host or reading a property that only exists on that particular component. Because `hostComponent` is typed as `any`, you lose type safety, so inspect the host component in the browser's DevTools first to understand what's available.
+
+---
+
 ## Prerequisites
 
 ### Node.js and npm
@@ -879,11 +914,7 @@ When multiple components target the same slot and position, use `priority` to co
 
 ### Host Component Instance
 
-Access the host component your custom component is attached to:
-
-```typescript
-@Input() private hostComponent!: any;
-```
+You can access the host component instance directly via `@Input() hostComponent`. See [Host Component Instance](#host-component-instance) in the data-sharing section for a full example and guidance on when to use this vs the shared state services.
 
 ### App State (NgRx Store)
 
