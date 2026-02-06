@@ -1,7 +1,7 @@
-import {deepMerge} from "./proxy-utils.mjs";
+import {deepMerge, logRequest, findLocalResource, serveLocalFile} from "./proxy-utils.mjs";
 import {readFileSync} from 'fs';
 import {fileURLToPath} from 'url';
-import {dirname, join} from 'path';
+import {dirname, join, resolve} from 'path';
 import {exec} from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -43,8 +43,12 @@ setTimeout(() => {
     exec(`${cmd} "${proxyUrl}"`);
 }, 5000);
 
+// Resolve local resource directories (configurable via nde.localResourceDirs)
+const projectRoot = join(__dirname, '..');
+const localResourceDirs = (ndeConfig.localResourceDirs || ['./dist'])
+    .map(d => resolve(projectRoot, d));
 
-
+console.log('  Local resource dirs:', localResourceDirs.join(', '), '\n');
 
 
 
@@ -59,17 +63,23 @@ const proxyRules = [
     target: 'not-needed',
     router: (req) => `${req.protocol}://${req.get('host')}`,
     changeOrigin: false,
-    logLevel: 'debug',
+    logLevel: 'silent',
     pathRewrite: (path) =>
       path.replace(/^\/(?:nde\/)?custom\/[^/]+\/assets\/?/, '/assets/'),
+    onProxyReq(proxyReq, req) {
+      logRequest(req.originalUrl, {local: true, localFile: 'dev-server/assets'});
+    },
   },
   {
     context: ['/primaws/rest/pub/configuration/vid/'],
     target: PROXY_TARGET,
     secure: true,
     changeOrigin: true,
-    logLevel: 'debug',
+    logLevel: 'silent',
     selfHandleResponse: true,
+    onProxyReq(proxyReq, req) {
+      logRequest(req.originalUrl);
+    },
     onProxyRes(proxyRes, req, res) {
       const chunks = [];
       proxyRes.on('data', chunk => chunks.push(chunk));
@@ -93,16 +103,13 @@ const proxyRules = [
       '/nde/custom/**'
     ],
     target: 'not-needed',
-    router: (req) => {
-      const url = `${req.protocol}://${req.get('host')}`
-      console.log(url);
-      return url;
-
-    },
+    router: (req) => `${req.protocol}://${req.get('host')}`,
     secure: true,
-    logLevel: 'debug',
+    logLevel: 'silent',
     pathRewrite: { '^/nde/custom/.*/': '' },
-
+    onProxyReq(proxyReq, req) {
+      logRequest(req.originalUrl, {local: true, localFile: 'dev-server/custom'});
+    },
   },
   {
     context: [
@@ -111,8 +118,37 @@ const proxyRules = [
     target: PROXY_TARGET,
     secure: true,
     changeOrigin: true,
-    logLevel: 'debug',
-
+    logLevel: 'silent',
+    selfHandleResponse: true,
+    onProxyReq(proxyReq, req) {
+      // Check local resource directories before proxying
+      const localFile = findLocalResource(req.originalUrl, localResourceDirs);
+      if (localFile) {
+        logRequest(req.originalUrl, {local: true, localFile});
+        // Mark the request so onProxyRes knows to serve locally
+        req._localFile = localFile;
+      } else {
+        logRequest(req.originalUrl);
+      }
+    },
+    onProxyRes(proxyRes, req, res) {
+      // If a local file was found, serve it instead of the proxy response
+      if (req._localFile) {
+        // Consume and discard the proxy response
+        proxyRes.on('data', () => {});
+        proxyRes.on('end', () => {
+          serveLocalFile(req._localFile, res);
+        });
+        return;
+      }
+      // Otherwise forward the proxy response manually
+      // (selfHandleResponse prevents automatic piping, so we do it ourselves)
+      res.statusCode = proxyRes.statusCode;
+      for (const [key, value] of Object.entries(proxyRes.headers)) {
+        try { res.setHeader(key, value); } catch { /* skip hop-by-hop headers */ }
+      }
+      proxyRes.pipe(res);
+    }
   }
 ];
 
