@@ -1,0 +1,39 @@
+.search-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.5em 1em;
+  font-size: 0.9em;
+
+  .loading {
+    color: #666;
+    font-style: italic;
+  }
+
+  .total-results {
+    font-weight: bold;
+  }
+
+  .query {
+    color: #555;
+  }
+
+  .docs-loaded {
+    color: #888;
+    font-size: 0.85em;
+  }
+
+  .timing {
+    color: #666;
+    font-size: 0.85em;
+
+    .timing-detail {
+      cursor: help;
+      margin-left: 0.2em;
+    }
+  }
+
+  .error {
+    color: #c00;
+  }
+}

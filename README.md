@@ -1,468 +1,1163 @@
-# CustomModule
+# NDE Custom Module
 
-## ✨ New Feature (9th November 2025): Support for all customization files in assets folder:
-All files that are you are able to customize through the assets folder of your customization package are now supported for preview when using the custom module in proxy mode.
+A development toolkit for building custom UI components for Ex Libris Primo's **New Discovery Experience (NDE)**. This project lets you create, preview, and deploy your own components that integrate directly into the NDE interface.
 
-For example to preview your brand logo you can now place your customized logo file in the following path in your local project:
-`src/assets/images/library-logo.png`
+---
 
-To start proxy mode use the command:
-``` bash
-npm run start:proxy
+## Table of Contents
+
+- [How It Works — The Big Picture](#how-it-works--the-big-picture)
+- [Key Technologies](#key-technologies)
+- [Boot Process](#boot-process)
+- [How Host and Client Share Data](#how-host-and-client-share-data)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Configuration (package.json)](#configuration-packagejson)
+- [Creating Components with @NDEComponent](#creating-components-with-ndecomponent)
+- [Accessing Host Data](#accessing-host-data)
+- [Working with Assets](#working-with-assets)
+- [Creating a Custom Color Theme](#creating-a-custom-color-theme)
+- [Understanding the Proxy Logs](#understanding-the-proxy-logs)
+- [Building and Deploying](#building-and-deploying)
+- [Developing an Add-On](#developing-an-add-on)
+- [Recommended Development Environment](#recommended-development-environment)
+- [Additional Resources](#additional-resources)
+
+---
+
+## How It Works — The Big Picture
+
+The NDE interface is a large web application (the **host**) that runs in the browser. Your custom module is a separate, smaller application (the **client**) that the host loads at runtime. They share the same page, the same Angular framework, and the same application state.
+
+This is made possible by two technologies:
+
+- **Angular** — A framework for building web applications using components (reusable UI building blocks). You write components in TypeScript/HTML/CSS and Angular turns them into interactive UI. If you are new to Angular, the [official tutorial](https://angular.dev/tutorials/learn-angular) is a good starting point.
+
+- **Module Federation** (via Webpack) — A mechanism that lets separately-built applications share code at runtime. The host application loads your custom module's `remoteEntry.js` file, which tells it what components you provide. They share common libraries (Angular, RxJS, NgRx) so there is no duplication. For more background, see the [Webpack Module Federation docs](https://webpack.js.org/concepts/module-federation/) and the [@angular-architects/module-federation plugin](https://www.npmjs.com/package/@angular-architects/module-federation).
+
+In practice, you write Angular components, decorate them with `@NDEComponent`, and the build system handles the rest — packaging them as a federated module that the NDE host can discover and render.
+
+---
+
+## Key Technologies
+
+| Technology | Version | Purpose |
+|---|---|---|
+| [Angular](https://angular.dev/) | 18.2 | Component framework |
+| [TypeScript](https://www.typescriptlang.org/) | 5.5 | Typed JavaScript |
+| [Webpack](https://webpack.js.org/) | 5.88 | Build tool and module bundler |
+| [@angular-architects/module-federation](https://www.npmjs.com/package/@angular-architects/module-federation) | 18.0 | Module Federation plugin for Angular |
+| [NgRx Store](https://ngrx.io/guide/store) | 18.1 | Centralized state management |
+| [RxJS](https://rxjs.dev/) | 7.8 | Reactive programming (Observables) |
+| [Angular Material](https://material.angular.io/) | 18.2 | Material Design UI components |
+| [@ngx-translate/core](https://github.com/ngx-translate/core) | 15.0 | Internationalization |
+| [@libis/primo-shared-state](https://github.com/libis/primo-shared-state) | 1.0.0 | Shared state services between host and client |
+
+---
+
+## Boot Process
+
+The following diagram shows how the NDE host application discovers and loads your custom module at runtime.
+
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant Host as Host (NDE Shell)
+    participant Config as Alma Config API
+    participant Client as Client (Custom Module)
+
+    Note over Browser,Client: Phase 1 — Host Bootstrap
+    Browser->>Host: Load index.html
+    Host->>Host: main.ts → dynamic import('./bootstrap')
+    Host->>Host: bootstrap-config.ts (sync XHR for CENTRAL_CODE.txt)
+    Host->>Host: bootstrap(AppModule, { appType: 'shell' })
+    Host->>Host: Initialize NgRx stores (search, user, viewConfig, filters, ...)
+    Host->>Host: AppInitService.init()
+    Host->>Config: GET /primaws/rest/pub/configuration/vid/{vid}
+    Config-->>Host: View configuration (includes ndeAddons, customization, ...)
+
+    Note over Browser,Client: Phase 2 — Load Custom Assets
+    Host->>Host: Load custom.css, custom.js, favicon.ico
+    Note right of Host: Asset fallback chain:<br/>1. custom/{inst-view}/asset<br/>2. custom/{nzVid}-CENTRAL_PACKAGE/asset<br/>3. default asset
+
+    Note over Browser,Client: Phase 3 — Discover & Load Client Module
+    Host->>Host: LookupService resolves remoteEntry.js location
+    alt Development mode (useLocalCustomPackage=true)
+        Host->>Client: Fetch http://localhost:4201/remoteEntry.js
+    else Production mode
+        Host->>Client: Fetch custom/{inst-view}/remoteEntry.js
+    end
+    Client-->>Host: remoteEntry.js (Module Federation manifest)
+    Host->>Host: __webpack_init_sharing__('default')
+    Host->>Client: container.init(sharedScopes)
+    Host->>Client: container.get('./custom-module')
+    Client-->>Host: bootstrapRemoteApp function
+
+    Note over Browser,Client: Phase 4 — Bootstrap Client & Register Components
+    Host->>Client: bootstrapRemoteApp({ providers: [Store, TranslateService, ...], shellRouter })
+    Client->>Client: bootstrap(AppModule, { appType: 'microfrontend' })
+    Client->>Client: Share NgZone and platform with host
+    Client->>Client: ngDoBootstrap() → convert components to Web Components
+    Client-->>Host: NgModuleRef with webComponentSelectorMap
+
+    Note over Browser,Client: Phase 5 — Inject Components into Host
+    Host->>Host: BaseCustomDirective scans for #nde-base-custom elements
+    Host->>Host: For each NDE slot, query remote module for matching component
+    Host->>Host: customElements.define() and inject into DOM
+    Note right of Host: Position mapping:<br/>nde-search-bar → replace<br/>nde-search-bar-before → insert before<br/>nde-search-bar-after → insert after<br/>nde-search-bar-top → first child<br/>nde-search-bar-bottom → last child
 ```
 
 ---
 
-### Overview
+## How Host and Client Share Data
 
+The host and client share a single **NgRx Store** instance. NgRx is a state management library — think of it as a centralized database for the application's runtime data (the current user, search results, applied filters, etc.).
 
-The NDE Customization package offers options to enhance and extend the functionality of Primo’s New Discovery Experience (NDE). You can add and develop your own components, customize theme templates, and tailor the discovery interface to your specific needs.
+Because Module Federation marks `@ngrx/store` as a **singleton**, both the host and your custom module operate on the exact same store instance. The host populates the store, and your components can read from it.
 
-**Note:**
-<mark>This branch includes updates and other improvements that are compatible with the December 2025 release of NDE.</mark>
+### @libis/primo-shared-state
 
-**Note:**
-The NDE Customization package is currently available exclusively to Primo customers who have early access to the New Discovery Experience (NDE). Further availability will be announced in upcoming releases.
+The [`@libis/primo-shared-state`](https://github.com/libis/primo-shared-state) library provides type-safe services that wrap the NgRx store. Instead of writing raw selectors, you inject a service and call its methods.
+
+Three services are available: **SearchStateService**, **UserStateService**, and **FilterStateService**. Each service offers two access patterns:
+
+- **Reactive (Observable)** — method names end with `$`. Your component updates automatically whenever the underlying data changes. Best for templates using the `| async` pipe or for components that need to react in real time.
+- **Snapshot (Promise)** — one-time reads of the current value. Useful in lifecycle hooks, click handlers, or anywhere you just need the value right now.
+
+> **Tip:** If you are new to Observables, see the [RxJS guide](https://rxjs.dev/guide/overview). For NgRx, see the [NgRx Store documentation](https://ngrx.io/guide/store).
+
+### A Note on Angular Signals vs Observables
+
+Angular 18 ships with **Signals** as a stable reactive primitive. Signals are well suited for synchronous, fine-grained state (local component state, computed values, NgRx store reads via `store.selectSignal()`), and they can simplify templates by removing the need for the `| async` pipe.
+
+However, **Signals are a complement to Observables, not a replacement.** Observables remain the right tool for inherently asynchronous or event-driven work:
+
+| Use Signals for | Keep Observables for |
+|---|---|
+| Local component state (`signal()`, `computed()`) | HTTP calls (`HttpClient`) |
+| NgRx store reads (`store.selectSignal()`) | HTTP interceptors (`HttpInterceptor`) |
+| Derived/computed values | Router events (`router.events`) |
+| Simple template bindings (no `\| async` needed) | Complex async composition (`switchMap`, `debounceTime`, `combineLatest`, ...) |
+
+The Angular team has explicitly stated that RxJS is not being deprecated. A wholesale migration to Signals would bring no practical benefit and would lose the async composition capabilities that Observables provide.
+
+**Current approach in this project:** The `@libis/primo-shared-state` services expose Observable-based selectors (methods ending with `$`) and Promise-based snapshots. Signal-based selectors may be added in a future version. In the meantime, you can use `store.selectSignal()` directly on the NgRx store for signal-based reads when that fits your component better (see [App State](#app-state-ngrx-store)).
+
+---
+
+### SearchStateService
+
+Provides access to search results, search parameters, metadata, and loading status.
+
+| Method | Returns | Description |
+|---|---|---|
+| `selectAllDocs$()` | `Observable<Doc[]>` | All search result documents |
+| `selectDocById$(id)` | `Observable<Doc \| undefined>` | A specific document by its ID |
+| `selectSearchParams$()` | `Observable<SearchParams \| null>` | Current search parameters (query, scope, sort, tab, ...) |
+| `selectSearchMetaData$()` | `Observable<SearchMetaData \| null>` | Search metadata (facets, highlights, did-you-mean, ...) |
+| `selectSearchStatus$()` | `Observable<LoadingStatus>` | Loading status: `'pending'` · `'loading'` · `'success'` · `'fail'` |
+| `selectTotalResults$()` | `Observable<number>` | Total number of results |
+| `selectPageSize$()` | `Observable<number \| null>` | Current page size |
+| `selectIsLoading$()` | `Observable<boolean>` | `true` while a search is in progress |
+| `getAllDocs()` | `Promise<Doc[]>` | Snapshot of all documents |
+| `getDocById(id)` | `Promise<Doc \| undefined>` | Snapshot of a single document |
+| `getSearchParams()` | `Promise<SearchParams \| null>` | Snapshot of current search parameters |
+
+#### Example — Display search results with loading state
+
+```typescript
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Subject, takeUntil } from 'rxjs';
+import { NDEComponent, NDE_SLOTS, NDE_POSITION } from '../../decorators/nde-component.decorator';
+import { SearchStateService, Doc, LoadingStatus } from '@libis/primo-shared-state';
+
+@NDEComponent({ selector: NDE_SLOTS.SEARCH_RESULTS, position: NDE_POSITION.BEFORE })
+@Component({
+  selector: 'custom-result-banner',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div *ngIf="status === 'loading'" class="loading">Searching...</div>
+    <div *ngIf="status === 'success'" class="result-count">
+      Found {{ totalResults }} results for "{{ query }}"
+    </div>
+  `
+})
+export class ResultBannerComponent implements OnInit, OnDestroy {
+  status: LoadingStatus = 'pending';
+  totalResults = 0;
+  query = '';
+  private destroy$ = new Subject<void>();
+
+  constructor(private searchState: SearchStateService) {}
+
+  ngOnInit() {
+    this.searchState.selectSearchStatus$()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(status => this.status = status);
+
+    this.searchState.selectTotalResults$()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(total => this.totalResults = total);
+
+    this.searchState.selectSearchParams$()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => this.query = params?.q ?? '');
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}
+```
+
+#### Example — Get a single document by ID (snapshot)
+
+```typescript
+async showDocumentDetails(docId: string) {
+  const doc = await this.searchState.getDocById(docId);
+  if (doc) {
+    console.log('Title:', doc.pnx?.display?.title);
+    console.log('Context:', doc.context);       // 'L' (local), 'PC' (Primo Central), etc.
+    console.log('Delivery:', doc.delivery);      // Physical/electronic delivery info
+  }
+}
+```
+
+#### Example — Access search metadata (facets, did-you-mean)
+
+```typescript
+this.searchState.selectSearchMetaData$()
+  .pipe(takeUntil(this.destroy$))
+  .subscribe(meta => {
+    if (meta?.facets) {
+      console.log('Available facets:', meta.facets);
+    }
+    if (meta?.did_u_mean) {
+      console.log('Did you mean:', meta.did_u_mean);
+    }
+    if (meta?.highlights) {
+      console.log('Highlighted terms:', meta.highlights);
+    }
+  });
+```
+
+#### Key data shapes
+
+```typescript
+// SearchParams — what the user searched for
+interface SearchParams {
+  q: string;               // Search query text
+  scope: string;           // Search scope
+  tab?: string;            // Active tab
+  sort?: string;           // Sort field
+  offset?: number;         // Pagination offset
+  limit?: number;          // Page size
+  qInclude?: string[];     // Include filters as query terms
+  qExclude?: string[];     // Exclude filters as query terms
+  multiFacets?: string[];  // Multi-facet selections
+  lang?: string;           // Language code
+  mode?: string;           // Search mode
+  inst?: string;           // Institution
+  // ... additional parameters
+}
+
+// Doc — a single search result
+interface Doc {
+  '@id': string;             // Document ID
+  context: Context;          // 'L' | 'PC' | 'SP' | 'U' | 'NP'
+  adaptor: Adaptor;          // Data source
+  pnx: Pnx;                 // PNX record (display, search, delivery fields)
+  delivery?: DocDelivery;    // Delivery/availability information
+  enrichment?: Enrichment;   // Virtual browse enrichment
+  expired?: boolean;         // Whether the document has expired
+}
+
+type LoadingStatus = 'pending' | 'loading' | 'success' | 'fail';
+```
+
+---
+
+### UserStateService
+
+Provides access to user authentication, JWT tokens, and user preferences.
+
+| Method | Returns | Description |
+|---|---|---|
+| `selectUserState$()` | `Observable<UserState>` | The entire user state object |
+| `selectJwt$()` | `Observable<string \| undefined>` | Raw JWT token string |
+| `selectDecodedJwt$()` | `Observable<DecodedJwt \| undefined>` | Decoded JWT (user name, group, campus status, ...) |
+| `selectIsLoggedIn$()` | `Observable<boolean>` | Whether the user is authenticated |
+| `selectUserSettings$()` | `Observable<UserSettings \| undefined>` | User preferences (language, page size, email, ...) |
+| `selectUserName$()` | `Observable<string \| undefined>` | User name (from decoded JWT) |
+| `selectUserGroup$()` | `Observable<string>` | User group (defaults to `'GUEST'` when not logged in) |
+| `getJwt()` | `Promise<string \| undefined>` | Snapshot of JWT token |
+| `isLoggedIn()` | `Promise<boolean>` | Snapshot of login status |
+| `getUserSettings()` | `Promise<UserSettings \| undefined>` | Snapshot of user settings |
+
+#### Example — Show a personalized greeting
+
+```typescript
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { NDEComponent, NDE_SLOTS, NDE_POSITION } from '../../decorators/nde-component.decorator';
+import { UserStateService } from '@libis/primo-shared-state';
+
+@NDEComponent({ selector: NDE_SLOTS.HEADER, position: NDE_POSITION.BOTTOM })
+@Component({
+  selector: 'custom-user-greeting',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="user-greeting" *ngIf="isLoggedIn$ | async">
+      <span>Welcome, {{ userName$ | async }}!</span>
+      <span class="badge">{{ userGroup$ | async }}</span>
+    </div>
+    <div class="guest-banner" *ngIf="(isLoggedIn$ | async) === false">
+      <span>Sign in to access personalized features</span>
+    </div>
+  `
+})
+export class UserGreetingComponent {
+  isLoggedIn$ = this.userState.selectIsLoggedIn$();
+  userName$ = this.userState.selectUserName$();
+  userGroup$ = this.userState.selectUserGroup$();
+
+  constructor(private userState: UserStateService) {}
+}
+```
+
+#### Example — Use JWT for API calls (snapshot)
+
+```typescript
+async callExternalApi() {
+  const jwt = await this.userState.getJwt();
+  if (!jwt) {
+    console.warn('User is not logged in');
+    return;
+  }
+
+  const response = await fetch('https://my-api.example.com/data', {
+    headers: { 'Authorization': `Bearer ${jwt}` }
+  });
+  // ...
+}
+```
+
+#### Example — Read decoded JWT details
+
+```typescript
+this.userState.selectDecodedJwt$()
+  .pipe(takeUntil(this.destroy$))
+  .subscribe(decoded => {
+    if (decoded) {
+      console.log('User:', decoded.userName);
+      console.log('Display name:', decoded.displayName);
+      console.log('Group:', decoded.userGroup);
+      console.log('On campus:', decoded.onCampus);
+      console.log('Auth profile:', decoded.authenticationProfile);
+    }
+  });
+```
+
+#### Example — Read user settings
+
+```typescript
+this.userState.selectUserSettings$()
+  .pipe(takeUntil(this.destroy$))
+  .subscribe(settings => {
+    if (settings) {
+      console.log('Preferred language:', settings.language);
+      console.log('Results per page:', settings.resultsBulkSize);
+      console.log('Email:', settings.email);
+    }
+  });
+```
+
+#### Key data shapes
+
+```typescript
+interface UserState {
+  jwt: string | undefined;                   // Raw JWT token
+  decodedJwt: DecodedJwt | undefined;       // Parsed JWT payload
+  status: LoadingStatus;                     // Loading status
+  isLoggedIn: boolean;                       // Authentication flag
+  userSettings: UserSettings | undefined;    // User preferences
+  userSettingsStatus: LoadingStatus;         // Settings loading status
+  logoutReason: LogoutReason | undefined;    // 'user' | 'timeout'
+}
+
+interface DecodedJwt {
+  userName: string;              // Login username
+  displayName: string;           // Human-readable name
+  userGroup: string;             // Group/role (e.g., 'STAFF', 'STUDENT')
+  onCampus: boolean;             // Whether user is on campus network
+  signedIn: boolean;             // Signed-in flag
+  authenticationProfile: string; // Authentication profile used
+  user: string;                  // User identifier
+}
+
+interface UserSettings {
+  resultsBulkSize?: string;   // Page size preference
+  language?: string;          // UI language
+  email?: string;             // User email
+  saveSearchHistory?: string; // Save search history flag
+  [key: string]: string | undefined;  // Custom settings
+}
+
+type LogoutReason = 'user' | 'timeout';
+```
+
+---
+
+### FilterStateService
+
+Provides access to applied filters, multi-select filters, resource type filters, and filter panel UI state.
+
+| Method | Returns | Description |
+|---|---|---|
+| `selectFilterState$()` | `Observable<FilterState>` | The entire filter state object |
+| `selectIncludedFilters$()` | `Observable<selectedFilters[] \| null>` | Filters that narrow results (include) |
+| `selectExcludedFilters$()` | `Observable<selectedFilters[] \| null>` | Filters that remove results (exclude) |
+| `selectMultiSelectedFilters$()` | `Observable<MultiSelectedFilter[] \| null>` | Filters with multiple selected values |
+| `selectResourceTypeFilter$()` | `Observable<ResourceTypeFilterModel \| null>` | Active resource type filter |
+| `selectIsFiltersOpen$()` | `Observable<boolean>` | Whether the filter panel is open |
+| `selectIsRememberAll$()` | `Observable<boolean>` | Whether "Remember All" filters is active |
+| `getIncludedFilters()` | `Promise<selectedFilters[] \| null>` | Snapshot of included filters |
+| `getExcludedFilters()` | `Promise<selectedFilters[] \| null>` | Snapshot of excluded filters |
+| `getMultiSelectedFilters()` | `Promise<MultiSelectedFilter[] \| null>` | Snapshot of multi-selected filters |
+
+#### Example — Display active filters
+
+```typescript
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { NDEComponent, NDE_SLOTS, NDE_POSITION } from '../../decorators/nde-component.decorator';
+import { FilterStateService } from '@libis/primo-shared-state';
+
+@NDEComponent({ selector: NDE_SLOTS.FACETS, position: NDE_POSITION.BEFORE })
+@Component({
+  selector: 'custom-active-filters',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="active-filters" *ngIf="includedFilters$ | async as filters">
+      <h4 *ngIf="filters.length">Active filters:</h4>
+      <div *ngFor="let filter of filters" class="filter-chip">
+        <strong>{{ filter.name }}:</strong>
+        <span *ngFor="let value of filter.values">{{ value }}</span>
+      </div>
+    </div>
+    <div *ngIf="resourceType$ | async as rt" class="resource-type">
+      Showing: {{ rt.resourceType }} ({{ rt.count }})
+    </div>
+  `
+})
+export class ActiveFiltersComponent {
+  includedFilters$ = this.filterState.selectIncludedFilters$();
+  resourceType$ = this.filterState.selectResourceTypeFilter$();
+
+  constructor(private filterState: FilterStateService) {}
+}
+```
+
+#### Example — Show excluded filters
+
+```typescript
+this.filterState.selectExcludedFilters$()
+  .pipe(takeUntil(this.destroy$))
+  .subscribe(excluded => {
+    if (excluded?.length) {
+      console.log('Excluded filters:');
+      excluded.forEach(f => {
+        console.log(`  ${f.name}: ${f.values.join(', ')}`);
+      });
+    }
+  });
+```
+
+#### Example — Work with multi-selected filters
+
+```typescript
+this.filterState.selectMultiSelectedFilters$()
+  .pipe(takeUntil(this.destroy$))
+  .subscribe(multiFilters => {
+    multiFilters?.forEach(filter => {
+      console.log(`Filter: ${filter.name}`);
+      filter.values.forEach(v => {
+        console.log(`  ${v.value} (${v.filterType})`); // 'include' or 'exclude'
+      });
+    });
+  });
+```
+
+#### Example — React to filter panel state
+
+```typescript
+this.filterState.selectIsFiltersOpen$()
+  .pipe(takeUntil(this.destroy$))
+  .subscribe(isOpen => {
+    console.log('Filter panel is', isOpen ? 'open' : 'closed');
+  });
+
+this.filterState.selectIsRememberAll$()
+  .pipe(takeUntil(this.destroy$))
+  .subscribe(rememberAll => {
+    console.log('"Remember All" is', rememberAll ? 'enabled' : 'disabled');
+  });
+```
+
+#### Example — Get filters as a snapshot (e.g., for analytics)
+
+```typescript
+async trackFilterUsage() {
+  const included = await this.filterState.getIncludedFilters();
+  const excluded = await this.filterState.getExcludedFilters();
+  const multi = await this.filterState.getMultiSelectedFilters();
+
+  const filterCount =
+    (included?.length ?? 0) +
+    (excluded?.length ?? 0) +
+    (multi?.length ?? 0);
+
+  console.log(`User has ${filterCount} active filter(s)`);
+}
+```
+
+#### Key data shapes
+
+```typescript
+interface FilterState {
+  status: LoadingStatus;                           // Loading status
+  isRememberAll: boolean;                          // "Remember All" toggle
+  previousSearchQuery: {
+    searchTerm: string | undefined;
+    scope: string | undefined;
+  };
+  includedFilter: selectedFilters[] | null;        // Include-type filters
+  excludedFilter: selectedFilters[] | null;        // Exclude-type filters
+  multiSelectedFilter: MultiSelectedFilter[] | null;
+  resourceTypeFilter: ResourceTypeFilterModel | null;
+  isFiltersOpen: boolean;                          // Filter panel visibility
+}
+
+interface selectedFilters {
+  name: string;      // Filter facet name (e.g., 'creator', 'lang')
+  values: string[];  // Selected values (e.g., ['English', 'French'])
+}
+
+interface MultiSelectedFilter {
+  name: string;                         // Filter facet name
+  values: MultiSelectedFilterValue[];   // Values with include/exclude type
+}
+
+interface MultiSelectedFilterValue {
+  value: string;           // The filter value
+  filterType: FilterType;  // 'include' | 'exclude'
+}
+
+interface ResourceTypeFilterModel {
+  resourceType: string;  // Resource type name (e.g., 'Books', 'Articles')
+  count: number;         // Number of results of this type
+}
+```
 
 ---
 
 ## Prerequisites
 
-### Node.js and npm (Node Package Manager)
-1. **Verify Node.js and npm Installation:**
-    - Open a terminal.
-    - Run the following commands to check if Node.js and npm are installed:
-        ```bash
-        node -v
-        npm -v
-        ```
-    - If installed, you will see version numbers. If not, you will see an error.
+### Node.js and npm
 
-2. **Install Node.js and npm (if not installed):**
-    - Visit the [Node.js download page](https://nodejs.org/en/download/).
-    - Download the appropriate version for your operating system (npm is included with Node.js).
-    - Follow the installation instructions.
+1. Verify installation:
+    ```bash
+    node -v   # Should be v18 or later
+    npm -v
+    ```
+2. If not installed, download from [nodejs.org](https://nodejs.org/en/download/).
 
 ### Angular CLI
 
-1. **Verify Angular CLI Installation:**
-    - Open a terminal.
-    - Run the following command:
-        ```bash
-        ng version
-        ```
-    - If Angular CLI is installed, you will see the version and installed Angular packages.
-
-2. **Install Angular CLI (if not installed):**
-    - After installing Node.js and npm, install Angular CLI globally by running:
-        ```bash
-        npm install -g @angular/cli
-        ```
+1. Verify installation:
+    ```bash
+    ng version
+    ```
+2. If not installed:
+    ```bash
+    npm install -g @angular/cli
+    ```
 
 ---
 
-## Development server setup and startup
+## Getting Started
 
-### Step 1: Download the Project
-1. Navigate to the GitHub repository: [https://github.com/ExLibrisGroup/customModule](https://github.com/ExLibrisGroup/customModule).
-2. Download the ZIP file of the project.
-3. Extract the ZIP file to your desired development folder (e.g., `c:\env\custom-module\`).
+### 1. Download the Project
 
-### Step 2: Install Dependencies
-1. Inside the `customModule` directory, install the necessary npm packages:
-    ```bash
-    npm install
-    ```
+```bash
+git clone https://github.com/ExLibrisGroup/customModule.git
+cd customModule
+```
 
-### Step 3: Configuring proxy for and starting local development server
+Or download the ZIP from GitHub and extract it.
 
-There are two options for setting up your local development environment: configuring a proxy or using parameter on your NDE URL.
+### 2. Install Dependencies
 
-- **Option 1: Update `proxy.const.mjs` Configuration**:
-  - Set the URL of the server you want to test your code with by modifying the proxy.const.mjs file in the ./proxy directory:
-    ```javascript
-    // Configuration for the development proxy
-    const environments = {
-      'example': 'https://myPrimoVE.com',
-    }
+```bash
+npm install
+```
 
-    export const PROXY_TARGET = environments['example'];
-    ```
-  - Start the development server with the configured proxy by running:
-    ```bash
-    npm run start:proxy
-    ```
-  - Open your browser on port 4201 to see your changes. e.g: http://localhost:4201/nde/home?vid=EXLDEV1_INST:NDE&lang=en
+### 3. Configure Your Environment
 
-  
-- **Option 2: Parameter on NDE URL**:
-    - Start your development server by running
-      ```bash
-      npm run start
-      ```
-    -  Add the following query parameter to your NDE URL:
-      ```
-      useLocalCustomPackage=true
-      ```
-      For example: `https://sqa-na02.alma.exlibrisgroup.com/nde/home?vid=EXLDEV1_INST:NDE&useLocalCustomPackage=true`
-    - This setting assumes that your local development environment is running on the default port `4201`.
+Edit the `nde` section in `package.json` (see [Configuration](#configuration-packagejson) below) with your Primo instance details.
 
-  
+### 4. Start Development
+
+There are two ways to develop:
+
+**Option A: Proxy mode (recommended)** — runs a local server that proxies requests to your real Primo instance, so you see your components in the actual NDE interface:
+
+```bash
+npm run start:proxy
+```
+
+The browser opens automatically at `http://localhost:4201/nde/home?vid=YOUR_INST:YOUR_VIEW&lang=en`.
+
+**Option B: Remote parameter** — start the dev server and add a query parameter to your NDE URL:
+
+```bash
+npm run start
+```
+
+Then visit your NDE URL with `?useLocalCustomPackage=true` appended, e.g.:
+```
+https://your-primo.example.com/nde/home?vid=MY_INST:MY_VIEW&useLocalCustomPackage=true
+```
+
+This assumes the dev server runs on the default port `4201`.
+
 ---
 
-## Step 4: Code Scaffolding and Customization
+## Configuration (package.json)
 
-### Add Custom Components
-1. Create custom components by running:
-    ```bash
-    ng generate component <ComponentName>
-    ```
-    Example:
-    ```bash
-    ng generate component RecommendationsComponent
-    ``` 
+All project settings live in the `nde` section of `package.json`:
 
-2. Update `selectorComponentMap` in `customComponentMappings.ts` to connect the newly created components:
-    ```typescript
-    export const selectorComponentMap = new Map<string, any>([
-      ['nde-recommendations-before', RecommendationsComponentBefore],
-      ['nde-recommendations-after', RecommendationsComponentAfter],
-      ['nde-recommendations-top', RecommendationsComponentTop],
-      ['nde-recommendations-bottom', RecommendationsComponentBottom], 	  
-      ['nde-recommendations', RecommendationsComponent],
-      // Add more pairs as needed
-    ]);
-    ```
+```jsonc
+{
+  "nde": {
+    // Add-on name (leave empty for standard customization package)
+    "addonName": "",
 
-3. Customize the component’s `.html`, `.ts`, and `.scss` files as needed:
-    - `src/app/recommendations-component/recommendations-component.component.html`
-    - `src/app/recommendations-component/recommendations-component.component.ts`
-    - `src/app/recommendations-component/recommendations-component.component.scss`
+    // Base URL for assets (used by AssetBaseService to resolve asset paths)
+    "assetBaseUrl": "",
 
+    // Primo environments you work against
+    "environments": {
+      "sandbox": {
+        "host": "https://my-sandbox-primo.example.com",
+        "institution": "MY_INST",
+        "view": "MY_VIEW"
+      },
+      "production": {
+        "host": "https://my-production-primo.example.com",
+        "institution": "MY_INST",
+        "view": "MY_VIEW"
+      }
+    },
 
+    // Which environment to use for proxy and build
+    "defaultEnvironment": "sandbox",
 
-- All components in the NDE are intended to be customizable. However, if you encounter a component that does not support customization, please open a support case with us. This helps ensure that we can address the issue and potentially add customization support for that component in future updates.
+    // URL template for proxy auto-open (placeholders: {institution}, {view})
+    "proxyUrlTemplate": "/nde/home?vid={institution}:{view}&lang=en",
 
-### Accessing host component instance
+    // View customization overrides (merged into Alma config during proxy)
+    "customization": {
+      "favIcon": "custom/MY_INST-MY_VIEW/assets/images/favicon.ico",
+      "libraryLogo": "custom/MY_INST-MY_VIEW/assets/images/library-logo.png",
+      "viewSvg": "custom/MY_INST-MY_VIEW/assets/icons/custom_icons.svg",
+      "homepage": {
+        "homepageBGImage": "custom/MY_INST-MY_VIEW/assets/homepage/homepage_background.svg",
+        "html": {
+          "en": "custom/MY_INST-MY_VIEW/assets/homepage/homepage_en.html"
+        }
+      }
+    },
 
-You can get the instance of the component your custom component is hooked to by adding this property to your component class:
+    // Component auto-discovery settings
+    "components": {
+      "autoRegister": true,
+      "directory": "src/app/components"
+    },
 
-```angular2html
+    // HTTP interceptor settings
+    "interceptors": {
+      "autoRegister": false,
+      "directory": "src/app/interceptors"
+    },
+
+    // Directories searched for local resources during proxy mode
+    "localResourceDirs": ["./dist"]
+  }
+}
+```
+
+### Key settings explained
+
+| Setting | Purpose |
+|---|---|
+| `environments` | Define one or more Primo environments (sandbox, production, etc.). Each needs a `host` URL, `institution` code, and `view` code. |
+| `defaultEnvironment` | Which environment is used when you run `npm run start:proxy` or `npm run build`. |
+| `customization` | Overrides merged into the Alma view configuration during proxy mode. This lets you preview custom logos, homepage HTML, icons, etc. without uploading to Alma first. |
+| `addonName` | Set this when developing an add-on (not a standard customization package). Changes the bootstrap filename and webpack module name. |
+| `assetBaseUrl` | When hosting assets separately from the NDE (e.g., on a CDN), set this to the base URL so that `AssetBaseService` resolves relative paths correctly. |
+| `localResourceDirs` | Directories on disk where the proxy looks for files before forwarding requests to Alma. Defaults to `./dist`. |
+
+---
+
+## Creating Components with @NDEComponent
+
+Components are the building blocks of your customization. Each component targets a **slot** in the NDE interface (e.g., the search bar, the header, the search results) and specifies a **position** relative to that slot.
+
+### Step 1: Generate a component
+
+```bash
+npm run nde generate component hello-world --target search-bar --position after
+```
+
+This creates a new component in `src/app/components/hello-world/` with the `@NDEComponent` decorator already configured. The `--position` defaults to `after` and `--target` defaults to `default` if omitted.
+
+The generated file looks like:
+
+```typescript
+import { NDEComponent } from '../../decorators/nde-component.decorator';
+import { Component } from '@angular/core';
+
+@NDEComponent({ selector: 'nde-search-bar', position: 'after' })
+@Component({
+  selector: 'custom-hello-world',
+  standalone: true,
+  templateUrl: './hello-world.component.html',
+  styleUrls: ['./hello-world.component.scss']
+})
+export class HelloWorldComponent {}
+```
+
+Edit the template (`hello-world.component.html`):
+
+```html
+<div class="hello">
+  <p>Hello from my custom component!</p>
+</div>
+```
+
+That's it. Start the dev server and your component will appear after the search bar.
+
+### How auto-registration works
+
+You **do not** need to manually register your components. A Webpack plugin (`NdeComponentDiscoveryPlugin`) scans `src/app/components/` before each build, finds all `*.component.ts` files, and auto-generates the import statements in `customComponentMappings.ts`. The `@NDEComponent` decorator registers each component in an internal registry, and during bootstrap they are converted to Web Components and made available to the host.
+
+### Step 2: Use shared state
+
+Make your component data-driven by injecting a shared state service:
+
+```typescript
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { NDEComponent, NDE_SLOTS, NDE_POSITION } from '../../decorators/nde-component.decorator';
+import { SearchStateService } from '@libis/primo-shared-state';
+
+@NDEComponent({ selector: NDE_SLOTS.TOP_BAR, position: NDE_POSITION.AFTER })
+@Component({
+  selector: 'custom-search-stats',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './search-stats.component.html',
+  styleUrls: ['./search-stats.component.scss']
+})
+export class SearchStatsComponent {
+  totalResults$ = this.searchState.selectTotalResults$();
+  isLoading$ = this.searchState.selectIsLoading$();
+  searchParams$ = this.searchState.selectSearchParams$();
+
+  constructor(private searchState: SearchStateService) {}
+}
+```
+
+```html
+<div class="search-stats" *ngIf="(isLoading$ | async) === false">
+  <span>{{ totalResults$ | async | number }} results</span>
+  <span *ngIf="searchParams$ | async as params"> for "{{ params.q }}"</span>
+</div>
+```
+
+### Step 3: Add user-awareness
+
+```typescript
+import { UserStateService } from '@libis/primo-shared-state';
+
+@NDEComponent({ selector: NDE_SLOTS.HEADER, position: NDE_POSITION.BOTTOM })
+@Component({
+  selector: 'custom-greeting',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div *ngIf="isLoggedIn$ | async" class="greeting">
+      Welcome back!
+    </div>
+  `
+})
+export class GreetingComponent {
+  isLoggedIn$ = this.userState.selectIsLoggedIn$();
+  constructor(private userState: UserStateService) {}
+}
+```
+
+### Step 4: Work with filters
+
+```typescript
+import { FilterStateService } from '@libis/primo-shared-state';
+
+@NDEComponent({ selector: NDE_SLOTS.FACETS, position: NDE_POSITION.BEFORE })
+@Component({
+  selector: 'custom-filter-summary',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div *ngIf="filters$ | async as filters">
+      <span *ngIf="filters?.length">{{ filters.length }} filter(s) applied</span>
+    </div>
+  `
+})
+export class FilterSummaryComponent {
+  filters$ = this.filterState.selectIncludedFilters$();
+  constructor(private filterState: FilterStateService) {}
+}
+```
+
+### Available NDE Slots
+
+These are the standard slots defined in `NDE_SLOTS`:
+
+| Constant | Selector | Area |
+|---|---|---|
+| `NDE_SLOTS.HEADER` | `nde-header` | Page header |
+| `NDE_SLOTS.FOOTER` | `nde-footer` | Page footer |
+| `NDE_SLOTS.SEARCH_BAR` | `nde-search-bar` | Search input area |
+| `NDE_SLOTS.SEARCH_RESULTS` | `nde-search-results` | Search results list |
+| `NDE_SLOTS.TOP_BAR` | `nde-top-bar` | Bar above results |
+| `NDE_SLOTS.BRIEF_RESULT` | `nde-brief-result` | Individual result item |
+| `NDE_SLOTS.FULL_DISPLAY` | `nde-full-display` | Full record view |
+| `NDE_SLOTS.RECOMMENDATIONS` | `nde-recommendations` | Recommendations section |
+| `NDE_SLOTS.FACETS` | `nde-facets` | Facet/filter panel |
+| `NDE_SLOTS.HOMEPAGE` | `nde-homepage` | Homepage content |
+| `NDE_SLOTS.LOGO` | `nde-logo` | Library logo |
+
+All NDE components are intended to be customizable. If you encounter a component that does not support customization, please open a support case.
+
+### Position Options
+
+| Position | Constant | Effect |
+|---|---|---|
+| `'before'` | `NDE_POSITION.BEFORE` | Renders before the host component |
+| `'after'` | `NDE_POSITION.AFTER` | Renders after the host component |
+| `'top'` | `NDE_POSITION.TOP` | Renders as first child inside the host component |
+| `'bottom'` | `NDE_POSITION.BOTTOM` | Renders as last child inside the host component |
+| `''` | `NDE_POSITION.REPLACE` | Completely replaces the host component |
+
+### Priority
+
+When multiple components target the same slot and position, use `priority` to control order (lower number renders first, default is 100):
+
+```typescript
+@NDEComponent({ selector: NDE_SLOTS.HEADER, position: 'after', priority: 10 })
+```
+
+---
+
+## Accessing Host Data
+
+### Host Component Instance
+
+Access the host component your custom component is attached to:
+
+```typescript
 @Input() private hostComponent!: any;
 ```
 
-### Accessing app state
+### App State (NgRx Store)
 
-- You can gain access to the app state which is stored on an NGRX store by injecting the Store service to your component:
+Inject the NgRx Store directly for state not covered by primo-shared-state:
 
-```angular2html
+```typescript
+import { Store, createFeatureSelector, createSelector } from '@ngrx/store';
+
 private store = inject(Store);
-```
 
-- Create selectors. For example: 
-
-```angular2html
+// Create selectors
 const selectUserFeature = createFeatureSelector<{isLoggedIn: boolean}>('user');
 const selectIsLoggedIn = createSelector(selectUserFeature, state => state.isLoggedIn);
-```
 
-- Apply selector to the store to get state as Signal:
-
-```angular2html
+// Use as Signal
 isLoggedIn = this.store.selectSignal(selectIsLoggedIn);
-```
 
-Or as Observable:
-
-```angular2html
+// Or as Observable
 isLoggedIn$ = this.store.select(selectIsLoggedIn);
 ```
 
-### Accessing app router
+### App Router
 
-- You can gain access to the app router service by injecting the SHELL_ROUTER  injection token to your component:
+Access the host application's router:
 
-```angular2html
-import {SHELL_ROUTER} from "../../injection-tokens"; //the import path may vary on your project
+```typescript
+import { SHELL_ROUTER } from "../../injection-tokens";
+
 private router = inject(SHELL_ROUTER);
-```
 
-- Listening for router navigation events. For example:
-
-```angular2html
-this.routerSubscription = this.router.events.subscribe((event) => {
-    if (event instanceof NavigationEnd) {
-        console.log('Tracking PageView: ', event.urlAfterRedirects);
-    }
+// Listen for navigation events
+this.router.events.subscribe((event) => {
+  if (event instanceof NavigationEnd) {
+    console.log('Page view:', event.urlAfterRedirects);
+  }
 });
 ```
 
+### Translations
 
+Use ngx-translate for code table translations. Add `TranslateModule` to your standalone component imports:
 
-### Translating from code tables 
-
-You can translate codes in your custom component by using ngx-translate (https://github.com/ngx-translate/core).
-
-- If you are using a stand alone component you will need to add the TranslateModule to your component imports list.
-- In your components HTML you can translate a label like so:
-```angular2html
-<span>This is some translated code: {{'delivery.code.ext_not_restricted' | translate}}</span>
+```html
+<span>{{ 'delivery.code.ext_not_restricted' | translate }}</span>
 ```
 
+See [ngx-translate documentation](https://github.com/ngx-translate/core) for details.
 
 ---
 
-## Creating your own color theme
+## Working with Assets
 
-The NDE theming is based on Angular Material. 
-We allow via the view configuration to choose between a number of pre built themes.
+Place your custom assets in the `src/assets/` directory:
 
-![prebuilt theme image](./readme-files/prebuilt-themes.png "prebuilt themes configuration")
+```
+src/assets/
+├── css/          Custom stylesheets (loaded as custom.css)
+├── images/       Logos, backgrounds, etc.
+├── icons/        SVG icon sets
+├── js/           Custom JavaScript (loaded as custom.js)
+├── homepage/     Homepage HTML and background images
+└── header-footer/  Header/footer customization files
+```
 
+### Asset Resolution in Components
 
-If you want to create your own theme instead of using one of our options follow these steps:
+For images and media elements, use the `autoAssetSrc` directive to automatically resolve asset URLs:
 
-1. Create a material 3 theme by running:
+```html
+<img autoAssetSrc [src]="'assets/images/library-logo.png'" />
+```
+
+This works with `<img>`, `<source>`, `<video>`, `<audio>`, and falls back to `background-image` for other elements.
+
+When `assetBaseUrl` is set in `package.json` (e.g., `http://my-cdn.example.com/`), the directive prepends it:
+```html
+<!-- Rendered output -->
+<img src="http://my-cdn.example.com/assets/images/library-logo.png" />
+```
+
+### Assets in Proxy Mode
+
+When running `npm run start:proxy`, all asset files in `src/assets/` are served locally. The proxy intercepts requests to `/custom/*/assets/**` and rewrites them to your local dev server. This means you can preview custom logos, homepage backgrounds, favicons, and other assets without uploading to Alma.
+
+For example, to preview your library logo locally:
+1. Place the file at `src/assets/images/library-logo.png`
+2. Run `npm run start:proxy`
+3. The proxy serves your local file instead of the one on the Alma server
+
+### Custom CSS and JS
+
+The host application loads these files automatically:
+- `assets/css/custom.css` — additional stylesheets
+- `assets/js/custom.js` — additional JavaScript (classic script, not ES module)
+- `assets/icons/favicon.ico` — custom favicon
+
+---
+
+## Creating a Custom Color Theme
+
+The NDE uses Angular Material theming. To create your own theme:
+
+1. Generate a Material 3 theme:
     ```bash
     ng generate @angular/material:m3-theme
-    ``` 
-   You will be prompted to answer a number of questions like so:
-  ```
-? What HEX color should be used to generate the M3 theme? It will represent your primary color palette. (ex. #ffffff) #1eba18
-? What HEX color should be used represent the secondary color palette? (Leave blank to use generated colors from Material)
-? What HEX color should be used represent the tertiary color palette? (Leave blank to use generated colors from Material)
-? What HEX color should be used represent the neutral color palette? (Leave blank to use generated colors from Material)
-? What is the directory you want to place the generated theme file in? (Enter the relative path such as 'src/app/styles/' or leave blank to generate at your project root) src/app/styles/
-? Do you want to use system-level variables in the theme? System-level variables make dynamic theming easier through CSS custom properties, but increase the bundle size. yes
-? Choose light, dark, or both to generate the corresponding themes light
+    ```
+   When prompted:
+   - Enter your primary HEX color (e.g., `#1eba18`)
+   - Leave secondary/tertiary/neutral blank to auto-generate from primary
+   - Set output directory to `src/app/styles/`
+   - Answer **yes** to system-level variables
+   - Choose `light`, `dark`, or `both`
 
-```
-- Note that it is imporant to answer yes when asked if you want to use system-level variables.
-
-- Also note that I'm only entering the primary color and not secondary or tertiary. They will be selected automatically based on my primary color.
-
-Once this script completes successfully you will recieve this message: 
-
-`CREATE src/app/styles/m3-theme.scss (2710 bytes)`
-
-To apply the theme go to `_customized-theme.scss` and uncomment the following lines:
-```
-.custom-nde-theme{
-  @include mat.all-component-colors(m3-theme.$light-theme);
-  @include mat.system-level-colors(m3-theme.$light-theme);
-}
-```
----
-
-
-
-## Developing an Add-On for the NDE UI
-
-The NDE UI supports loading of custom modules at runtime and also provides infrastructure to dynamically load add-ons developed by vendors, consortia, or community members. This enables seamless integration, allowing institutions to configure and deploy external add-ons through **Add-On Configuration in Alma**.
-
-The NDE UI add-on framework allows various stakeholders to develop and integrate custom functionality:
-
-- **Vendors** can create and host services that institutions can seamlessly incorporate into their environment.
-- **Institutions and consortia** can develop and share custom components, enabling consistency and collaboration across multiple libraries.
-
-Library staff can easily add, configure, and manage these add-ons through Alma, following guidelines provided by the stakeholders. These typically include:
-
-- **Add-on Name** – The identifier used in Alma’s configuration.
-- **Add-on URL** – The location where the add-on is hosted (static folder to load the add-on at runtime).
-- **Configuration Parameters** – JSON-based config parameters to be referenced at runtime by the add-on.
-
-![Add-on Overview](./readme-files/addon-overview.png)
+2. Apply the theme in `src/app/styles/_customized-theme.scss` by uncommenting:
+    ```scss
+    .custom-nde-theme {
+      @include mat.all-component-colors(m3-theme.$light-theme);
+      @include mat.system-level-colors(m3-theme.$light-theme);
+    }
+    ```
 
 ---
 
-## Guidelines for Developing an Add-On
+## Understanding the Proxy Logs
 
-You can download the custom module and modify it to function as an add-on.
+When running `npm run start:proxy`, the console shows color-coded logs for every request:
 
-### Set Add-on Name
+```
+14:23:01 LOCAL  /custom/32KUL_KUL-KULeuven_NDE/assets/images/library-logo.png → dev-server/assets
+14:23:01 PROXY  /primaws/rest/pub/configuration/vid/32KUL_KUL:KULeuven_NDE
+14:23:02 LOCAL  /nde/custom/32KUL_KUL-KULeuven_NDE/remoteEntry.js → dev-server/custom
+14:23:02 PROXY  /primaws/rest/pub/search
+```
 
-This section below should remain the same.
+| Color | Label | Meaning |
+|---|---|---|
+| Green | `LOCAL` | Served from your local dev server. The arrow shows the source directory. |
+| Cyan | `PROXY` | Forwarded to your remote Primo instance. |
 
-![Set Addon Name](./readme-files/set-addon-name.png)
+### What the proxy does
 
-![Example Configuration JSON](./readme-files/example-config-json.png)
+The proxy applies four rules in order:
+
+1. **Asset requests** (`/custom/*/assets/**`) — Rewritten to `/assets/` and served locally. This lets you preview custom images, CSS, etc.
+
+2. **Configuration endpoint** (`/primaws/rest/pub/configuration/vid/`) — Proxied to Alma, but the response is intercepted and your `customization` overrides from `package.json` are **deep merged** into the response. This lets you preview configuration changes (logo paths, homepage HTML paths, etc.) without modifying Alma settings.
+
+3. **Custom module files** (`/nde/custom/**`) — Served from your local dev server (the compiled module files including `remoteEntry.js`).
+
+4. **Everything else** (`**`) — Before proxying, the proxy checks `localResourceDirs` for a local file. If found, it serves the local copy. Otherwise, the request goes to Alma.
 
 ---
 
-The add-on infrastructure provides a way to access institution-specific configuration parameters. Institutions can upload their configuration settings in JSON format, which your add-on can reference dynamically within its components.
+## Building and Deploying
 
-### 🔧 Accessing Add-On Configuration Parameters
+### Build
 
-Use Angular DI to inject the parameters directly into your component via the `MODULE_PARAMETERS` token:
+```bash
+npm run build
+```
 
-```ts
+This:
+1. Runs `prebuild.js` — generates configuration files (`asset-base.generated.ts`), handles add-on naming
+2. Runs the Angular/Webpack build with Module Federation
+3. Runs `postbuild.js` — renames the output directory to `{INSTITUTION}-{VIEW}` and creates a ZIP file
+
+The output is in `dist/`:
+```
+dist/
+├── MY_INST-MY_VIEW/
+│   ├── remoteEntry.js        Module Federation entry point
+│   ├── assets/               Your custom assets
+│   ├── main.*.js             Application bundle
+│   ├── custom.css            Custom theme stylesheet
+│   └── ...                   Code-split chunks
+└── MY_INST-MY_VIEW.zip       Ready for upload
+```
+
+### Deploy to Alma
+
+1. In Alma, navigate to **Discovery > View List > Edit**
+2. Go to the **Manage Customization Package** tab
+3. Upload the `.zip` file from `dist/` in the **Customization Package** field
+4. Save and refresh the NDE frontend
+
+### NPM Scripts Reference
+
+| Command | Purpose |
+|---|---|
+| `npm run start:proxy` | Start dev server with proxy to Primo (recommended) |
+| `npm start` | Start dev server without proxy (use with `useLocalCustomPackage=true`) |
+| `npm run build` | Production build + ZIP packaging |
+| `npm run nde generate component <name>` | Scaffold a new NDE component |
+| `npm test` | Run unit tests |
+| `npm run watch` | Build in watch mode (development) |
+
+---
+
+## Developing an Add-On
+
+Add-ons allow vendors, consortia, or community members to develop and share custom functionality that institutions can configure and deploy through **Add-On Configuration in Alma**.
+
+### Setup
+
+1. Set `addonName` in `package.json` to your add-on identifier:
+    ```json
+    "nde": {
+      "addonName": "myVendorAddon",
+      ...
+    }
+    ```
+
+2. Set `assetBaseUrl` to the URL where you will host your add-on's static files:
+    ```json
+    "nde": {
+      "assetBaseUrl": "https://my-cdn.example.com/nde-addon/",
+      ...
+    }
+    ```
+
+### Accessing Add-On Configuration Parameters
+
+Institutions configure add-on parameters as JSON in Alma. Access them in your component via the `MODULE_PARAMETERS` injection token:
+
+```typescript
 import { Component, Inject } from '@angular/core';
 
 @Component({
-  selector: 'custom-test-bottom',
-  host: { 'data-component-id': 'custom-test-bottom-unique' },
-  templateUrl: './test-bottom.component.html',
-  styleUrls: ['./test-bottom.component.scss']
+  selector: 'custom-addon-widget',
+  template: `<div>{{ moduleParameters | json }}</div>`
 })
-export class TestBottomComponent {
+export class AddonWidgetComponent {
   constructor(@Inject('MODULE_PARAMETERS') public moduleParameters: any) {
-    console.log('Module parameters TestBottomComponent:', this.moduleParameters);
-  }
-
-  getKeys(obj: any): string[] {
-    return Object.keys(obj || {});
+    console.log('Addon parameters:', this.moduleParameters);
   }
 }
-
 ```
 
-> 📘 `yourParamKey` should match the keys defined in your Alma Add-on JSON configuration.
+### Add-on Deployment
 
----
-
-If your add-on includes assets such as images, you can ensure a complete separation between the frontend code and asset deployment. To achieve this, set `ASSET_BASE_URL` to point to your designated static folder, allowing your add-on to reference assets independently of the core application.
-
-![Access Assets via ASSET_BASE_URL](./readme-files/access-assets.png)
-
-
-The `autoAssetSrc` directive automatically prepends `ASSET_BASE_URL` to your `[src]` attribute.
-
-### Example:
-```html
-<img autoAssetSrc [src]="'assets/images/logo.png'" />
-```
-
-With:
-```env
-ASSET_BASE_URL=http://il-urm08.corp.exlibrisgroup.com:4202/
-```
-
-Results in:
-```html
-<img src="http://il-urm08.corp.exlibrisgroup.com:4202/assets/images/logo.png" />
-```
-
-### Supported Elements:
-- `<img>`
-- `<source>`
-- `<video>`
-- `<audio>`
-
-> ✅ Always use `[src]="'relative/path'"` to ensure proper asset URL injection.
-
----
-
-
-
+Institutions configure add-ons in Alma with:
+- **Add-on Name** — The identifier matching your `addonName`
+- **Add-on URL** — The URL where your built files are hosted (must serve `remoteEntry.js`)
+- **Configuration Parameters** — JSON parameters accessible via `MODULE_PARAMETERS`
 
 ---
 
 ## Recommended Development Environment
 
-To ensure smooth development, debugging, and code management, we recommend setting up your environment with the following tools:
+### IDEs
 
-### 🖥️ IDEs and Editors
+- **Visual Studio Code** — [Download](https://code.visualstudio.com/)
+  - Extensions: `Angular Language Service`, `ESLint`, `Prettier`, `Path Intellisense`
+- **WebStorm** — [Download](https://www.jetbrains.com/webstorm/) (built-in Angular support)
+- **IntelliJ IDEA** — [Download](https://www.jetbrains.com/idea/)
 
-- **Visual Studio Code (VSCode)** – Highly recommended  
-  [Download VSCode](https://code.visualstudio.com/)
-  - Recommended Extensions:
-    - `Angular Language Service`
-    - `ESLint` or `TSLint`
-    - `Prettier - Code formatter`
-    - `Path Intellisense`
-    - `Material Icon Theme` (optional for better visuals)
+### Tools
 
-- **WebStorm**  
-  A powerful alternative with built-in Angular and TypeScript support.  
-  [Download WebStorm](https://www.jetbrains.com/webstorm/)
-
-- **IntelliJ IDEA**  
-  A full-featured IDE by JetBrains. Ideal if you’re also working with Java backend.  
-  [Download IntelliJ IDEA](https://www.jetbrains.com/idea/)
-
-- **Eclipse IDE**  
-  Suitable for full-stack development including Angular with the right plugins.  
-  [Download Eclipse](https://www.eclipse.org/downloads/)
-
----
-
-### 🔧 Tools & Utilities
-
-- **Node Version Manager (nvm)**  
-  Manage multiple versions of Node.js easily:
+- **Node Version Manager (nvm)** — Manage multiple Node.js versions:
   ```bash
   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
   ```
-
-- **Angular CLI**
-  ```bash
-  npm install -g @angular/cli
-  ```
-
-- **Git GUI Clients**
-  - GitHub Desktop
-  - Sourcetree
-  - GitKraken
-
----
-
-### 🔍 Debugging & Testing
-
-- Use **Chrome Developer Tools** for runtime inspection.
-- Install **Augury Extension** (Angular DevTools) for inspecting Angular components.
-
----
-
-### 🧪 Optional Tools
-
-- **Postman** – For testing API requests.
-- **Docker** – For isolated build environments.
-- **Nx** – Monorepo tool (if planning multiple apps/libraries).
-
----
-## Build the Project
-
-### Step 5: Build the Project
-1. Compile the project:
-    ```bash
-    npm run build
-    ```
-
-2. After a successful build, the compiled code will be in the `dist/` directory.
-
-
-- **Automatic Packaging**:
-  - The build process automatically compiles and packages the project into a ZIP file named according to the `INST_ID` and `VIEW_ID` specified in the `build-settings.env` file located at:
-    ```
-    C:\env\nde\customModule-base\build-settings.env
-    ```
-  - Example configuration:
-    ```
-    INST_ID=DEMO_INST
-    VIEW_ID=Auto1
-    ```
-  - The ZIP file, e.g., `DEMO_INST-Auto1.zip`, is automatically created in the `dist/` directory after a successful build.
-
-
-### Step 6: Upload Customization Package to Alma
-1. In Alma, navigate to **Discovery > View List > Edit**.
-2. Go to the **Manage Customization Package** tab.
-3. Upload your zipped package in the **Customization Package** field and save.
-4. Refresh the front-end to see your changes.
-
+- **Angular DevTools** — Chrome extension for inspecting Angular components
+- **Chrome Developer Tools** — Runtime inspection and debugging
 
 ---
 
 ## Additional Resources
 
-### Live Demo Tutorial
-- **Customize Primo NDE UI**: Watch our live demo on YouTube for a visual guide on how to customize the Primo NDE UI:
-  [Customize Primo NDE UI: Live Demo](https://www.youtube.com/watch?v=j6jAYkawDSM)
-
-
-
----
-
-## Conclusion
-By following these steps, you can customize and extend the NDE interface using the `CustomModule` package. If you have any questions or run into issues, refer to the project documentation or the ExLibris support.
-
+- [Customize Primo NDE UI: Live Demo (YouTube)](https://www.youtube.com/watch?v=j6jAYkawDSM)
+- [Angular Tutorial](https://angular.dev/tutorials/learn-angular)
+- [Webpack Module Federation](https://webpack.js.org/concepts/module-federation/)
+- [@angular-architects/module-federation](https://www.npmjs.com/package/@angular-architects/module-federation)
+- [NgRx Store Documentation](https://ngrx.io/guide/store)
+- [RxJS Guide](https://rxjs.dev/guide/overview)
+- [Angular Material Theming](https://material.angular.io/guide/theming)
+- [ngx-translate](https://github.com/ngx-translate/core)
