@@ -126,6 +126,23 @@ Three services are available: **SearchStateService**, **UserStateService**, and 
 
 > **Tip:** If you are new to Observables, see the [RxJS guide](https://rxjs.dev/guide/overview). For NgRx, see the [NgRx Store documentation](https://ngrx.io/guide/store).
 
+### A Note on Angular Signals vs Observables
+
+Angular 18 ships with **Signals** as a stable reactive primitive. Signals are well suited for synchronous, fine-grained state (local component state, computed values, NgRx store reads via `store.selectSignal()`), and they can simplify templates by removing the need for the `| async` pipe.
+
+However, **Signals are a complement to Observables, not a replacement.** Observables remain the right tool for inherently asynchronous or event-driven work:
+
+| Use Signals for | Keep Observables for |
+|---|---|
+| Local component state (`signal()`, `computed()`) | HTTP calls (`HttpClient`) |
+| NgRx store reads (`store.selectSignal()`) | HTTP interceptors (`HttpInterceptor`) |
+| Derived/computed values | Router events (`router.events`) |
+| Simple template bindings (no `\| async` needed) | Complex async composition (`switchMap`, `debounceTime`, `combineLatest`, ...) |
+
+The Angular team has explicitly stated that RxJS is not being deprecated. A wholesale migration to Signals would bring no practical benefit and would lose the async composition capabilities that Observables provide.
+
+**Current approach in this project:** The `@libis/primo-shared-state` services expose Observable-based selectors (methods ending with `$`) and Promise-based snapshots. Signal-based selectors may be added in a future version. In the meantime, you can use `store.selectSignal()` directly on the NgRx store for signal-based reads when that fits your component better (see [App State](#app-state-ngrx-store)).
+
 ---
 
 ### SearchStateService
