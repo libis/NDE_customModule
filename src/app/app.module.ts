@@ -7,6 +7,8 @@ import {TranslateModule} from "@ngx-translate/core";
 import { CommonModule } from '@angular/common';
 import { AutoAssetSrcDirective } from './services/auto-asset-src.directive';
 import {SHELL_ROUTER} from "./injection-tokens";
+import { getInterceptorProviders } from './decorators/nde-interceptor.decorator';
+import './interceptors/_registry';
 
 export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter: Router}) => {
    @NgModule({
@@ -19,7 +21,7 @@ export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter:
       CommonModule,
       TranslateModule.forRoot({})
     ],
-    providers: [...providers, {provide: SHELL_ROUTER, useValue: shellRouter}],
+    providers: [...providers, {provide: SHELL_ROUTER, useValue: shellRouter}, ...getInterceptorProviders()],
     bootstrap: []
   })
   class AppModule implements DoBootstrap{

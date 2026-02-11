@@ -32,7 +32,7 @@
       "directory": "src/app/components"
     },
     "interceptors": {
-      "autoRegister": false,
+      "autoRegister": true,
       "directory": "src/app/interceptors"
     },
     "localResourceDirs": ["./dist"]

@@ -17,7 +17,7 @@ import {
 import { Observable, tap, catchError, throwError } from 'rxjs';
 
 // Import the NDE interceptor decorator
-import { NDEInterceptor } from '../../decorators/nde-interceptor.decorator';
+import { NDEInterceptor } from '../decorators/nde-interceptor.decorator';
 
 /**
  * Interface for analytics events
@@ -73,7 +73,7 @@ export class AnalyticsInterceptor implements HttpInterceptor {
     request: HttpRequest<unknown>,
     next: HttpHandler
   ): Observable<HttpEvent<unknown>> {
-    
+    console.log('[Analytics]', JSON.stringify(analyticsService.getEvents()));
     // Skip analytics for certain URLs
     if (this.shouldSkip(request.url)) {
       return next.handle(request);
