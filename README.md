@@ -14,6 +14,7 @@ A development toolkit for building custom UI components for Ex Libris Primo's **
 - [Getting Started](#getting-started)
 - [Configuration (package.json)](#configuration-packagejson)
 - [Creating Components with @NDEComponent](#creating-components-with-ndecomponent)
+- [Intercepting HTTP Traffic](#intercepting-http-traffic)
 - [Accessing Host Data](#accessing-host-data)
 - [Working with Assets](#working-with-assets)
 - [Creating a Custom Color Theme](#creating-a-custom-color-theme)
@@ -906,6 +907,234 @@ When multiple components target the same slot and position, use `priority` to co
 
 ```typescript
 @NDEComponent({ selector: NDE_SLOTS.HEADER, position: 'after', priority: 10 })
+```
+
+---
+
+## Intercepting HTTP Traffic
+
+### The Problem
+
+In a Module Federation setup, the host application (Primo NDE) and your custom module share the same browser page but have **separate Angular injector trees**. Angular's built-in `HTTP_INTERCEPTORS` mechanism is DI-based — interceptors registered in your module's injector only see requests made by your module's own `HttpClient`. They never see the host's HTTP traffic.
+
+This is a fundamental limitation: the host makes dozens of API calls (search queries to `/primaws/rest/pub/pnxs`, authentication to `/primaws/suprimaLogin`, configuration loads, delivery lookups, etc.) that your module cannot observe or influence through Angular's standard interceptor chain.
+
+```
+Host Injector Tree                    Remote Module Injector Tree
+┌─────────────────────┐               ┌─────────────────────┐
+│  HttpClient         │               │  HttpClient         │
+│  ├─ JwtInterceptor  │               │  ├─ AuthInterceptor │
+│  ├─ NdeParamIntcpt  │               │  ├─ AnalyticsIntcpt │
+│  └─ ConstParamsIntc │               │  └─ ErrorIntcpt     │
+│                     │               │                     │
+│  These only see     │               │  These only see     │
+│  HOST requests      │               │  MODULE requests    │
+└─────────────────────┘               └─────────────────────┘
+         ▲                                      ▲
+         │                                      │
+         └──── No cross-visibility ─────────────┘
+```
+
+### The Solution: Global XHR/Fetch Monkey-Patching
+
+Instead of relying on Angular's DI-scoped interceptors, we patch `XMLHttpRequest` and `window.fetch` at the **browser level** — before Angular even bootstraps. This captures every HTTP call on the page regardless of which injector tree originated it.
+
+This is the same approach used by Sentry, DataDog, New Relic, and other observability tools. It works because all Angular `HttpClient` requests ultimately go through `XMLHttpRequest` (or `fetch`) under the hood.
+
+### Architecture
+
+The system is organized in three layers that bridge the gap between browser-level interception (which runs before Angular exists) and Angular's DI-based services (which only exist after bootstrap):
+
+```
+Layer 1: Browser Level (pure JS)      Layer 2: Angular Service           Layer 3: Bridge
+─────────────────────────────────      ──────────────────────────         ─────────────────
+global-http-interceptor.ts             global-http-event.service.ts       analytics.interceptor.ts
+
+  XHR + fetch monkey-patch       ──>    GlobalHttpEventService      ──>   @NDEInterceptor
+  ├─ handler chain (modify/block)        ├─ request$ (Observable)          subscribers
+  ├─ event buffer (pre-bootstrap)        ├─ response$ (Observable)         (subscribe to all$)
+  ├─ CustomEvent dispatch                ├─ error$ (Observable)
+  └─ window.__nde_* globals              ├─ all$ (merged stream)
+                                         └─ addHandler() wrapper
+```
+
+**Why three layers?**
+
+1. **Layer 1 cannot depend on Angular.** The patch must install before Angular bootstraps — before any injector, service, or module exists. It is pure TypeScript with zero imports from `@angular/*`.
+
+2. **Layer 2 bridges the gap.** Once Angular boots, `GlobalHttpEventService` subscribes to the `CustomEvent`s from Layer 1 and re-emits them as typed RxJS Observables. It also drains any events that were buffered during the bootstrap gap, so nothing is lost.
+
+3. **Layer 3 connects to existing interceptors.** The `@NDEInterceptor`-decorated classes (like `AnalyticsInterceptor`) inject `GlobalHttpEventService` and subscribe to its streams. This means your existing interceptor chain now sees all traffic — host and module alike.
+
+### Key Design Decisions
+
+| Decision | Why |
+|---|---|
+| Patch both XHR and `fetch()` | Angular's `HttpClient` uses XHR, but third-party libraries or future host versions may use `fetch`. Patching both ensures complete coverage. |
+| Store state on `window.__nde_*` | Module Federation creates separate module scopes. A module-level `let installed = false` would be duplicated per remote. Using `window` globals ensures a single shared patch instance. |
+| Event buffer with drain | HTTP calls may happen between patch installation and Angular bootstrap. The buffer captures them; the service replays them on init. |
+| `CustomEvent` bridge | The DOM event system is the only communication channel available before Angular DI exists. Layer 1 dispatches events on `window`; Layer 2 listens. |
+| Handler chain for modify/block | Handlers run synchronously before each request is sent, allowing you to add headers, rewrite URLs, or cancel requests entirely — even for host traffic. |
+| Install in `bootstrap.ts` | This is the earliest point the remote module's code runs. Placing the call before `@angular/compiler` ensures the patch is active before any Angular HTTP activity. |
+
+### File Overview
+
+| File | Layer | Purpose |
+|---|---|---|
+| `src/app/services/global-http-interceptor.ts` | 1 | XHR + fetch monkey-patch, handler chain, event buffer. Zero Angular dependencies. |
+| `src/app/services/global-http-event.service.ts` | 2 | Angular `@Injectable` service. RxJS Subjects (`request$`, `response$`, `error$`, `all$`). Buffer drain. |
+| `src/bootstrap.ts` | — | Calls `installGlobalHttpInterceptor()` before Angular bootstraps. |
+| `src/app/interceptors/analytics.interceptor.ts` | 3 | `AnalyticsInterceptor` subscribes to `GlobalHttpEventService.all$` and feeds events into `AnalyticsService`. |
+| `src/app/services/analytics.service.ts` | — | Stores tracked events. Any component can inject it to read event history. |
+
+### Usage
+
+#### Observing HTTP traffic
+
+Inject `GlobalHttpEventService` in any component or service:
+
+```typescript
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject, takeUntil } from 'rxjs';
+import { GlobalHttpEventService } from '../../services/global-http-event.service';
+
+@Component({ /* ... */ })
+export class MyComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
+  constructor(private globalHttp: GlobalHttpEventService) {}
+
+  ngOnInit() {
+    // See ALL HTTP traffic (host + module)
+    this.globalHttp.all$.pipe(takeUntil(this.destroy$)).subscribe(event => {
+      console.log(`${event.method} ${event.url} [${event.type}]`, event);
+    });
+
+    // Or subscribe to specific streams
+    this.globalHttp.error$.pipe(takeUntil(this.destroy$)).subscribe(event => {
+      console.error(`HTTP error: ${event.status} ${event.url}`);
+    });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}
+```
+
+#### Modifying requests
+
+Register a handler that runs before every XHR/fetch call. Handlers can modify the method, URL, headers, body, or block the request entirely:
+
+```typescript
+import { Component, OnDestroy } from '@angular/core';
+import { GlobalHttpEventService } from '../../services/global-http-event.service';
+
+@Component({ /* ... */ })
+export class MyComponent implements OnDestroy {
+  private removeHandler: () => void;
+
+  constructor(private globalHttp: GlobalHttpEventService) {
+    // Add a custom header to all /primaws/ requests
+    this.removeHandler = this.globalHttp.addHandler((method, url, headers, body) => {
+      if (url.includes('/primaws/')) {
+        return { headers: { 'X-Custom-Source': 'nde-module' } };
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.removeHandler(); // clean up
+  }
+}
+```
+
+#### Blocking requests
+
+Return `{ blocked: true }` to cancel a request before it is sent:
+
+```typescript
+this.globalHttp.addHandler((method, url) => {
+  if (url.includes('/unwanted-endpoint')) {
+    return { blocked: true };
+  }
+});
+```
+
+For XHR, the request is aborted via `xhr.abort()`. For fetch, a rejected `Promise` is returned.
+
+#### Using the `@NDEInterceptor` decorator
+
+The `@NDEInterceptor` decorator auto-registers Angular `HttpInterceptor` classes. These interceptors only see requests made by the **module's own** `HttpClient` (not host traffic). To also see host traffic, inject `GlobalHttpEventService` in the interceptor's constructor:
+
+```typescript
+import { Injectable, OnDestroy } from '@angular/core';
+import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from '@angular/common/http';
+import { Observable, Subscription } from 'rxjs';
+import { NDEInterceptor } from '../decorators/nde-interceptor.decorator';
+import { GlobalHttpEventService } from '../services/global-http-event.service';
+
+@NDEInterceptor({ order: 80, description: 'My custom interceptor' })
+@Injectable()
+export class MyInterceptor implements HttpInterceptor, OnDestroy {
+  private sub: Subscription;
+
+  constructor(private globalHttp: GlobalHttpEventService) {
+    // This sees ALL traffic (host + module)
+    this.sub = this.globalHttp.response$.subscribe(event => {
+      // React to any response on the page
+    });
+  }
+
+  // This only sees the module's own HttpClient requests
+  intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+    return next.handle(req);
+  }
+
+  ngOnDestroy() { this.sub?.unsubscribe(); }
+}
+```
+
+### The `GlobalHttpEvent` Interface
+
+Every event emitted by the interceptor has this shape:
+
+```typescript
+interface GlobalHttpEvent {
+  id: string;                              // Unique ID per request (correlates request ↔ response)
+  type: 'request' | 'response' | 'error'; // Event phase
+  method: string;                          // HTTP method (GET, POST, ...)
+  url: string;                             // Sanitized URL (sensitive params redacted)
+  timestamp: number;                       // Date.now() when the event was emitted
+  duration?: number;                       // Milliseconds (only on response/error)
+  status?: number;                         // HTTP status code (only on response/error)
+  statusText?: string;                     // HTTP status text
+  requestHeaders?: Record<string, string>; // Headers sent with the request
+  responseHeaders?: Record<string, string>;// Headers received (XHR only)
+  error?: string;                          // Error message (only on error events)
+  source: 'xhr' | 'fetch';                // Which API originated the call
+  body?: unknown;                          // Request body (if available)
+}
+```
+
+The `id` field correlates a `request` event with its subsequent `response` or `error` event, so you can compute per-request timing or match request/response pairs.
+
+### URL Sanitization
+
+All URLs in events are automatically sanitized. Query parameters named `token`, `key`, `password`, `secret`, `apikey`, `api_key`, `access_token`, `auth`, or `jwt` are replaced with `[REDACTED]` before being stored or emitted. This prevents sensitive credentials from leaking into logs or analytics.
+
+### Runtime Sequence
+
+```
+1. Host bootstraps its own Angular app (we cannot intercept these initial calls — that's OK)
+2. Host loads the remote module via Module Federation
+3. bootstrap.ts runs → installGlobalHttpInterceptor() patches XHR + fetch
+4. Any HTTP calls during Angular bootstrap are buffered in window.__nde_http_event_buffer
+5. Angular DI initializes → GlobalHttpEventService is constructed
+6. Service drains the buffer → replays buffered events through RxJS Subjects
+7. AnalyticsInterceptor subscribes → events flow into AnalyticsService
+8. Normal operation: all subsequent HTTP calls flow through the full pipeline
 ```
 
 ---

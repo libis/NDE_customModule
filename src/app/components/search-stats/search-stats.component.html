@@ -24,5 +24,9 @@
     </ng-container>
 
     <span *ngIf="status === 'fail'" class="error">Search failed</span>
+
+    <span class="analytics-count">| {{ eventCount }} intercepted events</span>
+    <button class="analytics-btn" (click)="testPing()">Test Ping</button>
+    <button class="analytics-btn" (click)="printEvents()">Print Events</button>
   </div>
 </ng-container>

@@ -7,7 +7,9 @@ import {TranslateModule} from "@ngx-translate/core";
 import { CommonModule } from '@angular/common';
 import { AutoAssetSrcDirective } from './services/auto-asset-src.directive';
 import {SHELL_ROUTER} from "./injection-tokens";
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { getInterceptorProviders } from './decorators/nde-interceptor.decorator';
+import { GlobalHttpEventService } from './services/global-http-event.service';
 import './interceptors/_registry';
 
 export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter: Router}) => {
@@ -21,13 +23,13 @@ export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter:
       CommonModule,
       TranslateModule.forRoot({})
     ],
-    providers: [...providers, {provide: SHELL_ROUTER, useValue: shellRouter}, ...getInterceptorProviders()],
+    providers: [...providers, {provide: SHELL_ROUTER, useValue: shellRouter}, provideHttpClient(withInterceptorsFromDi()), ...getInterceptorProviders(), GlobalHttpEventService],
     bootstrap: []
   })
   class AppModule implements DoBootstrap{
     private webComponentSelectorMap = new Map<string,  NgElementConstructor<unknown>>();
 
-    constructor(private injector: Injector, private router: Router) {
+    constructor(private injector: Injector, private router: Router, _globalHttp: GlobalHttpEventService) {
       router.dispose(); //this prevents the router from being initialized and interfering with the shell app router
     }
 

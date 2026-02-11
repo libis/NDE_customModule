@@ -36,4 +36,24 @@
   .error {
     color: #c00;
   }
+
+  .analytics-count {
+    color: #888;
+    font-size: 0.85em;
+  }
+
+  .analytics-btn {
+    font-size: 0.8em;
+    padding: 0.15em 0.5em;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background: #f5f5f5;
+    color: #555;
+    cursor: pointer;
+
+    &:hover {
+      background: #e8e8e8;
+      border-color: #999;
+    }
+  }
 }
