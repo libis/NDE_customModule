@@ -10,6 +10,7 @@ import {SHELL_ROUTER} from "./injection-tokens";
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { getInterceptorProviders } from './decorators/nde-interceptor.decorator';
 import { GlobalHttpEventService } from './services/global-http-event.service';
+import { AnalyticsService } from './services/analytics.service';
 import './interceptors/_registry';
 
 export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter: Router}) => {
@@ -29,8 +30,21 @@ export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter:
   class AppModule implements DoBootstrap{
     private webComponentSelectorMap = new Map<string,  NgElementConstructor<unknown>>();
 
-    constructor(private injector: Injector, private router: Router, _globalHttp: GlobalHttpEventService) {
+    constructor(private injector: Injector, private router: Router, globalHttp: GlobalHttpEventService, analytics: AnalyticsService) {
       router.dispose(); //this prevents the router from being initialized and interfering with the shell app router
+
+      // Wire analytics tracking to the global HTTP event stream
+      globalHttp.all$.subscribe(event => {
+        analytics.track({
+          type: event.type,
+          method: event.method,
+          url: event.url,
+          timestamp: event.timestamp,
+          duration: event.duration,
+          status: event.status,
+          error: event.error
+        });
+      });
     }
 
     ngDoBootstrap(appRef: ApplicationRef) {

@@ -8,6 +8,9 @@
  * re-emits them as typed RxJS observables. On construction it also drains
  * any events that were buffered before Angular bootstrapped.
  *
+ * Consumers (e.g. AnalyticsService) subscribe to the exposed observables
+ * from wherever they are wired up — typically in AppModule's constructor.
+ *
  * IMPORTANT: This service is NOT providedIn:'root'. In a Module Federation
  * microfrontend the "root" injector belongs to the host app. Using
  * providedIn:'root' would create the service in the host's injector scope
@@ -18,7 +21,7 @@
  */
 
 import { Injectable, OnDestroy } from '@angular/core';
-import { Subject, Observable, merge, Subscription } from 'rxjs';
+import { Subject, Observable, merge } from 'rxjs';
 import {
   GlobalHttpEvent,
   RequestHandler,
@@ -31,7 +34,6 @@ import {
   RESPONSE_EVENT,
   ERROR_EVENT
 } from './global-http-interceptor';
-import { AnalyticsService, AnalyticsEvent } from './analytics.service';
 
 @Injectable()
 export class GlobalHttpEventService implements OnDestroy {
@@ -40,7 +42,6 @@ export class GlobalHttpEventService implements OnDestroy {
   private readonly _response$ = new Subject<GlobalHttpEvent>();
   private readonly _error$    = new Subject<GlobalHttpEvent>();
   private readonly listeners: Array<{ event: string; fn: EventListener }> = [];
-  private analyticsSub: Subscription;
 
   /** All request events (emitted before send). */
   readonly request$: Observable<GlobalHttpEvent> = this._request$.asObservable();
@@ -58,22 +59,7 @@ export class GlobalHttpEventService implements OnDestroy {
     this.error$
   );
 
-  constructor(private analytics: AnalyticsService) {
-    // Subscribe to our own stream FIRST — before draining the buffer.
-    // This ensures buffered events flow into AnalyticsService immediately,
-    // without depending on the lazy AnalyticsInterceptor being created.
-    this.analyticsSub = this.all$.subscribe(event => {
-      this.analytics.track({
-        type: event.type,
-        method: event.method,
-        url: event.url,
-        timestamp: event.timestamp,
-        duration: event.duration,
-        status: event.status,
-        error: event.error
-      });
-    });
-
+  constructor() {
     this.attachListeners();
     this.drainBuffer();
 
@@ -92,7 +78,6 @@ export class GlobalHttpEventService implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.analyticsSub?.unsubscribe();
     for (const { event, fn } of this.listeners) {
       window.removeEventListener(event, fn);
     }
