@@ -9,9 +9,11 @@ import { AutoAssetSrcDirective } from './services/auto-asset-src.directive';
 import {SHELL_ROUTER} from "./injection-tokens";
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { getInterceptorProviders } from './decorators/nde-interceptor.decorator';
+import { getEventProviders } from './decorators/nde-event.decorator';
 import { GlobalHttpEventService } from './services/global-http-event.service';
 import { AnalyticsService } from './services/analytics.service';
 import './interceptors/_registry';
+import './events/_registry';
 
 export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter: Router}) => {
    @NgModule({
@@ -24,7 +26,7 @@ export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter:
       CommonModule,
       TranslateModule.forRoot({})
     ],
-    providers: [...providers, {provide: SHELL_ROUTER, useValue: shellRouter}, provideHttpClient(withInterceptorsFromDi()), ...getInterceptorProviders(), GlobalHttpEventService],
+    providers: [...providers, {provide: SHELL_ROUTER, useValue: shellRouter}, provideHttpClient(withInterceptorsFromDi()), ...getInterceptorProviders(), GlobalHttpEventService, ...getEventProviders()],
     bootstrap: []
   })
   class AppModule implements DoBootstrap{

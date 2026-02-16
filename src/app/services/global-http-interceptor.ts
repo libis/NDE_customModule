@@ -52,6 +52,13 @@ export type RequestHandler = (
   body: unknown
 ) => RequestModification | void;
 
+export type ResponseHandler = (
+  method: string,
+  url: string,
+  status: number,
+  body: unknown
+) => unknown | void;
+
 // ---------------------------------------------------------------------------
 // CustomEvent names (used to bridge to Angular)
 // ---------------------------------------------------------------------------
@@ -65,10 +72,11 @@ export const ERROR_EVENT    = 'nde:http:error';
 // ---------------------------------------------------------------------------
 
 const W = window as any;
-const GLOBAL_FLAG     = '__nde_http_interceptor_installed';
-const GLOBAL_BUFFER   = '__nde_http_event_buffer';
-const GLOBAL_HANDLERS = '__nde_http_request_handlers';
-const GLOBAL_COUNTER  = '__nde_http_event_counter';
+const GLOBAL_FLAG              = '__nde_http_interceptor_installed';
+const GLOBAL_BUFFER            = '__nde_http_event_buffer';
+const GLOBAL_HANDLERS          = '__nde_http_request_handlers';
+const GLOBAL_RESPONSE_HANDLERS = '__nde_http_response_handlers';
+const GLOBAL_COUNTER           = '__nde_http_event_counter';
 
 function getEventBuffer(): GlobalHttpEvent[] {
   if (!W[GLOBAL_BUFFER]) W[GLOBAL_BUFFER] = [];
@@ -78,6 +86,11 @@ function getEventBuffer(): GlobalHttpEvent[] {
 function getRequestHandlers(): RequestHandler[] {
   if (!W[GLOBAL_HANDLERS]) W[GLOBAL_HANDLERS] = [];
   return W[GLOBAL_HANDLERS];
+}
+
+function getResponseHandlers(): ResponseHandler[] {
+  if (!W[GLOBAL_RESPONSE_HANDLERS]) W[GLOBAL_RESPONSE_HANDLERS] = [];
+  return W[GLOBAL_RESPONSE_HANDLERS];
 }
 
 function generateEventId(): string {
@@ -136,6 +149,30 @@ function callHandlers(
   return result;
 }
 
+/**
+ * Run all response handlers. Each handler may return a modified body,
+ * or void/undefined to leave it unchanged.
+ */
+function callResponseHandlers(
+  method: string,
+  url: string,
+  status: number,
+  body: unknown
+): unknown {
+  let currentBody = body;
+  for (const handler of getResponseHandlers()) {
+    try {
+      const result = handler(method, url, status, currentBody);
+      if (result !== undefined) {
+        currentBody = result;
+      }
+    } catch (err) {
+      console.error('[GlobalHttpInterceptor] Response handler error:', err);
+    }
+  }
+  return currentBody;
+}
+
 // ---------------------------------------------------------------------------
 // Event emission
 // ---------------------------------------------------------------------------
@@ -170,6 +207,17 @@ function parseResponseHeaders(xhr: XMLHttpRequest): Record<string, string> {
 }
 
 // ---------------------------------------------------------------------------
+// Per-instance XHR metadata keys (used by prototype getters)
+// ---------------------------------------------------------------------------
+
+const NDE_METHOD     = '__nde_method';
+const NDE_URL        = '__nde_url';
+const NDE_HEADERS    = '__nde_headers';
+const NDE_MOD_TEXT   = '__nde_modified_text';   // cached modified responseText
+const NDE_MOD_OBJ    = '__nde_modified_obj';    // cached modified response (object)
+const NDE_HANDLED    = '__nde_response_handled'; // boolean: handlers already ran
+
+// ---------------------------------------------------------------------------
 // XHR monkey-patch
 // ---------------------------------------------------------------------------
 
@@ -178,14 +226,108 @@ function patchXHR(): void {
   const originalSend = XMLHttpRequest.prototype.send;
   const originalSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
 
+  // ---- Prototype-level response getters ---------------------------------
+  //
+  // We replace the native `response` and `responseText` getters on the
+  // prototype ONCE. Every XHR instance then goes through these getters.
+  //
+  // When readyState === 4, the getter checks for a per-instance flag
+  // (__nde_response_handled). If not yet handled, it runs the response
+  // handler chain, stores the result on the instance, and returns it.
+  //
+  // This is Zone.js-safe because:
+  //  - Zone.js does NOT patch data property getters (response/responseText)
+  //  - Prototype-level descriptors survive Zone.js's configurable: true
+  //    force on instance-level Object.defineProperty calls
+  //  - It's ordering-independent: whoever reads first triggers the chain
+  //
+  const nativeResponseTextDesc = Object.getOwnPropertyDescriptor(
+    XMLHttpRequest.prototype, 'responseText'
+  )!;
+  const nativeResponseDesc = Object.getOwnPropertyDescriptor(
+    XMLHttpRequest.prototype, 'response'
+  )!;
+  const nativeResponseTextGetter = nativeResponseTextDesc.get!;
+  const nativeResponseGetter     = nativeResponseDesc.get!;
+
+  /**
+   * Run response handlers for this XHR instance (once).
+   * Stores the result as __nde_modified_text / __nde_modified_obj on the instance.
+   */
+  function ensureHandled(xhr: any): void {
+    if (xhr[NDE_HANDLED]) return;
+    xhr[NDE_HANDLED] = true;
+
+    const isError = xhr.status >= 400 || xhr.status === 0;
+    if (isError || getResponseHandlers().length === 0) return;
+
+    const method: string = xhr[NDE_METHOD] || 'UNKNOWN';
+    const url: string    = xhr[NDE_URL] || '';
+
+    // Read original via native getters
+    let responseBody: unknown;
+    if (xhr.responseType === 'json') {
+      responseBody = nativeResponseGetter.call(xhr);
+    } else {
+      const text = nativeResponseTextGetter.call(xhr);
+      responseBody = text;
+      try { responseBody = JSON.parse(text); } catch { /* not JSON */ }
+    }
+
+    try {
+      const modified = callResponseHandlers(method, url, xhr.status, responseBody);
+
+      // Store both string and object forms
+      const modifiedStr = typeof modified === 'string' ? modified : JSON.stringify(modified);
+      const modifiedObj = typeof modified === 'string'
+        ? (() => { try { return JSON.parse(modified); } catch { return modified; } })()
+        : modified;
+
+      xhr[NDE_MOD_TEXT] = modifiedStr;
+      xhr[NDE_MOD_OBJ]  = modifiedObj;
+    } catch (err) {
+      console.error('[GlobalHttpInterceptor] Response handler chain error:', err);
+    }
+  }
+
+  Object.defineProperty(XMLHttpRequest.prototype, 'responseText', {
+    configurable: true,
+    enumerable: true,
+    get() {
+      if (this.readyState === 4 && getResponseHandlers().length > 0) {
+        ensureHandled(this);
+        if (NDE_MOD_TEXT in this) return this[NDE_MOD_TEXT];
+      }
+      return nativeResponseTextGetter.call(this);
+    }
+  });
+
+  Object.defineProperty(XMLHttpRequest.prototype, 'response', {
+    configurable: true,
+    enumerable: true,
+    get() {
+      if (this.readyState === 4 && getResponseHandlers().length > 0) {
+        ensureHandled(this);
+        if (NDE_MOD_OBJ in this) {
+          // Return the right type for the responseType
+          if (this.responseType === 'json') return this[NDE_MOD_OBJ];
+          if (this.responseType === '' || this.responseType === 'text') return this[NDE_MOD_TEXT];
+        }
+      }
+      return nativeResponseGetter.call(this);
+    }
+  });
+
+  // ---- Method patches ---------------------------------------------------
+
   // Capture request headers
   XMLHttpRequest.prototype.setRequestHeader = function (
     this: XMLHttpRequest,
     name: string,
     value: string
   ) {
-    if (!(this as any).__nde_headers) (this as any).__nde_headers = {};
-    (this as any).__nde_headers[name] = value;
+    if (!(this as any)[NDE_HEADERS]) (this as any)[NDE_HEADERS] = {};
+    (this as any)[NDE_HEADERS][name] = value;
     return originalSetRequestHeader.apply(this, [name, value]);
   };
 
@@ -196,9 +338,13 @@ function patchXHR(): void {
     url: string | URL,
     ...rest: any[]
   ) {
-    (this as any).__nde_method = method;
-    (this as any).__nde_url = typeof url === 'string' ? url : url.toString();
-    (this as any).__nde_headers = {};
+    (this as any)[NDE_METHOD] = method;
+    (this as any)[NDE_URL] = typeof url === 'string' ? url : url.toString();
+    (this as any)[NDE_HEADERS] = {};
+    // Reset handler state for reused XHR instances
+    (this as any)[NDE_HANDLED] = false;
+    delete (this as any)[NDE_MOD_TEXT];
+    delete (this as any)[NDE_MOD_OBJ];
     return originalOpen.apply(this, [method, url, ...rest] as any);
   };
 
@@ -207,9 +353,9 @@ function patchXHR(): void {
     this: XMLHttpRequest,
     body?: Document | XMLHttpRequestBodyInit | null
   ) {
-    const method: string = (this as any).__nde_method || 'UNKNOWN';
-    const url: string = (this as any).__nde_url || '';
-    const reqHeaders: Record<string, string> = (this as any).__nde_headers || {};
+    const method: string = (this as any)[NDE_METHOD] || 'UNKNOWN';
+    const url: string = (this as any)[NDE_URL] || '';
+    const reqHeaders: Record<string, string> = (this as any)[NDE_HEADERS] || {};
 
     const mod = callHandlers(method, url, reqHeaders, body);
     if (mod.blocked) {
@@ -220,7 +366,8 @@ function patchXHR(): void {
 
     // If the URL was modified, re-open with the new URL
     if (mod.url !== url) {
-      (this as any).__nde_url = mod.url;
+      (this as any)[NDE_URL] = mod.url;
+      (this as any)[NDE_METHOD] = mod.method;
       // Preserve async flag (3rd arg to open, default true)
       originalOpen.apply(this, [mod.method, mod.url, true] as any);
       // Re-apply all headers (original + modified)
@@ -235,6 +382,11 @@ function patchXHR(): void {
         }
       }
     }
+
+    // Reset handler state (in case XHR instance is reused)
+    (this as any)[NDE_HANDLED] = false;
+    delete (this as any)[NDE_MOD_TEXT];
+    delete (this as any)[NDE_MOD_OBJ];
 
     const eventId = generateEventId();
     const startTime = Date.now();
@@ -251,9 +403,27 @@ function patchXHR(): void {
       body: mod.body
     });
 
-    // Listen for completion
-    this.addEventListener('loadend', () => {
-      const isError = this.status >= 400 || this.status === 0;
+    // Emit response/error event when the XHR completes.
+    // By this point the prototype getter has already run handlers
+    // on whoever read `response`/`responseText` first.
+    const xhrRef = this;
+    this.addEventListener('readystatechange', function ndeEmitEvent() {
+      if (xhrRef.readyState !== 4) return;
+
+      const isError = xhrRef.status >= 400 || xhrRef.status === 0;
+
+      // Trigger handler chain if not yet triggered (e.g. nobody read response yet)
+      ensureHandled(xhrRef);
+
+      // Use modified body if available, otherwise parse original
+      let finalBody: unknown;
+      if (NDE_MOD_OBJ in (xhrRef as any)) {
+        finalBody = (xhrRef as any)[NDE_MOD_OBJ];
+      } else {
+        try { finalBody = JSON.parse(nativeResponseTextGetter.call(xhrRef)); }
+        catch { finalBody = nativeResponseTextGetter.call(xhrRef); }
+      }
+
       emitEvent({
         id: eventId,
         type: isError ? 'error' : 'response',
@@ -261,11 +431,12 @@ function patchXHR(): void {
         url: sanitizeUrl(mod.url),
         timestamp: Date.now(),
         duration: Date.now() - startTime,
-        status: this.status,
-        statusText: this.statusText,
+        status: xhrRef.status,
+        statusText: xhrRef.statusText,
         source: 'xhr',
-        responseHeaders: parseResponseHeaders(this),
-        error: isError ? `${this.status} ${this.statusText}` : undefined
+        responseHeaders: parseResponseHeaders(xhrRef),
+        error: isError ? `${xhrRef.status} ${xhrRef.statusText}` : undefined,
+        body: finalBody
       });
     });
 
@@ -390,6 +561,16 @@ export function addRequestHandler(handler: RequestHandler): void {
 
 export function removeRequestHandler(handler: RequestHandler): void {
   const handlers = getRequestHandlers();
+  const idx = handlers.indexOf(handler);
+  if (idx >= 0) handlers.splice(idx, 1);
+}
+
+export function addResponseHandler(handler: ResponseHandler): void {
+  getResponseHandlers().push(handler);
+}
+
+export function removeResponseHandler(handler: ResponseHandler): void {
+  const handlers = getResponseHandlers();
   const idx = handlers.indexOf(handler);
   if (idx >= 0) handlers.splice(idx, 1);
 }

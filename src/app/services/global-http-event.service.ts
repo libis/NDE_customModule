@@ -25,10 +25,13 @@ import { Subject, Observable, merge } from 'rxjs';
 import {
   GlobalHttpEvent,
   RequestHandler,
+  ResponseHandler,
   getEventBuffer,
   clearEventBuffer,
   addRequestHandler,
   removeRequestHandler,
+  addResponseHandler,
+  removeResponseHandler,
   isInstalled,
   REQUEST_EVENT,
   RESPONSE_EVENT,
@@ -75,6 +78,20 @@ export class GlobalHttpEventService implements OnDestroy {
   addHandler(handler: RequestHandler): () => void {
     addRequestHandler(handler);
     return () => removeRequestHandler(handler);
+  }
+
+  /**
+   * Register a response handler that can inspect and transform response
+   * bodies before the host application reads them.
+   *
+   * The handler receives the parsed body and should return the modified body,
+   * or void/undefined to leave it unchanged.
+   *
+   * @returns A teardown function that removes the handler.
+   */
+  addResponseHandler(handler: ResponseHandler): () => void {
+    addResponseHandler(handler);
+    return () => removeResponseHandler(handler);
   }
 
   ngOnDestroy(): void {
