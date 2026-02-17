@@ -15,6 +15,7 @@ A development toolkit for building custom UI components for Ex Libris Primo's **
 - [Configuration (package.json)](#configuration-packagejson)
 - [Creating Components with @NDEComponent](#creating-components-with-ndecomponent)
 - [Intercepting HTTP Traffic](#intercepting-http-traffic)
+- [Reacting to HTTP Traffic with @NDEEvent](#reacting-to-http-traffic-with-ndeevent)
 - [Accessing Host Data](#accessing-host-data)
 - [Working with Assets](#working-with-assets)
 - [Creating a Custom Color Theme](#creating-a-custom-color-theme)
@@ -732,6 +733,12 @@ All project settings live in the `nde` section of `package.json`:
       "directory": "src/app/interceptors"
     },
 
+    // HTTP event handler settings
+    "events": {
+      "autoRegister": true,
+      "directory": "src/app/events"
+    },
+
     // Directories searched for local resources during proxy mode
     "localResourceDirs": ["./dist"]
   }
@@ -943,28 +950,28 @@ This is the same approach used by Sentry, DataDog, New Relic, and other observab
 
 ### Architecture
 
-The system is organized in three layers that bridge the gap between browser-level interception (which runs before Angular exists) and Angular's DI-based services (which only exist after bootstrap):
+The system is organized in two layers that bridge the gap between browser-level interception (which runs before Angular exists) and Angular's DI-based services (which only exist after bootstrap):
 
 ```
-Layer 1: Browser Level (pure JS)      Layer 2: Angular Service           Layer 3: Bridge
-─────────────────────────────────      ──────────────────────────         ─────────────────
-global-http-interceptor.ts             global-http-event.service.ts       analytics.interceptor.ts
+Layer 1: Browser Level (pure JS)      Layer 2: Angular Service
+─────────────────────────────────      ──────────────────────────
+global-http-interceptor.ts             global-http-event.service.ts
 
-  XHR + fetch monkey-patch       ──>    GlobalHttpEventService      ──>   @NDEInterceptor
-  ├─ handler chain (modify/block)        ├─ request$ (Observable)          subscribers
-  ├─ event buffer (pre-bootstrap)        ├─ response$ (Observable)         (subscribe to all$)
+  XHR + fetch monkey-patch       ──>    GlobalHttpEventService
+  ├─ handler chain (modify/block)        ├─ request$ (Observable)
+  ├─ event buffer (pre-bootstrap)        ├─ response$ (Observable)
   ├─ CustomEvent dispatch                ├─ error$ (Observable)
   └─ window.__nde_* globals              ├─ all$ (merged stream)
                                          └─ addHandler() wrapper
 ```
 
-**Why three layers?**
+**Why two layers?**
 
 1. **Layer 1 cannot depend on Angular.** The patch must install before Angular bootstraps — before any injector, service, or module exists. It is pure TypeScript with zero imports from `@angular/*`.
 
 2. **Layer 2 bridges the gap.** Once Angular boots, `GlobalHttpEventService` subscribes to the `CustomEvent`s from Layer 1 and re-emits them as typed RxJS Observables. It also drains any events that were buffered during the bootstrap gap, so nothing is lost.
 
-3. **Layer 3 connects to existing interceptors.** The `@NDEInterceptor`-decorated classes (like `AnalyticsInterceptor`) inject `GlobalHttpEventService` and subscribe to its streams. This means your existing interceptor chain now sees all traffic — host and module alike.
+Both `@NDEInterceptor` and `@NDEEvent` decorated classes consume Layer 2 to observe or modify HTTP traffic.
 
 ### Key Design Decisions
 
@@ -984,8 +991,8 @@ global-http-interceptor.ts             global-http-event.service.ts       analyt
 | `src/app/services/global-http-interceptor.ts` | 1 | XHR + fetch monkey-patch, handler chain, event buffer. Zero Angular dependencies. |
 | `src/app/services/global-http-event.service.ts` | 2 | Angular `@Injectable` service. RxJS Subjects (`request$`, `response$`, `error$`, `all$`). Buffer drain. |
 | `src/bootstrap.ts` | — | Calls `installGlobalHttpInterceptor()` before Angular bootstraps. |
-| `src/app/interceptors/analytics.interceptor.ts` | 3 | `AnalyticsInterceptor` subscribes to `GlobalHttpEventService.all$` and feeds events into `AnalyticsService`. |
-| `src/app/services/analytics.service.ts` | — | Stores tracked events. Any component can inject it to read event history. |
+| `src/app/interceptors/*.interceptor.ts` | — | `@NDEInterceptor`-decorated classes for Angular `HttpClient` interceptor chain. |
+| `src/app/events/*.event.ts` | — | `@NDEEvent`-decorated classes for observing/modifying global HTTP traffic. |
 
 ### Usage
 
@@ -1066,33 +1073,23 @@ For XHR, the request is aborted via `xhr.abort()`. For fetch, a rejected `Promis
 
 #### Using the `@NDEInterceptor` decorator
 
-The `@NDEInterceptor` decorator auto-registers Angular `HttpInterceptor` classes. These interceptors only see requests made by the **module's own** `HttpClient` (not host traffic). To also see host traffic, inject `GlobalHttpEventService` in the interceptor's constructor:
+The `@NDEInterceptor` decorator auto-registers Angular `HttpInterceptor` classes. These interceptors only see requests made by the **module's own** `HttpClient` (not host traffic). If you need to observe or modify **all** HTTP traffic (host + module), use `@NDEEvent` instead (see [Reacting to HTTP Traffic with @NDEEvent](#reacting-to-http-traffic-with-ndeevent)).
 
 ```typescript
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from '@angular/common/http';
-import { Observable, Subscription } from 'rxjs';
+import { Observable } from 'rxjs';
 import { NDEInterceptor } from '../decorators/nde-interceptor.decorator';
-import { GlobalHttpEventService } from '../services/global-http-event.service';
 
-@NDEInterceptor({ order: 80, description: 'My custom interceptor' })
+@NDEInterceptor({ order: 80, description: 'Adds custom header to module requests' })
 @Injectable()
-export class MyInterceptor implements HttpInterceptor, OnDestroy {
-  private sub: Subscription;
-
-  constructor(private globalHttp: GlobalHttpEventService) {
-    // This sees ALL traffic (host + module)
-    this.sub = this.globalHttp.response$.subscribe(event => {
-      // React to any response on the page
-    });
-  }
-
-  // This only sees the module's own HttpClient requests
+export class MyInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    return next.handle(req);
+    const modified = req.clone({
+      setHeaders: { 'X-Custom-Source': 'nde-module' }
+    });
+    return next.handle(modified);
   }
-
-  ngOnDestroy() { this.sub?.unsubscribe(); }
 }
 ```
 
@@ -1133,9 +1130,235 @@ All URLs in events are automatically sanitized. Query parameters named `token`, 
 4. Any HTTP calls during Angular bootstrap are buffered in window.__nde_http_event_buffer
 5. Angular DI initializes → GlobalHttpEventService is constructed
 6. Service drains the buffer → replays buffered events through RxJS Subjects
-7. AnalyticsInterceptor subscribes → events flow into AnalyticsService
+7. @NDEEvent handlers are eagerly instantiated and subscribe to streams
 8. Normal operation: all subsequent HTTP calls flow through the full pipeline
 ```
+
+---
+
+## Reacting to HTTP Traffic with @NDEEvent
+
+While `@NDEInterceptor` only sees the module's own `HttpClient` requests, `@NDEEvent` gives you access to **all** HTTP traffic on the page — including the host's API calls for search, authentication, configuration, and more.
+
+### Overview
+
+The `@NDEEvent` decorator auto-registers event handler classes that subscribe to `GlobalHttpEventService` streams. Unlike interceptors (which Angular only instantiates when `HttpClient` is used), events are **eagerly created** at bootstrap time — guaranteeing their subscriptions are active immediately.
+
+Events support two operation modes:
+
+| Mode | Hook | Timing | Purpose |
+|---|---|---|---|
+| **Observe** | `onEvent(event)` | After the response reaches the host | Read-only logging, analytics, side-effects |
+| **Modify** | `onRequest(method, url, headers, body)` | Before the request is sent | Add headers, rewrite URLs, block requests |
+| **Modify** | `onResponse(method, url, status, body)` | Before the host reads the response | Mutate response data, transform payloads |
+
+### Creating an Event Handler
+
+#### Step 1: Generate the file
+
+Create a new file in `src/app/events/`. The auto-discovery plugin scans this directory and generates import statements automatically (just like components).
+
+#### Step 2: Decorate and extend `NDEEventBase`
+
+```typescript
+import { Injectable } from '@angular/core';
+import { NDEEvent, NDEEventBase, GlobalHttpEvent } from '../decorators/nde-event.decorator';
+import { GlobalHttpEventService } from '../services/global-http-event.service';
+
+@NDEEvent({
+  stream: 'response',
+  match: /\/primaws\/rest\/pub\/pnxs/,
+  order: 30,
+  description: 'Logs search API responses'
+})
+@Injectable()
+export class SearchLogger extends NDEEventBase {
+  constructor(globalHttp: GlobalHttpEventService) {
+    super(globalHttp);
+  }
+
+  override onEvent(event: GlobalHttpEvent): void {
+    console.log(`Search response: ${event.status} (${event.duration}ms)`);
+  }
+}
+```
+
+### Configuration Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `stream` | `'request' \| 'response' \| 'error' \| 'all'` | `'all'` | Which HTTP event stream to subscribe to |
+| `match` | `RegExp \| string` | — | URL filter. RegExp is tested with `.test()`, string with `.includes()`. Only matching events reach your hooks. |
+| `order` | `number` | `50` | Execution order when multiple events listen to the same stream. Lower numbers execute first. |
+| `description` | `string` | — | Human-readable description for debugging |
+| `enabled` | `boolean` | `true` | Set to `false` to skip registration (feature flag) |
+
+### Observe Mode — `onEvent()`
+
+Override `onEvent()` to react to HTTP traffic after it has been processed. This is read-only — you cannot modify the request or response from here.
+
+```typescript
+@NDEEvent({ stream: 'error', match: '/primaws/' })
+@Injectable()
+export class ApiErrorTracker extends NDEEventBase {
+  constructor(globalHttp: GlobalHttpEventService) {
+    super(globalHttp);
+  }
+
+  override onEvent(event: GlobalHttpEvent): void {
+    console.error(`API error: ${event.method} ${event.url} → ${event.status}`);
+    // Send to external error tracking service, update UI state, etc.
+  }
+}
+```
+
+### Modify Mode — `onRequest()`
+
+Override `onRequest()` to intercept requests **before** they are sent. Return a `RequestModification` object to change the method, URL, headers, or body. Return `{ blocked: true }` to cancel the request entirely. Return `void` to pass through unchanged.
+
+```typescript
+@NDEEvent({ stream: 'request', match: /\/primaws/ })
+@Injectable()
+export class HeaderEnricher extends NDEEventBase {
+  constructor(globalHttp: GlobalHttpEventService) {
+    super(globalHttp);
+  }
+
+  override onRequest(
+    method: string,
+    url: string,
+    headers: Record<string, string>,
+    body: unknown
+  ): RequestModification | void {
+    return { headers: { ...headers, 'X-Custom-Source': 'nde-module' } };
+  }
+}
+```
+
+### Modify Mode — `onResponse()`
+
+Override `onResponse()` to mutate response data **before** the host application reads it. This is powerful — the host's NgRx store will receive your modified data.
+
+```typescript
+import { Injectable } from '@angular/core';
+import { NDEEvent, NDEEventBase } from '../decorators/nde-event.decorator';
+import { GlobalHttpEventService } from '../services/global-http-event.service';
+
+@NDEEvent({
+  stream: 'response',
+  match: /pnxs|directLink/,
+  order: 30,
+  description: 'Transforms search result titles'
+})
+@Injectable()
+export class SearchTransform extends NDEEventBase {
+  constructor(globalHttp: GlobalHttpEventService) {
+    super(globalHttp);
+  }
+
+  override onResponse(method: string, url: string, status: number, body: unknown): unknown {
+    const data = body as any;
+    const docs = data?.docs;
+
+    if (Array.isArray(docs)) {
+      for (const doc of docs) {
+        // Transform each document's display title
+        if (doc?.pnx?.display?.title) {
+          doc.pnx.display.title = doc.pnx.display.title.map(
+            (t: string) => t.toUpperCase()
+          );
+        }
+      }
+    }
+
+    return data; // Return the modified body
+  }
+}
+```
+
+### Combining Multiple Hooks
+
+A single event class can override any combination of `onEvent()`, `onRequest()`, and `onResponse()`. The `match` filter applies to all hooks automatically.
+
+```typescript
+@NDEEvent({
+  stream: 'response',
+  match: /pnxs/,
+  order: 30,
+  description: 'Modifies and logs search responses'
+})
+@Injectable()
+export class SearchEvent extends NDEEventBase {
+  constructor(globalHttp: GlobalHttpEventService) {
+    super(globalHttp);
+  }
+
+  // Layer 1: mutate the response before the host reads it
+  override onResponse(method: string, url: string, status: number, body: unknown): unknown {
+    const data = body as any;
+    // ... transform data ...
+    return data;
+  }
+
+  // Layer 2: observe the event after it's been processed
+  override onEvent(event: GlobalHttpEvent): void {
+    console.log(`Search completed: ${event.status} (${event.duration}ms)`);
+  }
+}
+```
+
+### Injecting Additional Services
+
+Event handlers are regular Angular `@Injectable()` classes. You can inject any service — shared state, the NgRx store, your own services, etc.:
+
+```typescript
+@NDEEvent({ stream: 'response', match: /pnxs/, order: 30 })
+@Injectable()
+export class SearchEvent extends NDEEventBase {
+  constructor(
+    globalHttp: GlobalHttpEventService,
+    private searchState: SearchStateService
+  ) {
+    super(globalHttp);
+  }
+
+  override onEvent(event: GlobalHttpEvent): void {
+    // Use injected services alongside HTTP event data
+    this.searchState.getAllDocs().then(docs => {
+      console.log(`${docs.length} docs in store after search response`);
+    });
+  }
+}
+```
+
+### Runtime Control
+
+You can enable, disable, and inspect registered events at runtime:
+
+```typescript
+import { disableEvent, enableEvent, getEventInfo } from '../decorators/nde-event.decorator';
+
+// List all registered events
+console.table(getEventInfo());
+
+// Disable/enable specific events
+disableEvent(SearchTransform);
+enableEvent(SearchTransform);
+```
+
+### How Auto-Registration Works
+
+The auto-discovery plugin scans `src/app/events/` and generates `src/app/events/_registry.ts` with import statements for all `*.event.ts` files. Importing the registry triggers the `@NDEEvent` decorators, which populate an internal registry. At bootstrap, `getEventProviders()` creates Angular providers and uses `APP_INITIALIZER` to eagerly instantiate every registered event handler.
+
+### @NDEEvent vs @NDEInterceptor — When to Use Which
+
+| | `@NDEEvent` | `@NDEInterceptor` |
+|---|---|---|
+| **Sees host traffic** | Yes — all XHR and fetch calls on the page | No — only the module's own `HttpClient` requests |
+| **Can modify requests** | Yes — via `onRequest()` (Layer 1 handler) | Yes — via `intercept()` (Angular chain) |
+| **Can modify responses** | Yes — via `onResponse()` (Layer 1 handler) | Yes — via `intercept()` (Angular chain) |
+| **Instantiation** | Eager (at bootstrap) | Lazy (on first `HttpClient` use) |
+| **Best for** | Observing/modifying host API calls, analytics, global request transforms | Standard Angular HTTP patterns for the module's own requests |
 
 ---
 
