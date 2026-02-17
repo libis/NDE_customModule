@@ -218,34 +218,36 @@ const NDE_MOD_OBJ    = '__nde_modified_obj';    // cached modified response (obj
 const NDE_HANDLED    = '__nde_response_handled'; // boolean: handlers already ran
 
 // ---------------------------------------------------------------------------
-// Zone.js-aware original resolution
-// ---------------------------------------------------------------------------
-
-/**
- * Zone.js (used by Angular) monkey-patches browser APIs and stores the
- * original, unpatched functions under `__zone_symbol__<name>`.
- *
- * If we blindly grab `XMLHttpRequest.prototype.open` as our "original",
- * we get Zone.js's wrapper — meaning our interceptor still runs inside
- * Angular's zone, triggering unnecessary change detection and zone task
- * tracking.
- *
- * By preferring the `__zone_symbol__` version when it exists, we bypass
- * Zone.js entirely and talk directly to the browser's native implementation.
- */
-function getOriginalXHRMethod<K extends keyof XMLHttpRequest>(name: K): XMLHttpRequest[K] {
-  const zoneKey = `__zone_symbol__${name}` as keyof XMLHttpRequest;
-  return (XMLHttpRequest.prototype[zoneKey] ?? XMLHttpRequest.prototype[name]) as XMLHttpRequest[K];
-}
-
-// ---------------------------------------------------------------------------
 // XHR monkey-patch
 // ---------------------------------------------------------------------------
 
+/**
+ * Zone.js compatibility note:
+ *
+ * Zone.js patches XHR methods via `patchMethod()`, which:
+ *   1. Copies the native function to `__zone_symbol__<name>` (dead backup)
+ *   2. Captures the native in a closure variable
+ *   3. Replaces `prototype.<name>` with a wrapper that calls via the closure
+ *
+ * Crucially, Zone.js does NOT re-read `__zone_symbol__<name>` at call time.
+ * The closure is sealed at patch time. So writing to `__zone_symbol__open`
+ * has no effect on the running call chain.
+ *
+ * We therefore patch `prototype.open/send/setRequestHeader` directly.
+ * The value we capture as "original" is Zone.js's wrapper, giving us:
+ *
+ *   app calls xhr.open()
+ *     → OUR wrapper (prototype.open)
+ *       → Zone.js wrapper (saved as originalOpen — does zone tracking)
+ *         → native open (in Zone.js's closure)
+ *
+ * Zone.js stays in the chain because we call through its wrapper.
+ */
+
 function patchXHR(): void {
-  const originalOpen = getOriginalXHRMethod('open');
-  const originalSend = getOriginalXHRMethod('send');
-  const originalSetRequestHeader = getOriginalXHRMethod('setRequestHeader');
+  const originalOpen = XMLHttpRequest.prototype.open;
+  const originalSend = XMLHttpRequest.prototype.send;
+  const originalSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
 
   // ---- Prototype-level response getters ---------------------------------
   //

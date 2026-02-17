@@ -6,14 +6,14 @@ import { GlobalHttpEventService } from '../services/global-http-event.service';
 
 @NDEEvent({
   stream: 'response',
-  match: /pnxs|directLink/,
+  match: /delivery|pnxs/,
   order: 30,
   description: 'Reverses doc.pnx.display.title in search responses'
 })
 @Injectable()
 export class SearchEvent extends NDEEventBase {
 
-  private storeSub: Subscription;
+  // private storeSub: Subscription;
 
   constructor(
     globalHttp: GlobalHttpEventService,
@@ -23,8 +23,8 @@ export class SearchEvent extends NDEEventBase {
 
     // Subscribe to the ngrx store — the single source of truth.
     // When docs arrive, mutate titles in-place on the entity objects.
-    this.storeSub = this.searchState.selectAllDocs$()
-      .subscribe(docs => this.transformDocsInStore(docs));
+    // this.storeSub = this.searchState.selectAllDocs$()
+    //   .subscribe(docs => this.transformDocsInStore(docs));
   }
 
   /**
@@ -33,13 +33,15 @@ export class SearchEvent extends NDEEventBase {
    */
   override onResponse(method: string, url: string, status: number, body: unknown): unknown {
     const data = body as any;
-    const docs = data?.docs;
+
+    // /pnxs returns { docs: [...] }, /delivery returns Doc[] directly
+    const docs = Array.isArray(data) ? data : data?.docs;
 
     if (Array.isArray(docs)) {
       for (const doc of docs) {
         this.reverseTitle(doc);
       }
-      console.log('[SearchEvent] Layer 1: reversed titles for', docs.length, 'doc(s)');
+      console.log('[SearchEvent] Layer 1: reversed titles for', docs.length, 'doc(s) from', url);
     }
 
     return data;
@@ -84,6 +86,6 @@ export class SearchEvent extends NDEEventBase {
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this.storeSub?.unsubscribe();
+    // this.storeSub?.unsubscribe();
   }
 }
