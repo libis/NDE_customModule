@@ -1,3 +1,7 @@
+// MUST be first — patches XHR/fetch BEFORE any Angular or host HTTP calls
+import { installGlobalHttpInterceptor } from './app/services/global-http-interceptor';
+installGlobalHttpInterceptor();
+
 import "@angular/compiler";
 import { AppModule } from './app/app.module';
 import {bootstrap} from "@angular-architects/module-federation-tools";

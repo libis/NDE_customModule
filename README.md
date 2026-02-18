@@ -14,6 +14,8 @@ A development toolkit for building custom UI components for Ex Libris Primo's **
 - [Getting Started](#getting-started)
 - [Configuration (package.json)](#configuration-packagejson)
 - [Creating Components with @NDEComponent](#creating-components-with-ndecomponent)
+- [Intercepting HTTP Traffic](#intercepting-http-traffic)
+- [Reacting to HTTP Traffic with @NDEEvent](#reacting-to-http-traffic-with-ndeevent)
 - [Accessing Host Data](#accessing-host-data)
 - [Working with Assets](#working-with-assets)
 - [Creating a Custom Color Theme](#creating-a-custom-color-theme)
@@ -731,6 +733,12 @@ All project settings live in the `nde` section of `package.json`:
       "directory": "src/app/interceptors"
     },
 
+    // HTTP event handler settings
+    "events": {
+      "autoRegister": true,
+      "directory": "src/app/events"
+    },
+
     // Directories searched for local resources during proxy mode
     "localResourceDirs": ["./dist"]
   }
@@ -907,6 +915,450 @@ When multiple components target the same slot and position, use `priority` to co
 ```typescript
 @NDEComponent({ selector: NDE_SLOTS.HEADER, position: 'after', priority: 10 })
 ```
+
+---
+
+## Intercepting HTTP Traffic
+
+### The Problem
+
+In a Module Federation setup, the host application (Primo NDE) and your custom module share the same browser page but have **separate Angular injector trees**. Angular's built-in `HTTP_INTERCEPTORS` mechanism is DI-based — interceptors registered in your module's injector only see requests made by your module's own `HttpClient`. They never see the host's HTTP traffic.
+
+This is a fundamental limitation: the host makes dozens of API calls (search queries to `/primaws/rest/pub/pnxs`, authentication to `/primaws/suprimaLogin`, configuration loads, delivery lookups, etc.) that your module cannot observe or influence through Angular's standard interceptor chain.
+
+```
+Host Injector Tree                    Remote Module Injector Tree
+┌─────────────────────┐               ┌─────────────────────┐
+│  HttpClient         │               │  HttpClient         │
+│  ├─ JwtInterceptor  │               │  ├─ AuthInterceptor │
+│  ├─ NdeParamIntcpt  │               │  ├─ AnalyticsIntcpt │
+│  └─ ConstParamsIntc │               │  └─ ErrorIntcpt     │
+│                     │               │                     │
+│  These only see     │               │  These only see     │
+│  HOST requests      │               │  MODULE requests    │
+└─────────────────────┘               └─────────────────────┘
+         ▲                                      ▲
+         │                                      │
+         └──── No cross-visibility ─────────────┘
+```
+
+### The Solution: Global XHR/Fetch Monkey-Patching
+
+Instead of relying on Angular's DI-scoped interceptors, we patch `XMLHttpRequest` and `window.fetch` at the **browser level** — before Angular even bootstraps. This captures every HTTP call on the page regardless of which injector tree originated it.
+
+This is the same approach used by Sentry, DataDog, New Relic, and other observability tools. It works because all Angular `HttpClient` requests ultimately go through `XMLHttpRequest` (or `fetch`) under the hood.
+
+### Architecture
+
+The system is organized in two layers that bridge the gap between browser-level interception (which runs before Angular exists) and Angular's DI-based services (which only exist after bootstrap):
+
+```
+Layer 1: Browser Level (pure JS)      Layer 2: Angular Service
+─────────────────────────────────      ──────────────────────────
+global-http-interceptor.ts             global-http-event.service.ts
+
+  XHR + fetch monkey-patch       ──>    GlobalHttpEventService
+  ├─ handler chain (modify/block)        ├─ request$ (Observable)
+  ├─ event buffer (pre-bootstrap)        ├─ response$ (Observable)
+  ├─ CustomEvent dispatch                ├─ error$ (Observable)
+  └─ window.__nde_* globals              ├─ all$ (merged stream)
+                                         └─ addHandler() wrapper
+```
+
+**Why two layers?**
+
+1. **Layer 1 cannot depend on Angular.** The patch must install before Angular bootstraps — before any injector, service, or module exists. It is pure TypeScript with zero imports from `@angular/*`.
+
+2. **Layer 2 bridges the gap.** Once Angular boots, `GlobalHttpEventService` subscribes to the `CustomEvent`s from Layer 1 and re-emits them as typed RxJS Observables. It also drains any events that were buffered during the bootstrap gap, so nothing is lost.
+
+Both `@NDEInterceptor` and `@NDEEvent` decorated classes consume Layer 2 to observe or modify HTTP traffic.
+
+### Key Design Decisions
+
+| Decision | Why |
+|---|---|
+| Patch both XHR and `fetch()` | Angular's `HttpClient` uses XHR, but third-party libraries or future host versions may use `fetch`. Patching both ensures complete coverage. |
+| Store state on `window.__nde_*` | Module Federation creates separate module scopes. A module-level `let installed = false` would be duplicated per remote. Using `window` globals ensures a single shared patch instance. |
+| Event buffer with drain | HTTP calls may happen between patch installation and Angular bootstrap. The buffer captures them; the service replays them on init. |
+| `CustomEvent` bridge | The DOM event system is the only communication channel available before Angular DI exists. Layer 1 dispatches events on `window`; Layer 2 listens. |
+| Handler chain for modify/block | Handlers run synchronously before each request is sent, allowing you to add headers, rewrite URLs, or cancel requests entirely — even for host traffic. |
+| Install in `bootstrap.ts` | This is the earliest point the remote module's code runs. Placing the call before `@angular/compiler` ensures the patch is active before any Angular HTTP activity. |
+
+### File Overview
+
+| File | Layer | Purpose |
+|---|---|---|
+| `src/app/services/global-http-interceptor.ts` | 1 | XHR + fetch monkey-patch, handler chain, event buffer. Zero Angular dependencies. |
+| `src/app/services/global-http-event.service.ts` | 2 | Angular `@Injectable` service. RxJS Subjects (`request$`, `response$`, `error$`, `all$`). Buffer drain. |
+| `src/bootstrap.ts` | — | Calls `installGlobalHttpInterceptor()` before Angular bootstraps. |
+| `src/app/interceptors/*.interceptor.ts` | — | `@NDEInterceptor`-decorated classes for Angular `HttpClient` interceptor chain. |
+| `src/app/events/*.event.ts` | — | `@NDEEvent`-decorated classes for observing/modifying global HTTP traffic. |
+
+### Usage
+
+#### Observing HTTP traffic
+
+Inject `GlobalHttpEventService` in any component or service:
+
+```typescript
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject, takeUntil } from 'rxjs';
+import { GlobalHttpEventService } from '../../services/global-http-event.service';
+
+@Component({ /* ... */ })
+export class MyComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
+  constructor(private globalHttp: GlobalHttpEventService) {}
+
+  ngOnInit() {
+    // See ALL HTTP traffic (host + module)
+    this.globalHttp.all$.pipe(takeUntil(this.destroy$)).subscribe(event => {
+      console.log(`${event.method} ${event.url} [${event.type}]`, event);
+    });
+
+    // Or subscribe to specific streams
+    this.globalHttp.error$.pipe(takeUntil(this.destroy$)).subscribe(event => {
+      console.error(`HTTP error: ${event.status} ${event.url}`);
+    });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}
+```
+
+#### Modifying requests
+
+Register a handler that runs before every XHR/fetch call. Handlers can modify the method, URL, headers, body, or block the request entirely:
+
+```typescript
+import { Component, OnDestroy } from '@angular/core';
+import { GlobalHttpEventService } from '../../services/global-http-event.service';
+
+@Component({ /* ... */ })
+export class MyComponent implements OnDestroy {
+  private removeHandler: () => void;
+
+  constructor(private globalHttp: GlobalHttpEventService) {
+    // Add a custom header to all /primaws/ requests
+    this.removeHandler = this.globalHttp.addHandler((method, url, headers, body) => {
+      if (url.includes('/primaws/')) {
+        return { headers: { 'X-Custom-Source': 'nde-module' } };
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.removeHandler(); // clean up
+  }
+}
+```
+
+#### Blocking requests
+
+Return `{ blocked: true }` to cancel a request before it is sent:
+
+```typescript
+this.globalHttp.addHandler((method, url) => {
+  if (url.includes('/unwanted-endpoint')) {
+    return { blocked: true };
+  }
+});
+```
+
+For XHR, the request is aborted via `xhr.abort()`. For fetch, a rejected `Promise` is returned.
+
+#### Using the `@NDEInterceptor` decorator
+
+The `@NDEInterceptor` decorator auto-registers Angular `HttpInterceptor` classes. These interceptors only see requests made by the **module's own** `HttpClient` (not host traffic). If you need to observe or modify **all** HTTP traffic (host + module), use `@NDEEvent` instead (see [Reacting to HTTP Traffic with @NDEEvent](#reacting-to-http-traffic-with-ndeevent)).
+
+```typescript
+import { Injectable } from '@angular/core';
+import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { NDEInterceptor } from '../decorators/nde-interceptor.decorator';
+
+@NDEInterceptor({ order: 80, description: 'Adds custom header to module requests' })
+@Injectable()
+export class MyInterceptor implements HttpInterceptor {
+  intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+    const modified = req.clone({
+      setHeaders: { 'X-Custom-Source': 'nde-module' }
+    });
+    return next.handle(modified);
+  }
+}
+```
+
+### The `GlobalHttpEvent` Interface
+
+Every event emitted by the interceptor has this shape:
+
+```typescript
+interface GlobalHttpEvent {
+  id: string;                              // Unique ID per request (correlates request ↔ response)
+  type: 'request' | 'response' | 'error'; // Event phase
+  method: string;                          // HTTP method (GET, POST, ...)
+  url: string;                             // Sanitized URL (sensitive params redacted)
+  timestamp: number;                       // Date.now() when the event was emitted
+  duration?: number;                       // Milliseconds (only on response/error)
+  status?: number;                         // HTTP status code (only on response/error)
+  statusText?: string;                     // HTTP status text
+  requestHeaders?: Record<string, string>; // Headers sent with the request
+  responseHeaders?: Record<string, string>;// Headers received (XHR only)
+  error?: string;                          // Error message (only on error events)
+  source: 'xhr' | 'fetch';                // Which API originated the call
+  body?: unknown;                          // Request body (if available)
+}
+```
+
+The `id` field correlates a `request` event with its subsequent `response` or `error` event, so you can compute per-request timing or match request/response pairs.
+
+### URL Sanitization
+
+All URLs in events are automatically sanitized. Query parameters named `token`, `key`, `password`, `secret`, `apikey`, `api_key`, `access_token`, `auth`, or `jwt` are replaced with `[REDACTED]` before being stored or emitted. This prevents sensitive credentials from leaking into logs or analytics.
+
+### Runtime Sequence
+
+```
+1. Host bootstraps its own Angular app (we cannot intercept these initial calls — that's OK)
+2. Host loads the remote module via Module Federation
+3. bootstrap.ts runs → installGlobalHttpInterceptor() patches XHR + fetch
+4. Any HTTP calls during Angular bootstrap are buffered in window.__nde_http_event_buffer
+5. Angular DI initializes → GlobalHttpEventService is constructed
+6. Service drains the buffer → replays buffered events through RxJS Subjects
+7. @NDEEvent handlers are eagerly instantiated and subscribe to streams
+8. Normal operation: all subsequent HTTP calls flow through the full pipeline
+```
+
+---
+
+## Reacting to HTTP Traffic with @NDEEvent
+
+While `@NDEInterceptor` only sees the module's own `HttpClient` requests, `@NDEEvent` gives you access to **all** HTTP traffic on the page — including the host's API calls for search, authentication, configuration, and more.
+
+### Overview
+
+The `@NDEEvent` decorator auto-registers event handler classes that subscribe to `GlobalHttpEventService` streams. Unlike interceptors (which Angular only instantiates when `HttpClient` is used), events are **eagerly created** at bootstrap time — guaranteeing their subscriptions are active immediately.
+
+Events support two operation modes:
+
+| Mode | Hook | Timing | Purpose |
+|---|---|---|---|
+| **Observe** | `onEvent(event)` | After the response reaches the host | Read-only logging, analytics, side-effects |
+| **Modify** | `onRequest(method, url, headers, body)` | Before the request is sent | Add headers, rewrite URLs, block requests |
+| **Modify** | `onResponse(method, url, status, body)` | Before the host reads the response | Mutate response data, transform payloads |
+
+### Creating an Event Handler
+
+#### Step 1: Generate the file
+
+Create a new file in `src/app/events/`. The auto-discovery plugin scans this directory and generates import statements automatically (just like components).
+
+#### Step 2: Decorate and extend `NDEEventBase`
+
+```typescript
+import { Injectable } from '@angular/core';
+import { NDEEvent, NDEEventBase, GlobalHttpEvent } from '../decorators/nde-event.decorator';
+import { GlobalHttpEventService } from '../services/global-http-event.service';
+
+@NDEEvent({
+  stream: 'response',
+  match: /\/primaws\/rest\/pub\/pnxs/,
+  order: 30,
+  description: 'Logs search API responses'
+})
+@Injectable()
+export class SearchLogger extends NDEEventBase {
+  constructor(globalHttp: GlobalHttpEventService) {
+    super(globalHttp);
+  }
+
+  override onEvent(event: GlobalHttpEvent): void {
+    console.log(`Search response: ${event.status} (${event.duration}ms)`);
+  }
+}
+```
+
+### Configuration Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `stream` | `'request' \| 'response' \| 'error' \| 'all'` | `'all'` | Which HTTP event stream to subscribe to |
+| `match` | `RegExp \| string` | — | URL filter. RegExp is tested with `.test()`, string with `.includes()`. Only matching events reach your hooks. |
+| `order` | `number` | `50` | Execution order when multiple events listen to the same stream. Lower numbers execute first. |
+| `description` | `string` | — | Human-readable description for debugging |
+| `enabled` | `boolean` | `true` | Set to `false` to skip registration (feature flag) |
+
+### Observe Mode — `onEvent()`
+
+Override `onEvent()` to react to HTTP traffic after it has been processed. This is read-only — you cannot modify the request or response from here.
+
+```typescript
+@NDEEvent({ stream: 'error', match: '/primaws/' })
+@Injectable()
+export class ApiErrorTracker extends NDEEventBase {
+  constructor(globalHttp: GlobalHttpEventService) {
+    super(globalHttp);
+  }
+
+  override onEvent(event: GlobalHttpEvent): void {
+    console.error(`API error: ${event.method} ${event.url} → ${event.status}`);
+    // Send to external error tracking service, update UI state, etc.
+  }
+}
+```
+
+### Modify Mode — `onRequest()`
+
+Override `onRequest()` to intercept requests **before** they are sent. Return a `RequestModification` object to change the method, URL, headers, or body. Return `{ blocked: true }` to cancel the request entirely. Return `void` to pass through unchanged.
+
+```typescript
+@NDEEvent({ stream: 'request', match: /\/primaws/ })
+@Injectable()
+export class HeaderEnricher extends NDEEventBase {
+  constructor(globalHttp: GlobalHttpEventService) {
+    super(globalHttp);
+  }
+
+  override onRequest(
+    method: string,
+    url: string,
+    headers: Record<string, string>,
+    body: unknown
+  ): RequestModification | void {
+    return { headers: { ...headers, 'X-Custom-Source': 'nde-module' } };
+  }
+}
+```
+
+### Modify Mode — `onResponse()`
+
+Override `onResponse()` to mutate response data **before** the host application reads it. This is powerful — the host's NgRx store will receive your modified data.
+
+```typescript
+import { Injectable } from '@angular/core';
+import { NDEEvent, NDEEventBase } from '../decorators/nde-event.decorator';
+import { GlobalHttpEventService } from '../services/global-http-event.service';
+
+@NDEEvent({
+  stream: 'response',
+  match: /pnxs|directLink/,
+  order: 30,
+  description: 'Transforms search result titles'
+})
+@Injectable()
+export class SearchTransform extends NDEEventBase {
+  constructor(globalHttp: GlobalHttpEventService) {
+    super(globalHttp);
+  }
+
+  override onResponse(method: string, url: string, status: number, body: unknown): unknown {
+    const data = body as any;
+    const docs = data?.docs;
+
+    if (Array.isArray(docs)) {
+      for (const doc of docs) {
+        // Transform each document's display title
+        if (doc?.pnx?.display?.title) {
+          doc.pnx.display.title = doc.pnx.display.title.map(
+            (t: string) => t.toUpperCase()
+          );
+        }
+      }
+    }
+
+    return data; // Return the modified body
+  }
+}
+```
+
+### Combining Multiple Hooks
+
+A single event class can override any combination of `onEvent()`, `onRequest()`, and `onResponse()`. The `match` filter applies to all hooks automatically.
+
+```typescript
+@NDEEvent({
+  stream: 'response',
+  match: /pnxs/,
+  order: 30,
+  description: 'Modifies and logs search responses'
+})
+@Injectable()
+export class SearchEvent extends NDEEventBase {
+  constructor(globalHttp: GlobalHttpEventService) {
+    super(globalHttp);
+  }
+
+  // Layer 1: mutate the response before the host reads it
+  override onResponse(method: string, url: string, status: number, body: unknown): unknown {
+    const data = body as any;
+    // ... transform data ...
+    return data;
+  }
+
+  // Layer 2: observe the event after it's been processed
+  override onEvent(event: GlobalHttpEvent): void {
+    console.log(`Search completed: ${event.status} (${event.duration}ms)`);
+  }
+}
+```
+
+### Injecting Additional Services
+
+Event handlers are regular Angular `@Injectable()` classes. You can inject any service — shared state, the NgRx store, your own services, etc.:
+
+```typescript
+@NDEEvent({ stream: 'response', match: /pnxs/, order: 30 })
+@Injectable()
+export class SearchEvent extends NDEEventBase {
+  constructor(
+    globalHttp: GlobalHttpEventService,
+    private searchState: SearchStateService
+  ) {
+    super(globalHttp);
+  }
+
+  override onEvent(event: GlobalHttpEvent): void {
+    // Use injected services alongside HTTP event data
+    this.searchState.getAllDocs().then(docs => {
+      console.log(`${docs.length} docs in store after search response`);
+    });
+  }
+}
+```
+
+### Runtime Control
+
+You can enable, disable, and inspect registered events at runtime:
+
+```typescript
+import { disableEvent, enableEvent, getEventInfo } from '../decorators/nde-event.decorator';
+
+// List all registered events
+console.table(getEventInfo());
+
+// Disable/enable specific events
+disableEvent(SearchTransform);
+enableEvent(SearchTransform);
+```
+
+### How Auto-Registration Works
+
+The auto-discovery plugin scans `src/app/events/` and generates `src/app/events/_registry.ts` with import statements for all `*.event.ts` files. Importing the registry triggers the `@NDEEvent` decorators, which populate an internal registry. At bootstrap, `getEventProviders()` creates Angular providers and uses `APP_INITIALIZER` to eagerly instantiate every registered event handler.
+
+### @NDEEvent vs @NDEInterceptor — When to Use Which
+
+| | `@NDEEvent` | `@NDEInterceptor` |
+|---|---|---|
+| **Sees host traffic** | Yes — all XHR and fetch calls on the page | No — only the module's own `HttpClient` requests |
+| **Can modify requests** | Yes — via `onRequest()` (Layer 1 handler) | Yes — via `intercept()` (Angular chain) |
+| **Can modify responses** | Yes — via `onResponse()` (Layer 1 handler) | Yes — via `intercept()` (Angular chain) |
+| **Instantiation** | Eager (at bootstrap) | Lazy (on first `HttpClient` use) |
+| **Best for** | Observing/modifying host API calls, analytics, global request transforms | Standard Angular HTTP patterns for the module's own requests |
 
 ---
 

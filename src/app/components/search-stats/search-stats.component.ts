@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { NDE_SLOTS, NDE_POSITION, NDEComponent } from 'src/app/decorators/nde-component.decorator';
 import { SearchStateService } from '@libis/primo-shared-state';
+import { AnalyticsService } from '../../services/analytics.service';
 
 @NDEComponent({ selector: NDE_SLOTS.HEADER, position: NDE_POSITION.BEFORE })
 @Component({
@@ -19,5 +21,24 @@ export class SearchStatsComponent {
   searchParams$ = this.searchState.selectSearchParams$();
   metaData$ = this.searchState.selectSearchMetaData$();
 
-  constructor(private searchState: SearchStateService) {}
+  constructor(
+    private searchState: SearchStateService,
+    private analyticsService: AnalyticsService,
+    private http: HttpClient
+  ) {}
+
+  get eventCount(): number {
+    return this.analyticsService.getEvents().length;
+  }
+
+  printEvents(): void {
+    console.log('[AnalyticsEvents]', this.analyticsService.getEvents());
+  }
+
+  testPing(): void {
+    this.http.get('https://jsonplaceholder.typicode.com/posts/1').subscribe({
+      next: (res) => console.log('[TestPing] Response:', res),
+      error: (err) => console.error('[TestPing] Error:', err)
+    });
+  }
 }
