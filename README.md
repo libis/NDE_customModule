@@ -45,11 +45,11 @@ In practice, you write Angular components, decorate them with `@NDEComponent`, a
 
 | Technology | Version | Purpose |
 |---|---|---|
-| [Angular](https://angular.dev/) | 18.2 | Component framework |
+| [Angular](https://angular.dev/) | 19.0 | Component framework |
 | [TypeScript](https://www.typescriptlang.org/) | 5.5 | Typed JavaScript |
 | [Webpack](https://webpack.js.org/) | 5.88 | Build tool and module bundler |
 | [@angular-architects/module-federation](https://www.npmjs.com/package/@angular-architects/module-federation) | 18.0 | Module Federation plugin for Angular |
-| [NgRx Store](https://ngrx.io/guide/store) | 18.1 | Centralized state management |
+| [NgRx Store](https://ngrx.io/guide/store) | 19.0 | Centralized state management |
 | [RxJS](https://rxjs.dev/) | 7.8 | Reactive programming (Observables) |
 | [Angular Material](https://material.angular.io/) | 18.2 | Material Design UI components |
 | [@ngx-translate/core](https://github.com/ngx-translate/core) | 15.0 | Internationalization |
@@ -121,10 +121,12 @@ Because Module Federation marks `@ngrx/store` as a **singleton**, both the host 
 
 The [`@libis/primo-shared-state`](https://github.com/libis/primo-shared-state) library provides type-safe services that wrap the NgRx store. Instead of writing raw selectors, you inject a service and call its methods.
 
-Three services are available: **SearchStateService**, **UserStateService**, and **FilterStateService**. Each service offers two access patterns:
+Three services are available: **SearchStateService**, **UserStateService**, and **FilterStateService**. Each service offers three read access patterns and a set of typed dispatch helpers for writing state:
 
 - **Reactive (Observable)** — method names end with `$`. Your component updates automatically whenever the underlying data changes. Best for templates using the `| async` pipe or for components that need to react in real time.
+- **Signal** — method names end with `Signal`. Returns an Angular `Signal<T>` backed by the NgRx store. Works directly in templates without the `| async` pipe and integrates with Angular's fine-grained change detection. Requires Angular 17+.
 - **Snapshot (Promise)** — one-time reads of the current value. Useful in lifecycle hooks, click handlers, or anywhere you just need the value right now.
+- **Dispatch helpers** — typed methods that dispatch safe NgRx actions back to the host store (e.g., `search()`, `clearSearch()`, `setPageLimit()`). Only actions that cannot corrupt state or trigger unintended HTTP calls are exposed.
 
 > **Tip:** If you are new to Observables, see the [RxJS guide](https://rxjs.dev/guide/overview). For NgRx, see the [NgRx Store documentation](https://ngrx.io/guide/store).
 
@@ -143,13 +145,15 @@ However, **Signals are a complement to Observables, not a replacement.** Observa
 
 The Angular team has explicitly stated that RxJS is not being deprecated. A wholesale migration to Signals would bring no practical benefit and would lose the async composition capabilities that Observables provide.
 
-**Current approach in this project:** The `@libis/primo-shared-state` services expose Observable-based selectors (methods ending with `$`) and Promise-based snapshots. Signal-based selectors may be added in a future version. In the meantime, you can use `store.selectSignal()` directly on the NgRx store for signal-based reads when that fits your component better (see [App State](#app-state-ngrx-store)).
+**Current approach in this project:** The `@libis/primo-shared-state` services expose Observable-based selectors (methods ending with `$`), Signal-based selectors (methods ending with `Signal`), and Promise-based snapshots. You can also use `store.selectSignal()` directly on the NgRx store for signal-based reads when that fits your component better (see [App State](#app-state-ngrx-store)).
 
 ---
 
 ### SearchStateService
 
-Provides access to search results, search parameters, metadata, and loading status.
+Provides access to search results, search parameters, metadata, and loading status. Also exposes dispatch helpers for triggering searches and updating pagination.
+
+**Reactive (Observable)**
 
 | Method | Returns | Description |
 |---|---|---|
@@ -161,9 +165,38 @@ Provides access to search results, search parameters, metadata, and loading stat
 | `selectTotalResults$()` | `Observable<number>` | Total number of results |
 | `selectPageSize$()` | `Observable<number \| null>` | Current page size |
 | `selectIsLoading$()` | `Observable<boolean>` | `true` while a search is in progress |
+
+**Signal (Angular 17+)**
+
+| Method | Returns | Description |
+|---|---|---|
+| `allDocsSignal()` | `Signal<Doc[]>` | All search result documents |
+| `searchParamsSignal()` | `Signal<SearchParams \| null>` | Current search parameters |
+| `searchMetaDataSignal()` | `Signal<SearchMetaData \| null>` | Search metadata |
+| `searchStatusSignal()` | `Signal<LoadingStatus>` | Loading status |
+| `totalResultsSignal()` | `Signal<number>` | Total number of results |
+| `pageSizeSignal()` | `Signal<number \| null>` | Current page size |
+| `isLoadingSignal()` | `Signal<boolean>` | `true` while a search is in progress |
+
+**Snapshot (Promise)**
+
+| Method | Returns | Description |
+|---|---|---|
 | `getAllDocs()` | `Promise<Doc[]>` | Snapshot of all documents |
 | `getDocById(id)` | `Promise<Doc \| undefined>` | Snapshot of a single document |
 | `getSearchParams()` | `Promise<SearchParams \| null>` | Snapshot of current search parameters |
+
+**Dispatch Helpers**
+
+| Method | Description |
+|---|---|
+| `search(searchParams, searchType?)` | Trigger a search with the given parameters |
+| `clearSearch()` | Clear search results |
+| `setPageLimit(limit)` | Set the page size |
+| `setPageNumber(pageNumber)` | Navigate to a specific page |
+| `setSortBy(sort)` | Set the sort order |
+| `setIsSavedSearch(isSavedSearch)` | Mark the current search as saved |
+| `setSearchNotificationMessage(msg)` | Set a notification message |
 
 #### Example — Display search results with loading state
 
@@ -280,11 +313,68 @@ interface Doc {
 type LoadingStatus = 'pending' | 'loading' | 'success' | 'fail';
 ```
 
+#### Example — Use Signals (Angular 17+)
+
+Signals work directly in templates without the `| async` pipe:
+
+```typescript
+import { Component } from '@angular/core';
+import { NDEComponent, NDE_SLOTS, NDE_POSITION } from '../../decorators/nde-component.decorator';
+import { SearchStateService } from '@libis/primo-shared-state';
+
+@NDEComponent({ selector: NDE_SLOTS.SEARCH_RESULTS, position: NDE_POSITION.BEFORE })
+@Component({
+  selector: 'custom-result-count',
+  standalone: true,
+  template: `
+    @if (isLoading()) {
+      <div class="loading">Searching...</div>
+    } @else {
+      <div class="result-count">{{ totalResults() }} results</div>
+    }
+  `
+})
+export class ResultCountComponent {
+  isLoading = this.searchState.isLoadingSignal();
+  totalResults = this.searchState.totalResultsSignal();
+
+  constructor(private searchState: SearchStateService) {}
+}
+```
+
+#### Example — Trigger a search programmatically
+
+Use the dispatch helpers to issue a new search from your component:
+
+```typescript
+import { Component } from '@angular/core';
+import { SearchStateService } from '@libis/primo-shared-state';
+
+@Component({ /* ... */ })
+export class SearchButtonComponent {
+  constructor(private searchState: SearchStateService) {}
+
+  doSearch(query: string) {
+    this.searchState.search({ q: query, scope: 'MyInst_and_CI' });
+  }
+
+  clear() {
+    this.searchState.clearSearch();
+  }
+
+  setPage(page: number) {
+    this.searchState.setPageNumber(page);
+  }
+}
+```
+
 ---
 
 ### UserStateService
 
-Provides access to user authentication, JWT tokens, and user preferences.
+Provides access to user authentication, JWT tokens, and user preferences. Also exposes dispatch helpers for updating user settings and authentication state.
+
+**Reactive (Observable)**
 
 | Method | Returns | Description |
 |---|---|---|
@@ -295,9 +385,39 @@ Provides access to user authentication, JWT tokens, and user preferences.
 | `selectUserSettings$()` | `Observable<UserSettings \| undefined>` | User preferences (language, page size, email, ...) |
 | `selectUserName$()` | `Observable<string \| undefined>` | User name (from decoded JWT) |
 | `selectUserGroup$()` | `Observable<string>` | User group (defaults to `'GUEST'` when not logged in) |
+
+**Signal (Angular 17+)**
+
+| Method | Returns | Description |
+|---|---|---|
+| `userStateSignal()` | `Signal<UserState>` | The entire user state object |
+| `jwtSignal()` | `Signal<string \| undefined>` | Raw JWT token string |
+| `decodedJwtSignal()` | `Signal<DecodedJwt \| undefined>` | Decoded JWT payload |
+| `isLoggedInSignal()` | `Signal<boolean>` | Whether the user is authenticated |
+| `userSettingsSignal()` | `Signal<UserSettings \| undefined>` | User preferences |
+| `userNameSignal()` | `Signal<string \| undefined>` | User name (from decoded JWT) |
+| `userGroupSignal()` | `Signal<string>` | User group (defaults to `'GUEST'`) |
+
+**Snapshot (Promise)**
+
+| Method | Returns | Description |
+|---|---|---|
 | `getJwt()` | `Promise<string \| undefined>` | Snapshot of JWT token |
 | `isLoggedIn()` | `Promise<boolean>` | Snapshot of login status |
 | `getUserSettings()` | `Promise<UserSettings \| undefined>` | Snapshot of user settings |
+
+**Dispatch Helpers**
+
+| Method | Description |
+|---|---|
+| `setDecodedJwt(decodedJwt)` | Update the decoded JWT in the store |
+| `setLoginFromState(value)` | Set login-from-state flag |
+| `resetLogoutReason()` | Clear the stored logout reason |
+| `setLanguage(value)` | Update the user's preferred language |
+| `setSaveHistory(value)` | Toggle save-search-history preference |
+| `setUseHistory(value)` | Toggle use-search-history preference |
+| `setAutoExtendMySession(value)` | Toggle auto-extend-session preference |
+| `setAllowSavingRaSearchHistory(value)` | Toggle research assistant history preference |
 
 #### Example — Show a personalized greeting
 
@@ -412,11 +532,39 @@ interface UserSettings {
 type LogoutReason = 'user' | 'timeout';
 ```
 
+#### Example — Use Signals for user state
+
+```typescript
+import { Component } from '@angular/core';
+import { NDEComponent, NDE_SLOTS, NDE_POSITION } from '../../decorators/nde-component.decorator';
+import { UserStateService } from '@libis/primo-shared-state';
+
+@NDEComponent({ selector: NDE_SLOTS.HEADER, position: NDE_POSITION.BOTTOM })
+@Component({
+  selector: 'custom-user-badge',
+  standalone: true,
+  template: `
+    @if (isLoggedIn()) {
+      <span class="badge">{{ userName() }} ({{ userGroup() }})</span>
+    }
+  `
+})
+export class UserBadgeComponent {
+  isLoggedIn = this.userState.isLoggedInSignal();
+  userName = this.userState.userNameSignal();
+  userGroup = this.userState.userGroupSignal();
+
+  constructor(private userState: UserStateService) {}
+}
+```
+
 ---
 
 ### FilterStateService
 
-Provides access to applied filters, multi-select filters, resource type filters, and filter panel UI state.
+Provides access to applied filters, multi-select filters, resource type filters, and filter panel UI state. Also exposes dispatch helpers for triggering filter loads.
+
+**Reactive (Observable)**
 
 | Method | Returns | Description |
 |---|---|---|
@@ -427,9 +575,33 @@ Provides access to applied filters, multi-select filters, resource type filters,
 | `selectResourceTypeFilter$()` | `Observable<ResourceTypeFilterModel \| null>` | Active resource type filter |
 | `selectIsFiltersOpen$()` | `Observable<boolean>` | Whether the filter panel is open |
 | `selectIsRememberAll$()` | `Observable<boolean>` | Whether "Remember All" filters is active |
+
+**Signal (Angular 17+)**
+
+| Method | Returns | Description |
+|---|---|---|
+| `filterStateSignal()` | `Signal<FilterState>` | The entire filter state object |
+| `includedFiltersSignal()` | `Signal<selectedFilters[] \| null>` | Include-type filters |
+| `excludedFiltersSignal()` | `Signal<selectedFilters[] \| null>` | Exclude-type filters |
+| `multiSelectedFiltersSignal()` | `Signal<MultiSelectedFilter[] \| null>` | Multi-select filters |
+| `resourceTypeFilterSignal()` | `Signal<ResourceTypeFilterModel \| null>` | Active resource type filter |
+| `isFiltersOpenSignal()` | `Signal<boolean>` | Whether the filter panel is open |
+| `isRememberAllSignal()` | `Signal<boolean>` | Whether "Remember All" is active |
+
+**Snapshot (Promise)**
+
+| Method | Returns | Description |
+|---|---|---|
 | `getIncludedFilters()` | `Promise<selectedFilters[] \| null>` | Snapshot of included filters |
 | `getExcludedFilters()` | `Promise<selectedFilters[] \| null>` | Snapshot of excluded filters |
 | `getMultiSelectedFilters()` | `Promise<MultiSelectedFilter[] \| null>` | Snapshot of multi-selected filters |
+
+**Dispatch Helpers**
+
+| Method | Description |
+|---|---|
+| `loadFilters(searchParams)` | Trigger a filter load for the given search parameters |
+| `updateSortByParam(sort)` | Update the sort parameter in filter state |
 
 #### Example — Display active filters
 
