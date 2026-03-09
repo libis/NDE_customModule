@@ -5,7 +5,9 @@ export type TopbarSize = 'thin' | 'medium' | 'thick';
 export interface StyleConfig {
   topbarSize: TopbarSize;
   topbarColor: string;
-  signInOptions?: boolean;
+  HideSignIn?: boolean;
+  HideLinksInLiriasRecords?: boolean;
+  HideLoginBannerInFullRecordView?: boolean;
 }
 
 export const TOPBAR_STYLE_MAP = {
@@ -16,7 +18,10 @@ export const TOPBAR_STYLE_MAP = {
 
 export const DEFAULT_STYLE_CONFIG: StyleConfig = {
   topbarSize: 'thick',
-  topbarColor: 'magenta',
+  topbarColor: 'blue',
+  HideSignIn: true,
+  HideLinksInLiriasRecords: false,
+  HideLoginBannerInFullRecordView: true,
 };
 
 export const STYLE_CONFIG = new InjectionToken<StyleConfig>('STYLE_CONFIG', {
