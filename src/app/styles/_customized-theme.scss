@@ -1,5 +1,8 @@
-@use '@angular/material' as mat;
-@use 'm3-theme' as m3-theme;
+@use "@angular/material" as mat;
+@use "m3-theme" as m3-theme;
+
+/* layout overrides */
+@use "./layout-overrides.scss";
 
 //uncomment the following lines in order to apply your own theme
 
@@ -7,3 +10,8 @@
 //  @include mat.all-component-colors(m3-theme.$light-theme);
 //  @include mat.system-level-colors(m3-theme.$light-theme);
 //}
+// aplly it
+.custom-nde-theme {
+  @include mat.all-component-colors(m3-theme.$light-theme);
+  @include mat.system-level-colors(m3-theme.$light-theme);
+}

@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-	"prestart": "node prebuild.js",
+    "prestart": "node prebuild.js",
     "start:no-prebundle": "ng serve --prebundle=false",
     "start:proxy": "ng serve --proxy-config ./proxy/proxy.conf.mjs",
     "build": "ng build",
@@ -12,7 +12,9 @@
     "test": "ng test",
     "postbuild": "node postbuild.js",
     "prebuild": "node prebuild.js",
-    "run:all": "node node_modules/@angular-architects/module-federation/src/server/mf-dev-server.js"
+    "run:all": "node node_modules/@angular-architects/module-federation/src/server/mf-dev-server.js",
+    "generate:scss": "ts-node scripts/generate-scss-vars.ts",
+    "dev": "npm run generate:scss && vite"
   },
   "private": true,
   "dependencies": {
@@ -44,7 +46,9 @@
     "@angular-devkit/build-angular": "^18.2.9",
     "@angular/cli": "^18.2.9",
     "@angular/compiler-cli": "^18.2.8",
+    "@types/angular": "^1.8.9",
     "@types/jasmine": "~4.3.0",
+    "@types/node": "^25.0.10",
     "archiver": "^7.0.1",
     "jasmine-core": "~4.6.0",
     "karma": "~6.4.0",
@@ -53,6 +57,7 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "ngx-build-plus": "^18.0.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.5.4",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4",
