@@ -26,7 +26,14 @@ export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter:
       CommonModule,
       TranslateModule.forRoot({})
     ],
-    providers: [...providers, {provide: SHELL_ROUTER, useValue: shellRouter}, provideHttpClient(withInterceptorsFromDi()), ...getInterceptorProviders(), GlobalHttpEventService, ...getEventProviders()],
+    providers: [
+      ...providers,
+      {provide: SHELL_ROUTER, useValue: shellRouter}, 
+      provideHttpClient(withInterceptorsFromDi()), 
+      ...getInterceptorProviders(), 
+      GlobalHttpEventService, 
+      ...getEventProviders()
+    ],
     bootstrap: []
   })
   class AppModule implements DoBootstrap{
@@ -51,21 +58,10 @@ export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter:
   
 
     ngDoBootstrap(appRef: ApplicationRef) {
-      let currentVid = this.config.getValue("vid")
-      console.log ( "currentVid:"+ currentVid  )
-      if (typeof currentVid === 'string') {
-        for (const [vid_regex, mapping] of selectorComponentMap) {
+      for (const [key, value] of selectorComponentMap) {
         try {
-            console.log ( "currentVid:"+ currentVid  )
-          if ( currentVid.match(vid_regex) ) {
-            // console.log ("MAPPING element:" + mapping.element)
-            // console.log ("MAPPING component:" + mapping.component)
-            const customElement = createCustomElement(mapping.component, {injector: this.injector});
-              this.webComponentSelectorMap.set(mapping.element, customElement);
-          } 
-        }
-      }else{
-        console.warn("Invalid vid type:", currentVid);
+          const customElement = createCustomElement(value, {injector: this.injector});
+          this.webComponentSelectorMap.set(key, customElement);
           console.log(`[AppModule] Registered custom element: ${key}`);
         } catch (error) {
           console.warn(`[AppModule] Failed to register custom element: ${key}`, error);
