@@ -1,22 +1,60 @@
 {
   "name": "custom-module",
   "version": "2.0.0",
+  "nde": {
+    "addonName": "",
+    "assetBaseUrl": "",
+    "environments": {
+      "kuleuven": {
+        "host": "https://libis-kul-psb.primo.exlibrisgroup.com",
+        "institution": "32KUL_KUL",
+        "view": "KULeuven_NDE"
+      }
+    },
+    "defaultEnvironment": "kuleuven",
+    "proxyUrlTemplate": "/nde/home?vid={institution}:{view}&lang=en",
+    "customization": {
+      "favIcon": "custom/MOCKINST-MOCKVID/assets/images/favicon.ico",
+      "libraryLogo": "custom/MOCKINST-MOCKVID/assets/images/library-logo.png",
+      "viewSvg": "custom/MOCKINST-MOCKVID/assets/icons/custom_icons.svg",
+      "homepage": {
+        "homepageBGImage": "custom/MOCKINST-MOCKVID/assets/homepage/homepage_background.svg",
+        "html": {
+          "en": "custom/MOCKINST-MOCKVID/assets/homepage/homepage_en.html",
+          "nl": "custom/MOCKINST-MOCKVID/assets/homepage/homepage_nl.html",
+          "fr": "custom/MOCKINST-MOCKVID/assets/homepage/homepage_fr.html",
+          "de": "custom/MOCKINST-MOCKVID/assets/homepage/homepage_de.html"
+        }
+      }
+    },
+    "components": {
+      "autoRegister": true,
+      "directory": "src/app/components"
+    },
+    "interceptors": {
+      "autoRegister": true,
+      "directory": "src/app/interceptors"
+    },
+    "localResourceDirs": ["./dist"]
+  },
   "scripts": {
     "ng": "ng",
+    "nde": "node nde/nde-cli.js",
     "start": "ng serve",
-	"prestart": "node prebuild.js",
+    "prestart": "node nde/prebuild.js",
     "start:no-prebundle": "ng serve --prebundle=false",
-    "start:proxy": "ng serve --proxy-config ./proxy/proxy.conf.mjs",
+    "start:proxy": "ng serve --proxy-config ./nde/proxy.conf.mjs",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "postbuild": "node postbuild.js",
-    "prebuild": "node prebuild.js",
+    "postbuild": "node nde/postbuild.js",
+    "prebuild": "node nde/prebuild.js",
     "run:all": "node node_modules/@angular-architects/module-federation/src/server/mf-dev-server.js"
   },
   "private": true,
   "dependencies": {
     "@angular-architects/module-federation": "^18.0.6",
+    "@libis/primo-shared-state": "file:nde/libis-primo-shared-state-1.0.0.tgz",
     "@angular/animations": "^18.2.8",
     "@angular/cdk": "18.2.9",
     "@angular/common": "^18.2.8",
