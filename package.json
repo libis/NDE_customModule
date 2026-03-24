@@ -54,7 +54,7 @@
   "private": true,
   "dependencies": {
     "@angular-architects/module-federation": "^18.0.6",
-    "@libis/primo-shared-state": "file:nde/libis-primo-shared-state-1.0.0.tgz",
+    "@libis/primo-shared-state": "file:libis-primo-shared-state-2026.3.1.tgz",
     "@angular/animations": "^18.2.8",
     "@angular/cdk": "18.2.9",
     "@angular/common": "^18.2.8",
