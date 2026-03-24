@@ -10,7 +10,8 @@ import { AutoAssetSrcDirective } from './services/auto-asset-src.directive';
 import { SHELL_ROUTER } from './injection-tokens';
 import { InjectorTestComponent } from './injector-test/injector-test.component';
 import { DEFAULT_STYLE_CONFIG, STYLE_CONFIG } from './config/style-config';
-
+import { getEventProviders } from './decorators/nde-event.decorator';
+import './events/_registry';
 export const AppModule = ({
   providers,
   shellRouter,
@@ -26,6 +27,7 @@ export const AppModule = ({
       ...providers,
       { provide: SHELL_ROUTER, useValue: shellRouter },
       { provide: STYLE_CONFIG, useValue: DEFAULT_STYLE_CONFIG },
+      ...getEventProviders(),
     ],
     bootstrap: [],
   })
@@ -50,9 +52,9 @@ export const AppModule = ({
         customElements.define(key, customElement);
       }
       // Mount the component to actually run it
-      const el = document.createElement('nde-injector-test');
-      document.body.appendChild(el); // now ngOnInit runs
-      console.log('nde-theme-injector mounted');
+      // const el = document.createElement('nde-injector-test');
+      // document.body.appendChild(el); // now ngOnInit runs
+      // console.log('nde-theme-injector mounted');
     }
 
     public getComponentRef(componentName: string) {

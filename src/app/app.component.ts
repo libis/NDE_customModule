@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-
+// import { injectStylesEarly } from '../app/config/inject-styles';
+// injectStylesEarly();
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',

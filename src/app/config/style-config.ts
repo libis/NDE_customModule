@@ -17,9 +17,9 @@ export const TOPBAR_STYLE_MAP = {
 } as const;
 
 export const DEFAULT_STYLE_CONFIG: StyleConfig = {
-  topbarSize: 'thick',
-  topbarColor: 'blue',
-  HideSignIn: true,
+  topbarSize: 'medium',
+  topbarColor: 'hotpink',
+  HideSignIn: false,
   HideLinksInLiriasRecords: false,
   HideLoginBannerInFullRecordView: true,
 };
