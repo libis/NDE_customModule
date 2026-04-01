@@ -43,6 +43,7 @@ export class AnalyticsInterceptor implements HttpInterceptor {
     request: HttpRequest<unknown>,
     next: HttpHandler
   ): Observable<HttpEvent<unknown>> {
+    console.log( "[NDEInterceptor] : -- TEST -- AnalyticsInterceptor ",request )
     return next.handle(request);
   }
 }

@@ -3,6 +3,7 @@ import {BrowserModule} from '@angular/platform-browser';
 import {createCustomElement, NgElementConstructor} from "@angular/elements";
 import {Router} from "@angular/router";
 import {selectorComponentMap} from "./custom1-module/customComponentMappings";
+import {sharedComponentMap} from "./components/shared/index";
 import {TranslateModule} from "@ngx-translate/core";
 import {CommonModule } from '@angular/common';
 import {AutoAssetSrcDirective } from './services/auto-asset-src.directive';
@@ -12,6 +13,9 @@ import { getInterceptorProviders } from './decorators/nde-interceptor.decorator'
 import { getEventProviders } from './decorators/nde-event.decorator';
 import { GlobalHttpEventService } from './services/global-http-event.service';
 import { AnalyticsService } from './services/analytics.service';
+import { HostStylesService } from './services/host-styles.service' // Copy styles
+import { initApp } from './app.initializer';
+import { ConfigService } from './services/config.service';
 import './interceptors/_registry';
 import './events/_registry';
 
@@ -29,6 +33,23 @@ export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter:
     providers: [
       ...providers,
       {provide: SHELL_ROUTER, useValue: shellRouter}, 
+
+      HostStylesService,
+      {
+        provide: APP_INITIALIZER,
+        useFactory: (hostStylesService: HostStylesService) => {
+          return () => hostStylesService.initializeHostStyles();
+        },
+        deps: [HostStylesService],
+        multi: true,
+      },
+      
+      {
+        provide: APP_INITIALIZER,
+        useFactory: initApp,
+        deps: [ConfigService],
+        multi: true,
+      },
       provideHttpClient(withInterceptorsFromDi()), 
       ...getInterceptorProviders(), 
       GlobalHttpEventService, 
@@ -58,6 +79,26 @@ export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter:
   
 
     ngDoBootstrap(appRef: ApplicationRef) {
+    
+      /* TEST Maar werkt niet
+      const combinedComponentMap = new Map<string, any>([
+        ...sharedComponentMap,
+        ...selectorComponentMap
+      ]); // (selector overrides shared)
+      */
+
+      // const combinedComponentMap = selectorComponentMap;
+
+      /*
+       Create webcomponents to use inside the remote Angular Components 
+       (Angular Components are converted tp Web Components in the host 
+       code\host\source\src_bootstrap_ts.c52827332bfd336c\src\app\components\base-custom\web-component-wrapper.component.ts) 
+      */
+      for (const [key, value] of sharedComponentMap) {
+        const customWebComponent = createCustomElement(value, {injector: this.injector});
+        customElements.define(key, customWebComponent);
+      }
+
       for (const [key, value] of selectorComponentMap) {
         try {
           const customElement = createCustomElement(value, {injector: this.injector});

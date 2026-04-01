@@ -35,7 +35,9 @@
       "autoRegister": true,
       "directory": "src/app/interceptors"
     },
-    "localResourceDirs": ["./dist"]
+    "localResourceDirs": [
+      "./dist"
+    ]
   },
   "scripts": {
     "ng": "ng",
@@ -54,7 +56,6 @@
   "private": true,
   "dependencies": {
     "@angular-architects/module-federation": "^18.0.6",
-    "@libis/primo-shared-state": "file:nde/libis-primo-shared-state-1.0.0.tgz",
     "@angular/animations": "^18.2.8",
     "@angular/cdk": "18.2.9",
     "@angular/common": "^18.2.8",
@@ -66,6 +67,7 @@
     "@angular/platform-browser": "^18.2.8",
     "@angular/platform-browser-dynamic": "^18.2.8",
     "@angular/router": "^18.2.8",
+    "@libis/primo-shared-state": "file:nde/libis-primo-shared-state-2026.3.1.tgz",
     "@ngrx/entity": "^18.1.0",
     "@ngrx/store": "^18.1.0",
     "@ngrx/store-devtools": "^18.1.0",
@@ -73,6 +75,7 @@
     "@ngx-translate/http-loader": "^8.0.0",
     "@webcomponents/custom-elements": "^1.6.0",
     "dotenv": "^16.4.5",
+    "lodash": "^4.17.23",
     "rxjs": "~7.8.0",
     "tslib": "^2.4.1",
     "zone.js": "~0.14.10"
@@ -83,6 +86,7 @@
     "@angular/cli": "^18.2.9",
     "@angular/compiler-cli": "^18.2.8",
     "@types/jasmine": "~4.3.0",
+    "@types/lodash": "^4.17.24",
     "archiver": "^7.0.1",
     "jasmine-core": "~4.6.0",
     "karma": "~6.4.0",

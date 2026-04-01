@@ -84,8 +84,8 @@
 		  "defaultConfiguration": "development",
 		  "options": {
 			"host": "0.0.0.0",
-			"port": 4201,
-			"publicHost": "http://localhost:4201",
+			"port": 4204,
+			"publicHost": "http://localhost:4204",
 			"extraWebpackConfig": "webpack.config.js",
       "disableHostCheck": true
 		  }

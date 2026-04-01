@@ -20,6 +20,7 @@
  */
 
 import 'reflect-metadata';
+import { ConfigService } from 'src/app/services/config.service'
 
 /**
  * Configuration options for @NDEComponent decorator
@@ -84,8 +85,8 @@ const NDE_METADATA_KEY = 'nde:component:config';
 export function NDEComponent(config: NDEComponentConfig) {
   return function <T extends { new (...args: any[]): {} }>(constructor: T) {
     // Build the full selector with position suffix
-    const fullSelector = buildFullSelector(config.selector, config.position);
 
+    const fullSelector = buildFullSelector(config.selector, config.position);
     
     const bootstrapCfg = (window as any).__BOOTSTRAP_CFG__ ?? {};
     let currentVid = bootstrapCfg.vid;
@@ -198,7 +199,6 @@ export function getComponentRegistry(): Map<string, any> {
   for (const entry of entries) {
     map.set(entry.fullSelector, entry.component);
   }
-  
   return map;
 }
 

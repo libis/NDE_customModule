@@ -1,0 +1,104 @@
+<div data-qa="full-display-details" class="flex-column full-display-details-container">
+    
+  <div class="full-display-detail" *ngFor="let detail of details$ | async" [attr.data-qa]="'detail_' + detail.label">
+    <!--  detail label  -->
+    <h5 class="details-label mat-title-small">{{getDetailLabel$(detail.label) | async}}</h5>
+
+    <!--  detail values  -->
+    <div>
+        <!-- Special case for: keyword/mesh -->
+        @if (detail.label === 'keyword' || detail.label === 'mesh'){
+            <div class="flex-row flex-wrap-wrap" [attr.aria-label]="detail.originalValueText">
+                @for (value of detail.values; let i = $index; track value){
+                    <div class="flex-row">
+                        @if (value.prefix){
+                            <span class="mat-body-medium">{{ value.prefix }}</span>
+                        }
+
+                        @if(value.link && this.displayHypertextLinkingInJournalAndDB()) {
+                            <a [attr.aria-label]="(getDetailLabel$(detail.label) | async) + ': ' + value.text"
+                               [routerLink]="value.link.context"
+                               [queryParams]="value.link.params"
+                               class="hyper-text"
+                               (click)="onHyperTextLinking(value)">
+
+                                <libis-highlight class="break-word" [text]="value.text" [field]="detail.label"></libis-highlight>
+                            </a>
+                        } @else {
+                            <libis-highlight class="break-word" [text]="value.text" [field]="detail.label"></libis-highlight>
+                        }
+
+                        @if (value.deiNote != undefined) {
+                            <nde-info-popup-host class="margin-left-small" [contextLabel]="value.text" [text]="value.deiNote"
+                                                 [dataQaLabel]="'info_popup_fulldisplay_btn'"></nde-info-popup-host>
+                        }
+
+                        <!-- delimiter -->
+                        @if(i < detail.values.length - 1) {
+                            <span class="padding-right-left-small">;</span>
+                        }
+                    </div>
+                }
+            </div>
+        } @else {
+            <div *ngFor="let value of detail.values; let index = index">
+                <div class="flex-row flex-layout-center" *ngIf="shouldShowDetailValue(detail, index)" [attr.aria-label]="value.prefix + value.text">
+
+              <span class="mat-body-medium value-prefix" *ngIf="value.prefix" >{{value.prefix}}</span>
+
+
+                    @if(value.link && this.displayHypertextLinkingInJournalAndDB()) {
+
+<!-- # REMOVED [routerLink] and [queryParams] ???  Angular Router is not available module-federated 
+                        <a [attr.aria-label]="(getDetailLabel$(detail.label) | async) +': '+value.text"
+                           [routerLink]="value.link.context"
+                           [queryParams]="value.link.params"
+                           class="hyper-text"
+                           (click)="onHyperTextLinking(value)">
+-->                                                
+                        <!-- <libis-highlight class="break-word" [text]="value.text" [field]="detail.label"></libis-highlight> --> 
+                        <!-- <div style="width: 100%;">[[LINK?]] {{ value | json }} </div> -->
+
+                        <a [attr.aria-label]="(getDetailLabel$(detail.label) | async) +': '+value.text"
+                           class="hyper-text"
+                           [href]="buildLink(value.link)"
+                           (click)="onHyperTextLinking(value)">
+                           <libis-highlight class="break-word" text="{{value.text}}" field="{{detail.label}}"></libis-highlight>
+                        </a>
+                    } @else {
+                        
+                            <!-- <libis-highlight class="break-word" [text]="value.text" [field]="detail.label"></libis-highlight> --> 
+                            <libis-highlight class="break-word" text="{{value.text}}" field="{{detail.label}}"></libis-highlight>
+                            <nde-highlight class="break-word" text="{{value.text}}" field="{{detail.label}}"></nde-highlight>
+                    }
+
+                    @if (value.deiNote != undefined){
+                        <nde-info-popup-host class="margin-left-small flex-row flex-layout-center" [contextLabel]="value.text" [text]="value.deiNote"
+                                             [dataQaLabel]="'info_popup_fulldisplay_btn'"></nde-info-popup-host>
+                    }
+                </div>
+
+            </div>
+        }
+
+      <button *ngIf="detail.values.length > NUMBER_OF_DETAILS_TO_DISPLAY"
+              mat-button
+              color="primary"
+              (click)="toggleShowMoreLess(detail)">
+        <span>{{(detail.isExpanded ? "fulldisplay.details.showLess" : "fulldisplay.details.showAll") | translate}}</span>
+        <mat-icon iconPositionEnd style="display: flex"
+                  *ndeIcon="'Arrow-down'; let svgName=svgName" [svgIcon]="svgName"
+                  color="primary"
+                  [ngClass]="{'rotate-180': detail.isExpanded}">
+        </mat-icon>
+      </button>
+
+  </div>
+  </div>
+<!--
+  @if(shouldShowCollectionsPath() | async) {
+    <nde-collection-path-detail [searchResult]="searchResult">
+    </nde-collection-path-detail>
+  }
+-->
+</div>
