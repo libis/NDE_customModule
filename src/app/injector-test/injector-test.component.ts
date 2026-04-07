@@ -3,6 +3,7 @@ import {
   STYLE_CONFIG,
   StyleConfig,
   TOPBAR_STYLE_MAP,
+  BooleanOrViews,
 } from '../config/style-config';
 import { TranslateService } from '@ngx-translate/core';
 
@@ -11,14 +12,32 @@ import { TranslateService } from '@ngx-translate/core';
   template: ``,
 })
 export class InjectorTestComponent implements OnInit {
+  private currentView: string = '';
   constructor(
     @Inject(STYLE_CONFIG) private config: StyleConfig,
     private translate: TranslateService,
   ) {}
 
   ngOnInit() {
-    console.log('Injector running with config:', this.config);
+    this.currentView = this.resolveCurrentView();
+    console.log(
+      'Injector running with config:',
+      this.config,
+      'view:',
+      this.currentView,
+    );
     this.injectStyles();
+  }
+
+  private resolveCurrentView(): string {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('vid') ?? '';
+  }
+
+  private isActive(value: BooleanOrViews | undefined): boolean {
+    if (value === undefined || value === false) return false;
+    if (value === true) return true;
+    return value.includes(this.currentView);
   }
 
   private getTopbarStyles(
@@ -42,7 +61,7 @@ export class InjectorTestComponent implements OnInit {
   }
 
   private getHideSignInStyles(): string {
-    if (!this.config.HideSignIn) return '';
+    if (!this.isActive(this.config.HideSignIn)) return '';
     return `
       nde-user-area {
         display: none !important;
@@ -51,7 +70,7 @@ export class InjectorTestComponent implements OnInit {
   }
 
   private getHideLiriasLinksStyles(): string {
-    if (!this.config.HideLinksInLiriasRecords) return '';
+    if (!this.isActive(this.config.HideLinksInLiriasRecords)) return '';
     return `
       nde-view-it-card {
         display: none !important;
@@ -59,7 +78,7 @@ export class InjectorTestComponent implements OnInit {
     `;
   }
   private getHideLoginBannerStyles(): string {
-    if (!this.config.HideLoginBannerInFullRecordView) return '';
+    if (!this.isActive(this.config.HideLoginBannerInFullRecordView)) return '';
     return `
     nde-custom-snack-bar {
       display: none !important;
@@ -68,7 +87,7 @@ export class InjectorTestComponent implements OnInit {
   }
 
   private injectHideHowToGetItStyles(): void {
-    if (!this.config.HideHowToGetIt) return;
+    if (!this.isActive(this.config.HideHowToGetIt)) return;
 
     const service = {
       title: 'nui.getit.service_howtogetit',

@@ -1,14 +1,17 @@
 import { InjectionToken } from '@angular/core';
 
 export type TopbarSize = 'thin' | 'medium' | 'thick';
+// to accept either boolean or viewlist
+export type ViewList = string[]; // list of views, if set as a value => those views the value is true
+export type BooleanOrViews = boolean | ViewList;
 
 export interface StyleConfig {
   topbarSize: TopbarSize;
   topbarColor: string;
-  HideSignIn?: boolean;
-  HideLinksInLiriasRecords?: boolean;
-  HideLoginBannerInFullRecordView?: boolean;
-  HideHowToGetIt?: boolean;
+  HideSignIn?: BooleanOrViews;
+  HideLinksInLiriasRecords?: BooleanOrViews;
+  HideLoginBannerInFullRecordView?: BooleanOrViews;
+  HideHowToGetIt?: BooleanOrViews;
 }
 
 export const TOPBAR_STYLE_MAP = {
@@ -20,10 +23,10 @@ export const TOPBAR_STYLE_MAP = {
 export const DEFAULT_STYLE_CONFIG: StyleConfig = {
   topbarSize: 'thin',
   topbarColor: 'magenta',
-  HideSignIn: true,
-  HideLinksInLiriasRecords: true,
-  HideLoginBannerInFullRecordView: true,
-  HideHowToGetIt: true,
+  HideSignIn: ['32KUL_KUL:KULeuven_NDE'],
+  HideLinksInLiriasRecords: false,
+  HideLoginBannerInFullRecordView: false,
+  HideHowToGetIt: false,
 };
 
 export const STYLE_CONFIG = new InjectionToken<StyleConfig>('STYLE_CONFIG', {
