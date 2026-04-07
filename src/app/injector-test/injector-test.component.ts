@@ -4,13 +4,17 @@ import {
   StyleConfig,
   TOPBAR_STYLE_MAP,
 } from '../config/style-config';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'nde-injector-test',
   template: ``,
 })
 export class InjectorTestComponent implements OnInit {
-  constructor(@Inject(STYLE_CONFIG) private config: StyleConfig) {}
+  constructor(
+    @Inject(STYLE_CONFIG) private config: StyleConfig,
+    private translate: TranslateService,
+  ) {}
 
   ngOnInit() {
     console.log('Injector running with config:', this.config);
@@ -63,6 +67,32 @@ export class InjectorTestComponent implements OnInit {
   `;
   }
 
+  private injectHideHowToGetItStyles(): void {
+    if (!this.config.HideHowToGetIt) return;
+
+    const service = {
+      title: 'nui.getit.service_howtogetit',
+      scrollId: 'getit_link1_0',
+    };
+
+    this.translate.get(service.title).subscribe((translatedLabel) => {
+      const styleId = 'style_' + service.scrollId;
+
+      if (document.getElementById(styleId)) return;
+
+      const s = document.createElement('style');
+      s.setAttribute('id', styleId);
+
+      s.innerHTML = '';
+      s.innerHTML += `div#services-index button[aria-label="${translatedLabel}"] { display: none !important; }`;
+      s.innerHTML += `div.full-view-section#${service.scrollId} { display: none !important; }`;
+
+      document.getElementsByTagName('primo-explore')[0]?.appendChild(s);
+
+      console.log('HideHowToGetIt applied with label:', translatedLabel);
+    });
+  }
+
   private injectStyles() {
     const styleId = 'nde-custom-topbar-styles';
     if (document.getElementById(styleId)) return;
@@ -79,6 +109,7 @@ export class InjectorTestComponent implements OnInit {
     ].join('\n');
 
     document.head.appendChild(style);
+    this.injectHideHowToGetItStyles(); // seprate because async
     console.log('Styles injected from config:', this.config);
   }
 }
