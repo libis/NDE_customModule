@@ -11,9 +11,11 @@
   "portsAttributes": {
     "4201": {
       "label": "NDE Dev Server",
-      "onAutoForward": "notify"
+      "onAutoForward": "silent",
+      "requireLocalPort": true
     }
   },
+  "postAttachCommand": "bash -c 'PROXY_URL=$(node --input-type=module -e \"import {proxyUrl} from \\\"./nde/proxy-url.mjs\\\"; console.log(proxyUrl);\") && until curl -s \"$PROXY_URL\" > /dev/null 2>&1; do sleep 2; done && npx open-cli \"$PROXY_URL\"'",
   "postCreateCommand": "npm install",
   "customizations": {
     "vscode": {
@@ -22,7 +24,6 @@
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "ms-vscode.vscode-typescript-next",
-        "nrwl.angular-console",
         "formulahendry.auto-rename-tag"
       ],
       "settings": {
