@@ -15,8 +15,8 @@
       "requireLocalPort": true
     }
   },
-  "postAttachCommand": "bash -c 'PROXY_URL=$(node --input-type=module -e \"import {proxyUrl} from \\\"./nde/proxy-url.mjs\\\"; console.log(proxyUrl);\") && until curl -s \"$PROXY_URL\" > /dev/null 2>&1; do sleep 2; done && npx open-cli \"$PROXY_URL\"'",
-  "postCreateCommand": "npm install",
+  "postAttachCommand": "./nde/run.sh",
+  "postCreateCommand": "npm install && npx ng completion --disable",
   "customizations": {
     "vscode": {
       "extensions": [
