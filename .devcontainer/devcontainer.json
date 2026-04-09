@@ -7,9 +7,9 @@
   "features": {
     "ghcr.io/devcontainers/features/git:1": {}
   },
-  "forwardPorts": [4200],
+  "forwardPorts": [4201],
   "portsAttributes": {
-    "4200": {
+    "4201": {
       "label": "NDE Dev Server",
       "onAutoForward": "notify"
     }
