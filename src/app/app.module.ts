@@ -71,4 +71,3 @@ export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter:
   }
   return AppModule
 }
-

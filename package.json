@@ -55,7 +55,6 @@
   },
   "private": true,
   "dependencies": {
-    "@libis/primo-shared-state": "file:nde/libis-primo-shared-state-2026.3.1.tgz",
     "@angular-architects/module-federation": "^19.0.3",
     "@angular/animations": "^19.2.20",
     "@angular/cdk": "19.2.19",
@@ -68,6 +67,7 @@
     "@angular/platform-browser": "^19.2.20",
     "@angular/platform-browser-dynamic": "^19.2.20",
     "@angular/router": "^19.2.20",
+    "@libis/primo-shared-state": "file:nde/libis-primo-shared-state-2026.3.1.tgz",
     "@ngrx/entity": "^19.2.1",
     "@ngrx/store": "^19.2.1",
     "@ngrx/store-devtools": "^19.2.1",

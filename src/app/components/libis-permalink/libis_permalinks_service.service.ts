@@ -1,14 +1,10 @@
-import { HttpClient } from '@angular/common/http';
 import {
-  EnvironmentInjector,
   inject,
   Injectable,
-  Injector,
 } from '@angular/core';
-import { PrimoView, ViewConfigState } from 'src/app/Models/view-config.model';
-import limo_map from '../LIBIS_assets/permalink_map.json';
-import { Doc, SearchState, Sourcesystem } from 'src/app/Models/search.model';
-import { selectCurrentLanguage } from '../LIBIS_state/LIBIS_selectors.selectors';
+import limo_map from '../libis-permalink/permalink_map.json';
+import { Doc } from '@libis/primo-shared-state';
+import { selectCurrentLanguage } from '../libis-permalink/permalink_utils.selector';
 import { Store } from '@ngrx/store';
 
 export class ViewParams {
