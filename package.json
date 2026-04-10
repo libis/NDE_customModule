@@ -1,49 +1,90 @@
 {
   "name": "custom-module",
   "version": "2.0.0",
+  "nde": {
+    "addonName": "",
+    "assetBaseUrl": "",
+    "environments": {
+      "kuleuven": {
+        "host": "https://libis-kul-psb.primo.exlibrisgroup.com",
+        "institution": "32KUL_KUL",
+        "view": "KULeuven_NDE"
+      }
+    },
+    "defaultEnvironment": "kuleuven",
+    "proxyUrlTemplate": "/nde/home?vid={institution}:{view}&lang=en",
+    "customization": {
+      "favIcon": "custom/MOCKINST-MOCKVID/assets/images/favicon.ico",
+      "libraryLogo": "custom/MOCKINST-MOCKVID/assets/images/library-logo.png",
+      "viewSvg": "custom/MOCKINST-MOCKVID/assets/icons/custom_icons.svg",
+      "homepage": {
+        "homepageBGImage": "custom/MOCKINST-MOCKVID/assets/homepage/homepage_background.svg",
+        "html": {
+          "en": "custom/MOCKINST-MOCKVID/assets/homepage/homepage_en.html",
+          "nl": "custom/MOCKINST-MOCKVID/assets/homepage/homepage_nl.html",
+          "fr": "custom/MOCKINST-MOCKVID/assets/homepage/homepage_fr.html",
+          "de": "custom/MOCKINST-MOCKVID/assets/homepage/homepage_de.html"
+        }
+      }
+    },
+    "components": {
+      "autoRegister": true,
+      "directory": "src/app/components"
+    },
+    "interceptors": {
+      "autoRegister": true,
+      "directory": "src/app/interceptors"
+    },
+    "localResourceDirs": [
+      "./dist"
+    ]
+  },
   "scripts": {
     "ng": "ng",
+    "nde": "node nde/nde-cli.js",
     "start": "ng serve",
-	"prestart": "node prebuild.js",
+    "prestart": "node nde/prebuild.js",
     "start:no-prebundle": "ng serve --prebundle=false",
-    "start:proxy": "ng serve --proxy-config ./proxy/proxy.conf.mjs",
+    "start:proxy": "ng serve --proxy-config ./nde/proxy.conf.mjs",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "postbuild": "node postbuild.js",
-    "prebuild": "node prebuild.js",
+    "postbuild": "node nde/postbuild.js",
+    "prebuild": "node nde/prebuild.js",
     "run:all": "node node_modules/@angular-architects/module-federation/src/server/mf-dev-server.js"
   },
   "private": true,
   "dependencies": {
-    "@angular-architects/module-federation": "^18.0.6",
-    "@angular/animations": "^18.2.8",
-    "@angular/cdk": "18.2.9",
-    "@angular/common": "^18.2.8",
-    "@angular/compiler": "^18.2.8",
-    "@angular/core": "^18.2.8",
-    "@angular/elements": "^18.2.8",
-    "@angular/forms": "^18.2.8",
-    "@angular/material": "18.2.9",
-    "@angular/platform-browser": "^18.2.8",
-    "@angular/platform-browser-dynamic": "^18.2.8",
-    "@angular/router": "^18.2.8",
-    "@ngrx/entity": "^18.1.0",
-    "@ngrx/store": "^18.1.0",
-    "@ngrx/store-devtools": "^18.1.0",
+    "@libis/primo-shared-state": "file:nde/libis-primo-shared-state-2026.3.1.tgz",
+    "@angular-architects/module-federation": "^19.0.3",
+    "@angular/animations": "^19.2.20",
+    "@angular/cdk": "19.2.19",
+    "@angular/common": "^19.2.20",
+    "@angular/compiler": "^19.2.20",
+    "@angular/core": "^19.2.20",
+    "@angular/elements": "^19.2.20",
+    "@angular/forms": "^19.2.20",
+    "@angular/material": "19.2.19",
+    "@angular/platform-browser": "^19.2.20",
+    "@angular/platform-browser-dynamic": "^19.2.20",
+    "@angular/router": "^19.2.20",
+    "@ngrx/entity": "^19.2.1",
+    "@ngrx/store": "^19.2.1",
+    "@ngrx/store-devtools": "^19.2.1",
     "@ngx-translate/core": "^15.0.0",
     "@ngx-translate/http-loader": "^8.0.0",
     "@webcomponents/custom-elements": "^1.6.0",
     "dotenv": "^16.4.5",
     "rxjs": "~7.8.0",
     "tslib": "^2.4.1",
-    "zone.js": "~0.14.10"
+    "zone.js": "~0.15.1"
   },
-  "devDependencies": {
-    "@angular-architects/module-federation-tools": "^19.0.1",
-    "@angular-devkit/build-angular": "^18.2.9",
-    "@angular/cli": "^18.2.9",
-    "@angular/compiler-cli": "^18.2.8",
+  "devDependencies": {    
+    "@angular-architects/module-federation-tools": "^19.0.3",
+    "@angular-devkit/build-angular": "^19.2.24",
+    "@angular-devkit/core": "^19.2.24",
+    "@angular/cli": "^19.2.24",
+    "@angular/compiler-cli": "^19.2.20",
     "@types/jasmine": "~4.3.0",
     "archiver": "^7.0.1",
     "jasmine-core": "~4.6.0",
@@ -52,7 +93,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "ngx-build-plus": "^18.0.0",
+    "ngx-build-plus": "^19.0.0",
     "typescript": "^5.5.4",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4",

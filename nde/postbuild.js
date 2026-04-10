@@ -1,11 +1,28 @@
 const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
-require('dotenv').config({ path: './build-settings.env' });
 
-const distPath = path.join(__dirname, 'dist', 'custom-module');
-const targetPath = path.join(__dirname, 'dist', `${process.env.INST_ID}-${process.env.VIEW_ID}`);
-const zipPath = path.join(__dirname, 'dist', `${process.env.INST_ID}-${process.env.VIEW_ID}.zip`);
+const projectRoot = path.join(__dirname, '..');
+const packageJsonPath = path.join(projectRoot, 'package.json');
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+const ndeConfig = packageJson.nde;
+
+if (!ndeConfig) {
+    console.error("Error: 'nde' section not found in package.json!");
+    process.exit(1);
+}
+
+const defaultEnv = ndeConfig.defaultEnvironment;
+const envConfig = ndeConfig.environments[defaultEnv];
+
+if (!envConfig) {
+    console.error(`Error: Environment '${defaultEnv}' not found in package.json nde.environments!`);
+    process.exit(1);
+}
+
+const distPath = path.join(projectRoot, 'dist', 'custom-module');
+const targetPath = path.join(projectRoot, 'dist', `${envConfig.institution}-${envConfig.view}`);
+const zipPath = path.join(projectRoot, 'dist', `${envConfig.institution}-${envConfig.view}.zip`);
 
 function removeDirectory(directory, callback) {
     fs.rm(directory, { recursive: true, force: true }, callback);
