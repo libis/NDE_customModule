@@ -5,7 +5,12 @@ import { NDE_SLOTS, NDE_POSITION, NDEComponent } from 'src/app/decorators/nde-co
 import { SearchStateService } from '@libis/primo-shared-state';
 import { AnalyticsService } from '../../services/analytics.service';
 
-@NDEComponent({ selector: NDE_SLOTS.HEADER, position: NDE_POSITION.BEFORE })
+@NDEComponent(
+  { 
+    selector: NDE_SLOTS.HEADER, 
+    position: NDE_POSITION.BEFORE,
+    viewPattern: /32KUL.*/
+})
 @Component({
     selector: 'custom-search-stats',
     imports: [CommonModule],

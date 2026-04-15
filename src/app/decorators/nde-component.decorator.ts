@@ -52,6 +52,11 @@ export interface NDEComponentConfig {
    * Optional description for documentation purposes
    */
   description?: string;
+  
+  /**
+   * Optional viewPattern that specifies in which view the component should be included.
+   */
+  viewPattern?: RegExp;
 }
 
 /**
@@ -81,7 +86,10 @@ export function NDEComponent(config: NDEComponentConfig) {
   return function <T extends { new (...args: any[]): {} }>(constructor: T) {
     // Build the full selector with position suffix
     const fullSelector = buildFullSelector(config.selector, config.position);
-    
+    const bootstrapCfg = (window as any).__BOOTSTRAP_CFG__ ?? {};
+    let currentVid = bootstrapCfg.vid;
+    let componentIsRegistered = false    
+
     // Validate selector format
     if (!isValidSelector(fullSelector)) {
       console.warn(
@@ -115,16 +123,32 @@ export function NDEComponent(config: NDEComponentConfig) {
       );
     }
     
-    componentRegistry.set(fullSelector, entry);
+    // Component registration only if view matches the viewPattern
+    // Or if viewPattern is missing (default Registered == true)
+    if (config.viewPattern !== undefined) {
+      if ( currentVid.match(config.viewPattern) ) {
+        // console.log(`View [${currentVid}] and Components viewPattern [${config.viewPattern}]`);
+        componentRegistry.set(fullSelector, entry);
+        componentIsRegistered = true;
+      //}else{
+      //  console.log(`Mismatch between View [${currentVid}] and Components viewPattern [${config.viewPattern}]`);
+      }
+    }else{
+      componentRegistry.set(fullSelector, entry);
+      componentIsRegistered = true
+    }
 
     // Log component registration with selector and position
     const position = config.position || 'replace';
-    console.log(
-      `[NDEComponent] Registered: ${constructor.name}\n` +
-      `  Selector: ${config.selector}\n` +
-      `  Position: ${position}\n` +
-      `  Full Selector: ${fullSelector}`
-    );
+    if (componentIsRegistered){
+      console.log(
+        `[NDEComponent] Registered: ${constructor.name}\n` +
+        `  Selector: ${config.selector}\n` +
+        `  Position: ${position}\n` +
+        `  Full Selector: ${fullSelector}\n` +
+        `  viewPattern: ${config.viewPattern}\n`
+      );
+    }   
 
     return constructor;
   };

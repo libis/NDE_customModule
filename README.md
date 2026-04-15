@@ -1142,6 +1142,15 @@ All NDE components are intended to be customizable. If you encounter a component
 | `'bottom'` | `NDE_POSITION.BOTTOM` | Renders as last child inside the host component |
 | `''` | `NDE_POSITION.REPLACE` | Completely replaces the host component |
 
+### Regex viewPattern
+
+Component registration only if view matches the viewPattern
+
+```typescript
+@NDEComponent({ selector: NDE_SLOTS.HEADER, position: 'after', viewPattern: /32KUL.*/ })
+```
+
+
 ### Priority
 
 When multiple components target the same slot and position, use `priority` to control order (lower number renders first, default is 100):
