@@ -9,4 +9,4 @@ FROM node:20-bookworm
 # EXPOSE 4200
 # EXPOSE 4201
 
-RUN npm install -g @angular/cli@18
+RUN npm install -g @angular/cli@19
