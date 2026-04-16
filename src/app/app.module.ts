@@ -1,4 +1,4 @@
-import {ApplicationRef, DoBootstrap, Injector, NgModule} from '@angular/core';
+import {ApplicationRef, DoBootstrap, Injector, NgModule, inject, provideAppInitializer} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {createCustomElement, NgElementConstructor} from "@angular/elements";
 import {Router} from "@angular/router";
@@ -12,6 +12,7 @@ import { getInterceptorProviders } from './decorators/nde-interceptor.decorator'
 import { getEventProviders } from './decorators/nde-event.decorator';
 import { GlobalHttpEventService } from './services/global-http-event.service';
 import { AnalyticsService } from './services/analytics.service';
+import { HostStylesService } from './services/host-styles.service'
 import './interceptors/_registry';
 import './events/_registry';
 
@@ -26,7 +27,25 @@ export const AppModule = ({providers, shellRouter}: {providers:any, shellRouter:
       CommonModule,
       TranslateModule.forRoot({})
     ],
-    providers: [...providers, {provide: SHELL_ROUTER, useValue: shellRouter}, provideHttpClient(withInterceptorsFromDi()), ...getInterceptorProviders(), GlobalHttpEventService, ...getEventProviders()],
+    providers: [
+      ...providers, 
+
+      HostStylesService,
+     
+      provideAppInitializer(() => {
+        const hostStyles = inject(HostStylesService);
+
+        console.log('[App Init] HostStylesService running');
+        hostStyles.initializeHostStyles();
+      }),
+
+
+      {provide: SHELL_ROUTER, useValue: shellRouter}, 
+      provideHttpClient(withInterceptorsFromDi()), 
+      ...getInterceptorProviders(), 
+      GlobalHttpEventService, 
+      ...getEventProviders()
+    ],
     bootstrap: []
   })
   class AppModule implements DoBootstrap{
