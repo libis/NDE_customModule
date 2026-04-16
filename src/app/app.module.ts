@@ -49,7 +49,7 @@ export const AppModule = ({
         });
         customElements.define(key, customElement);
       }
-      // Mount the component to actually run it
+      // mount the component to actually run it
       const el = document.createElement('nde-injector-test');
       document.body.appendChild(el); // now ngOnInit runs
       console.log('nde-theme-injector mounted');

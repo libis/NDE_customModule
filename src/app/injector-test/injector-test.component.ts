@@ -112,6 +112,28 @@ export class InjectorTestComponent implements OnInit {
     });
   }
 
+  private injectHideWhereToFindItStyles(): void {
+    if (!this.isActive(this.config.HideWhereToFindIt)) return;
+
+    const service = {
+      title: 'nui.getit.service_getit', // same key as Primo VE
+      scrollId: 'getit_link1_1', // same scroll ID as Primo VE
+    };
+
+    this.translate.get(service.title).subscribe((translatedLabel) => {
+      const styleId = 'style_' + service.scrollId;
+      if (document.getElementById(styleId)) return;
+
+      const s = document.createElement('style');
+      s.setAttribute('id', styleId);
+      s.innerHTML = `div#services-index button[aria-label="${translatedLabel}"] { display: none !important; }`;
+      s.innerHTML += `div.full-view-section#${service.scrollId} { display: none !important; }`;
+
+      document.head.appendChild(s); // NDE uses <head>, not primo-explore element
+      console.log('HideWhereToFindIt applied with label:', translatedLabel);
+    });
+  }
+
   private injectStyles() {
     const styleId = 'nde-custom-topbar-styles';
     if (document.getElementById(styleId)) return;
@@ -129,6 +151,7 @@ export class InjectorTestComponent implements OnInit {
 
     document.head.appendChild(style);
     this.injectHideHowToGetItStyles(); // seprate because async
+    this.injectHideWhereToFindItStyles();
     console.log('Styles injected from config:', this.config);
   }
 }
