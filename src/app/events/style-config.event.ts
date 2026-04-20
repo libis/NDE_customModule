@@ -1,4 +1,6 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
+import { NDEEvent, NDEEventBase } from '../decorators/nde-event.decorator';
+import { GlobalHttpEventService } from '../services/global-http-event.service';
 import {
   STYLE_CONFIG,
   StyleConfig,
@@ -7,25 +9,22 @@ import {
 } from '../config/style-config';
 import { TranslateService } from '@ngx-translate/core';
 
-@Component({
-  selector: 'nde-injector-test',
-  template: ``,
+@NDEEvent({
+  stream: 'all',
+  enabled: true,
+  description: 'Injects styles eagerly at bootstrap',
 })
-export class InjectorTestComponent implements OnInit {
+@Injectable()
+export class styleConfigEvent extends NDEEventBase {
   private currentView: string = '';
-  constructor(
-    @Inject(STYLE_CONFIG) private config: StyleConfig,
-    private translate: TranslateService,
-  ) {}
 
-  ngOnInit() {
+  constructor(
+    globalHttp: GlobalHttpEventService,
+    @Inject(STYLE_CONFIG) private config: StyleConfig,
+    private translate: TranslateService, // Now available here
+  ) {
+    super(globalHttp);
     this.currentView = this.resolveCurrentView();
-    console.log(
-      'Injector running with config:',
-      this.config,
-      'view:',
-      this.currentView,
-    );
     this.injectStyles();
   }
 
@@ -62,28 +61,17 @@ export class InjectorTestComponent implements OnInit {
 
   private getHideSignInStyles(): string {
     if (!this.isActive(this.config.HideSignIn)) return '';
-    return `
-      nde-user-area {
-        display: none !important;
-      }
-    `;
+    return `nde-user-area { display: none !important; }`;
   }
 
   private getHideLiriasLinksStyles(): string {
     if (!this.isActive(this.config.HideLinksInLiriasRecords)) return '';
-    return `
-      nde-view-it-card {
-        display: none !important;
-      }
-    `;
+    return `nde-view-it-card { display: none !important; }`;
   }
+
   private getHideLoginBannerStyles(): string {
     if (!this.isActive(this.config.HideLoginBannerInFullRecordView)) return '';
-    return `
-    nde-custom-snack-bar {
-      display: none !important;
-    }
-  `;
+    return `nde-custom-snack-bar { display: none !important; }`;
   }
 
   private injectHideHowToGetItStyles(): void {
@@ -96,19 +84,15 @@ export class InjectorTestComponent implements OnInit {
 
     this.translate.get(service.title).subscribe((translatedLabel) => {
       const styleId = 'style_' + service.scrollId;
-
       if (document.getElementById(styleId)) return;
 
       const s = document.createElement('style');
-      s.setAttribute('id', styleId);
-
-      s.innerHTML = '';
-      s.innerHTML += `div#services-index button[aria-label="${translatedLabel}"] { display: none !important; }`;
-      s.innerHTML += `div.full-view-section#${service.scrollId} { display: none !important; }`;
-
-      document.getElementsByTagName('primo-explore')[0]?.appendChild(s);
-
-      console.log('HideHowToGetIt applied with label:', translatedLabel);
+      s.id = styleId;
+      s.innerHTML = `
+        div#services-index button[aria-label="${translatedLabel}"] { display: none !important; }
+        div.full-view-section#${service.scrollId} { display: none !important; }
+      `;
+      document.head.appendChild(s);
     });
   }
 
@@ -116,8 +100,8 @@ export class InjectorTestComponent implements OnInit {
     if (!this.isActive(this.config.HideWhereToFindIt)) return;
 
     const service = {
-      title: 'nui.getit.service_getit', // same key as Primo VE
-      scrollId: 'getit_link1_1', // same scroll ID as Primo VE
+      title: 'nui.getit.service_getit',
+      scrollId: 'getit_link1_1',
     };
 
     this.translate.get(service.title).subscribe((translatedLabel) => {
@@ -125,12 +109,12 @@ export class InjectorTestComponent implements OnInit {
       if (document.getElementById(styleId)) return;
 
       const s = document.createElement('style');
-      s.setAttribute('id', styleId);
-      s.innerHTML = `div#services-index button[aria-label="${translatedLabel}"] { display: none !important; }`;
-      s.innerHTML += `div.full-view-section#${service.scrollId} { display: none !important; }`;
-
-      document.head.appendChild(s); // NDE uses <head>, not primo-explore element
-      console.log('HideWhereToFindIt applied with label:', translatedLabel);
+      s.id = styleId;
+      s.innerHTML = `
+        div#services-index button[aria-label="${translatedLabel}"] { display: none !important; }
+        div.full-view-section#${service.scrollId} { display: none !important; }
+      `;
+      document.head.appendChild(s);
     });
   }
 
@@ -150,8 +134,11 @@ export class InjectorTestComponent implements OnInit {
     ].join('\n');
 
     document.head.appendChild(style);
-    this.injectHideHowToGetItStyles(); // seprate because async
+    this.injectHideHowToGetItStyles();
     this.injectHideWhereToFindItStyles();
-    console.log('Styles injected from config:', this.config);
+    console.log(
+      'semmi test style injected from config via nde event:',
+      this.config,
+    );
   }
 }
