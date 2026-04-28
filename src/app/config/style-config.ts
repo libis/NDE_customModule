@@ -22,8 +22,8 @@ export const TOPBAR_STYLE_MAP = {
 } as const;
 
 export const DEFAULT_STYLE_CONFIG: StyleConfig = {
-  // topbarSize: 'thin',
-  // topbarColor: 'red',
+  topbarSize: 'thin',
+  topbarColor: 'red',
   HideSignIn: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
   HideLinksInLiriasRecords: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
   HideLoginBannerInFullRecordView: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
