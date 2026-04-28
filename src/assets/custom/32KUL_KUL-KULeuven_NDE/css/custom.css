@@ -1,0 +1,17 @@
+/* Force header to grow */
+/* header.top-bar {
+  background: red !important;
+  height: 300px !important;
+}
+
+/* Force inner container to fill full height */
+/* header.top-bar .header-container {
+  height: 100% !important;
+  align-items: center !important;
+} */
+
+/* Scale logo */
+/* nde-logo img { */
+/* transform: scale(var(--custom-logo-scale)) !important;
+  transform-origin: left center; */
+/* } */
