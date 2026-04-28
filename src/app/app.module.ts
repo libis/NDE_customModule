@@ -1,16 +1,17 @@
-import { ApplicationRef, DoBootstrap, Injector, NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+// import {ApplicationRef, DoBootstrap, Injector, NgModule} from '@angular/core';
+// import {BrowserModule} from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 import { createCustomElement, NgElementConstructor } from '@angular/elements';
-import { Router } from '@angular/router';
+// import {Router} from "@angular/router";
+import { selectorComponentMap } from './custom1-module/customComponentMappings';
 import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
+import { AutoAssetSrcDirective } from './services/auto-asset-src.directive';
 import { SHELL_ROUTER } from './injection-tokens';
-import { DEFAULT_STYLE_CONFIG, STYLE_CONFIG } from './config/style-config';
-import { getEventProviders } from './decorators/nde-event.decorator';
-import './events/style-config.event';
+import { Router } from '@angular/router';
+import { ApplicationRef, DoBootstrap, Injector, NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
 
-import { GlobalHttpEventService } from './services/global-http-event.service';
 export const AppModule = ({
   providers,
   shellRouter,
@@ -19,16 +20,10 @@ export const AppModule = ({
   shellRouter: Router;
 }) => {
   @NgModule({
-    declarations: [AppComponent],
-    exports: [],
+    declarations: [AppComponent, AutoAssetSrcDirective],
+    exports: [AutoAssetSrcDirective],
     imports: [BrowserModule, CommonModule, TranslateModule.forRoot({})],
-    providers: [
-      ...providers,
-      GlobalHttpEventService,
-      { provide: SHELL_ROUTER, useValue: shellRouter },
-      { provide: STYLE_CONFIG, useValue: DEFAULT_STYLE_CONFIG },
-      ...getEventProviders(),
-    ],
+    providers: [...providers, { provide: SHELL_ROUTER, useValue: shellRouter }],
     bootstrap: [],
   })
   class AppModule implements DoBootstrap {
@@ -41,11 +36,22 @@ export const AppModule = ({
       private injector: Injector,
       private router: Router,
     ) {
-      router.dispose();
+      router.dispose(); //this prevents the router from being initialized and interfering with the shell app router
     }
 
-    ngDoBootstrap(appRef: ApplicationRef) {}
+    ngDoBootstrap(appRef: ApplicationRef) {
+      for (const [key, value] of selectorComponentMap) {
+        const customElement = createCustomElement(value, {
+          injector: this.injector,
+        });
+        this.webComponentSelectorMap.set(key, customElement);
+      }
+    }
 
+    /**
+     * Use componentMapping, selectorComponentMap
+     * @param componentName
+     */
     public getComponentRef(componentName: string) {
       return this.webComponentSelectorMap.get(componentName);
     }

@@ -49,34 +49,34 @@ export type RequestHandler = (
   method: string,
   url: string,
   headers: Record<string, string>,
-  body: unknown,
+  body: unknown
 ) => RequestModification | void;
 
 export type ResponseHandler = (
   method: string,
   url: string,
   status: number,
-  body: unknown,
+  body: unknown
 ) => unknown | void;
 
 // ---------------------------------------------------------------------------
 // CustomEvent names (used to bridge to Angular)
 // ---------------------------------------------------------------------------
 
-export const REQUEST_EVENT = 'nde:http:request';
+export const REQUEST_EVENT  = 'nde:http:request';
 export const RESPONSE_EVENT = 'nde:http:response';
-export const ERROR_EVENT = 'nde:http:error';
+export const ERROR_EVENT    = 'nde:http:error';
 
 // ---------------------------------------------------------------------------
 // Window-scoped globals (shared across federation modules)
 // ---------------------------------------------------------------------------
 
 const W = window as any;
-const GLOBAL_FLAG = '__nde_http_interceptor_installed';
-const GLOBAL_BUFFER = '__nde_http_event_buffer';
-const GLOBAL_HANDLERS = '__nde_http_request_handlers';
+const GLOBAL_FLAG              = '__nde_http_interceptor_installed';
+const GLOBAL_BUFFER            = '__nde_http_event_buffer';
+const GLOBAL_HANDLERS          = '__nde_http_request_handlers';
 const GLOBAL_RESPONSE_HANDLERS = '__nde_http_response_handlers';
-const GLOBAL_COUNTER = '__nde_http_event_counter';
+const GLOBAL_COUNTER           = '__nde_http_event_counter';
 
 function getEventBuffer(): GlobalHttpEvent[] {
   if (!W[GLOBAL_BUFFER]) W[GLOBAL_BUFFER] = [];
@@ -95,7 +95,7 @@ function getResponseHandlers(): ResponseHandler[] {
 
 function generateEventId(): string {
   if (!W[GLOBAL_COUNTER]) W[GLOBAL_COUNTER] = 0;
-  return 'nde-' + ++W[GLOBAL_COUNTER];
+  return 'nde-' + (++W[GLOBAL_COUNTER]);
 }
 
 // ---------------------------------------------------------------------------
@@ -103,21 +103,14 @@ function generateEventId(): string {
 // ---------------------------------------------------------------------------
 
 const SENSITIVE_PARAMS = [
-  'token',
-  'key',
-  'password',
-  'secret',
-  'apikey',
-  'api_key',
-  'access_token',
-  'auth',
-  'jwt',
+  'token', 'key', 'password', 'secret',
+  'apikey', 'api_key', 'access_token', 'auth', 'jwt'
 ];
 
 function sanitizeUrl(url: string): string {
   try {
     const urlObj = new URL(url, window.location.origin);
-    SENSITIVE_PARAMS.forEach((param) => {
+    SENSITIVE_PARAMS.forEach(param => {
       if (urlObj.searchParams.has(param)) {
         urlObj.searchParams.set(param, '[REDACTED]');
       }
@@ -136,30 +129,16 @@ function callHandlers(
   method: string,
   url: string,
   headers: Record<string, string>,
-  body: unknown,
-): {
-  method: string;
-  url: string;
-  headers: Record<string, string>;
-  body: unknown;
-  blocked: boolean;
-} {
+  body: unknown
+): { method: string; url: string; headers: Record<string, string>; body: unknown; blocked: boolean } {
   const result = { method, url, headers: { ...headers }, body, blocked: false };
   for (const handler of getRequestHandlers()) {
     try {
-      const mod = handler(
-        result.method,
-        result.url,
-        result.headers,
-        result.body,
-      );
+      const mod = handler(result.method, result.url, result.headers, result.body);
       if (mod) {
-        if (mod.blocked) {
-          result.blocked = true;
-          break;
-        }
-        if (mod.method) result.method = mod.method;
-        if (mod.url) result.url = mod.url;
+        if (mod.blocked) { result.blocked = true; break; }
+        if (mod.method)  result.method  = mod.method;
+        if (mod.url)     result.url     = mod.url;
         if (mod.headers) result.headers = { ...result.headers, ...mod.headers };
         if (mod.body !== undefined) result.body = mod.body;
       }
@@ -178,7 +157,7 @@ function callResponseHandlers(
   method: string,
   url: string,
   status: number,
-  body: unknown,
+  body: unknown
 ): unknown {
   let currentBody = body;
   for (const handler of getResponseHandlers()) {
@@ -204,12 +183,9 @@ function emitEvent(event: GlobalHttpEvent): void {
   // Cap buffer to prevent memory leak before Angular drains it
   if (buffer.length > 1000) buffer.shift();
 
-  const eventName =
-    event.type === 'request'
-      ? REQUEST_EVENT
-      : event.type === 'error'
-        ? ERROR_EVENT
-        : RESPONSE_EVENT;
+  const eventName = event.type === 'request' ? REQUEST_EVENT
+                  : event.type === 'error'   ? ERROR_EVENT
+                  : RESPONSE_EVENT;
   window.dispatchEvent(new CustomEvent(eventName, { detail: event }));
 }
 
@@ -221,17 +197,12 @@ function parseResponseHeaders(xhr: XMLHttpRequest): Record<string, string> {
   const headers: Record<string, string> = {};
   const raw = xhr.getAllResponseHeaders();
   if (!raw) return headers;
-  raw
-    .trim()
-    .split(/[\r\n]+/)
-    .forEach((line) => {
-      const idx = line.indexOf(':');
-      if (idx > 0) {
-        headers[line.substring(0, idx).trim().toLowerCase()] = line
-          .substring(idx + 1)
-          .trim();
-      }
-    });
+  raw.trim().split(/[\r\n]+/).forEach(line => {
+    const idx = line.indexOf(':');
+    if (idx > 0) {
+      headers[line.substring(0, idx).trim().toLowerCase()] = line.substring(idx + 1).trim();
+    }
+  });
   return headers;
 }
 
@@ -239,12 +210,12 @@ function parseResponseHeaders(xhr: XMLHttpRequest): Record<string, string> {
 // Per-instance XHR metadata keys (used by prototype getters)
 // ---------------------------------------------------------------------------
 
-const NDE_METHOD = '__nde_method';
-const NDE_URL = '__nde_url';
-const NDE_HEADERS = '__nde_headers';
-const NDE_MOD_TEXT = '__nde_modified_text'; // cached modified responseText
-const NDE_MOD_OBJ = '__nde_modified_obj'; // cached modified response (object)
-const NDE_HANDLED = '__nde_response_handled'; // boolean: handlers already ran
+const NDE_METHOD     = '__nde_method';
+const NDE_URL        = '__nde_url';
+const NDE_HEADERS    = '__nde_headers';
+const NDE_MOD_TEXT   = '__nde_modified_text';   // cached modified responseText
+const NDE_MOD_OBJ    = '__nde_modified_obj';    // cached modified response (object)
+const NDE_HANDLED    = '__nde_response_handled'; // boolean: handlers already ran
 
 // ---------------------------------------------------------------------------
 // XHR monkey-patch
@@ -294,15 +265,13 @@ function patchXHR(): void {
   //  - It's ordering-independent: whoever reads first triggers the chain
   //
   const nativeResponseTextDesc = Object.getOwnPropertyDescriptor(
-    XMLHttpRequest.prototype,
-    'responseText',
+    XMLHttpRequest.prototype, 'responseText'
   )!;
   const nativeResponseDesc = Object.getOwnPropertyDescriptor(
-    XMLHttpRequest.prototype,
-    'response',
+    XMLHttpRequest.prototype, 'response'
   )!;
   const nativeResponseTextGetter = nativeResponseTextDesc.get!;
-  const nativeResponseGetter = nativeResponseDesc.get!;
+  const nativeResponseGetter     = nativeResponseDesc.get!;
 
   /**
    * Run response handlers for this XHR instance (once).
@@ -316,7 +285,7 @@ function patchXHR(): void {
     if (isError || getResponseHandlers().length === 0) return;
 
     const method: string = xhr[NDE_METHOD] || 'UNKNOWN';
-    const url: string = xhr[NDE_URL] || '';
+    const url: string    = xhr[NDE_URL] || '';
 
     // Read original via native getters
     let responseBody: unknown;
@@ -325,42 +294,22 @@ function patchXHR(): void {
     } else {
       const text = nativeResponseTextGetter.call(xhr);
       responseBody = text;
-      try {
-        responseBody = JSON.parse(text);
-      } catch {
-        /* not JSON */
-      }
+      try { responseBody = JSON.parse(text); } catch { /* not JSON */ }
     }
 
     try {
-      const modified = callResponseHandlers(
-        method,
-        url,
-        xhr.status,
-        responseBody,
-      );
+      const modified = callResponseHandlers(method, url, xhr.status, responseBody);
 
       // Store both string and object forms
-      const modifiedStr =
-        typeof modified === 'string' ? modified : JSON.stringify(modified);
-      const modifiedObj =
-        typeof modified === 'string'
-          ? (() => {
-              try {
-                return JSON.parse(modified);
-              } catch {
-                return modified;
-              }
-            })()
-          : modified;
+      const modifiedStr = typeof modified === 'string' ? modified : JSON.stringify(modified);
+      const modifiedObj = typeof modified === 'string'
+        ? (() => { try { return JSON.parse(modified); } catch { return modified; } })()
+        : modified;
 
       xhr[NDE_MOD_TEXT] = modifiedStr;
-      xhr[NDE_MOD_OBJ] = modifiedObj;
+      xhr[NDE_MOD_OBJ]  = modifiedObj;
     } catch (err) {
-      console.error(
-        '[GlobalHttpInterceptor] Response handler chain error:',
-        err,
-      );
+      console.error('[GlobalHttpInterceptor] Response handler chain error:', err);
     }
   }
 
@@ -373,7 +322,7 @@ function patchXHR(): void {
         if (NDE_MOD_TEXT in this) return this[NDE_MOD_TEXT];
       }
       return nativeResponseTextGetter.call(this);
-    },
+    }
   });
 
   Object.defineProperty(XMLHttpRequest.prototype, 'response', {
@@ -385,12 +334,11 @@ function patchXHR(): void {
         if (NDE_MOD_OBJ in this) {
           // Return the right type for the responseType
           if (this.responseType === 'json') return this[NDE_MOD_OBJ];
-          if (this.responseType === '' || this.responseType === 'text')
-            return this[NDE_MOD_TEXT];
+          if (this.responseType === '' || this.responseType === 'text') return this[NDE_MOD_TEXT];
         }
       }
       return nativeResponseGetter.call(this);
-    },
+    }
   });
 
   // ---- Method patches ---------------------------------------------------
@@ -399,7 +347,7 @@ function patchXHR(): void {
   XMLHttpRequest.prototype.setRequestHeader = function (
     this: XMLHttpRequest,
     name: string,
-    value: string,
+    value: string
   ) {
     if (!(this as any)[NDE_HEADERS]) (this as any)[NDE_HEADERS] = {};
     (this as any)[NDE_HEADERS][name] = value;
@@ -426,7 +374,7 @@ function patchXHR(): void {
   // Intercept send — call handler chain, emit events
   XMLHttpRequest.prototype.send = function (
     this: XMLHttpRequest,
-    body?: Document | XMLHttpRequestBodyInit | null,
+    body?: Document | XMLHttpRequestBodyInit | null
   ) {
     const method: string = (this as any)[NDE_METHOD] || 'UNKNOWN';
     const url: string = (this as any)[NDE_URL] || '';
@@ -475,7 +423,7 @@ function patchXHR(): void {
       timestamp: startTime,
       source: 'xhr',
       requestHeaders: mod.headers,
-      body: mod.body,
+      body: mod.body
     });
 
     // Emit response/error event when the XHR completes.
@@ -495,11 +443,8 @@ function patchXHR(): void {
       if (NDE_MOD_OBJ in (xhrRef as any)) {
         finalBody = (xhrRef as any)[NDE_MOD_OBJ];
       } else {
-        try {
-          finalBody = JSON.parse(nativeResponseTextGetter.call(xhrRef));
-        } catch {
-          finalBody = nativeResponseTextGetter.call(xhrRef);
-        }
+        try { finalBody = JSON.parse(nativeResponseTextGetter.call(xhrRef)); }
+        catch { finalBody = nativeResponseTextGetter.call(xhrRef); }
       }
 
       emitEvent({
@@ -514,7 +459,7 @@ function patchXHR(): void {
         source: 'xhr',
         responseHeaders: parseResponseHeaders(xhrRef),
         error: isError ? `${xhrRef.status} ${xhrRef.statusText}` : undefined,
-        body: finalBody,
+        body: finalBody
       });
     });
 
@@ -532,26 +477,19 @@ function patchFetch(): void {
 
   window.fetch = function (
     input: RequestInfo | URL,
-    init?: RequestInit,
+    init?: RequestInit
   ): Promise<Response> {
     let method = init?.method || 'GET';
-    let url =
-      typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.toString()
-          : input.url;
+    let url = typeof input === 'string' ? input
+            : input instanceof URL      ? input.toString()
+            : input.url;
     let headers: Record<string, string> = {};
 
     if (init?.headers) {
       if (init.headers instanceof Headers) {
-        init.headers.forEach((v, k) => {
-          headers[k] = v;
-        });
+        init.headers.forEach((v, k) => { headers[k] = v; });
       } else if (Array.isArray(init.headers)) {
-        init.headers.forEach(([k, v]) => {
-          headers[k] = v;
-        });
+        init.headers.forEach(([k, v]) => { headers[k] = v; });
       } else {
         headers = { ...(init.headers as Record<string, string>) };
       }
@@ -583,7 +521,7 @@ function patchFetch(): void {
       timestamp: startTime,
       source: 'fetch',
       requestHeaders: mod.headers,
-      body: mod.body,
+      body: mod.body
     });
 
     return originalFetch.call(window, modifiedInput, modifiedInit).then(
@@ -598,7 +536,7 @@ function patchFetch(): void {
           duration: Date.now() - startTime,
           status: response.status,
           statusText: response.statusText,
-          source: 'fetch',
+          source: 'fetch'
         });
         return response;
       },
@@ -611,10 +549,10 @@ function patchFetch(): void {
           timestamp: Date.now(),
           duration: Date.now() - startTime,
           error: error?.message || String(error),
-          source: 'fetch',
+          source: 'fetch'
         });
         throw error;
-      },
+      }
     );
   };
 }
@@ -637,9 +575,7 @@ export function installGlobalHttpInterceptor(): void {
   patchXHR();
   patchFetch();
 
-  console.log(
-    '[GlobalHttpInterceptor] Installed — tracking all XHR + fetch traffic.',
-  );
+  console.log('[GlobalHttpInterceptor] Installed — tracking all XHR + fetch traffic.');
 }
 
 export function addRequestHandler(handler: RequestHandler): void {

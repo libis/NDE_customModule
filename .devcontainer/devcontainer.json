@@ -1,0 +1,35 @@
+{
+  "name": "NDE Custom Module",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "forwardPorts": [4201],
+  "portsAttributes": {
+    "4201": {
+      "label": "NDE Dev Server",
+      "onAutoForward": "silent",
+      "requireLocalPort": true
+    }
+  },
+  "postAttachCommand": "./nde/run.sh",
+  "postCreateCommand": "npm install && npx ng completion --disable",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "angular.ng-template",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next",
+        "formulahendry.auto-rename-tag"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "remoteUser": "node"
+}
