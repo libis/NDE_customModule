@@ -6,6 +6,7 @@ import limo_map from '../libis-permalink/permalink_map.json';
 import { Doc } from '@libis/primo-shared-state';
 import { selectCurrentLanguage } from '../libis-permalink/permalink_utils.selector';
 import { Store } from '@ngrx/store';
+import { HttpClient } from '@angular/common/http';
 
 export class ViewParams {
   constructor(
@@ -33,13 +34,29 @@ export class LIBISPermalinkService {
   private limo_map: { [key: string]: libViewMap } = limo_map.limo_map as {
     [key: string]: libViewMap;
   };
+  private limo_http_map: { [key: string]: libViewMap } = limo_map.limo_map as {
+    [key: string]: libViewMap;
+  };
   private store = inject(Store);
 
-  constructor(/*private http:HttpClient*/) {
+  constructor(private http:HttpClient) {
     //console.log('HttpClient provider:', this.envInjector.get(HttpClient, null));
     console.log('Initializing LIBIS permalink service');
     console.log('Mapping for LIMO permalinks: ', this.limo_map);
     console.log('LIMO permalinks service ready for service');
+
+    // console.log('Testing mappings loading via http client');
+    // this.http.get<{ [key: string]: libViewMap }>('https://assets.libis.be/_/files/limo/Limo_mappings/permalink_map.json')
+    // .subscribe({
+    //   next: (data) => {
+    //     this.limo_http_map = data;
+    //     console.log('Successfully loaded LIMO mappings via HttpClient: ', this.limo_http_map);
+    //   },
+    //   error: (error) => {
+    //     console.error('Error loading LIMO mappings via HttpClient: ', error);
+    //   }
+    // });
+
   }
 
   public calculateLIBISPermalink(
@@ -115,4 +132,5 @@ export class LIBISPermalinkService {
 
     return `${this.limo_map[instCode]['inst']}:${this.limo_map[instCode]['views'][viewCode]['code']}:${this.limo_map[instCode]['views'][viewCode]['scopes'][scopeCode]}`;
   }
+
 }
