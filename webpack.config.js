@@ -237,6 +237,7 @@ module.exports = {
         "@angular/router":            { requiredVersion: "auto" },
         "@angular/common/http":       { requiredVersion: "auto" },
         "@angular/platform-browser":  { requiredVersion: "auto" },
+        "@angular/material":       { requiredVersion: "auto" },
         "@ngx-translate/core":        { singleton: true },
         "@ngrx/store":                { singleton: true },
         "rxjs":                       { requiredVersion: "auto" },        
