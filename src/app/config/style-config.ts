@@ -6,13 +6,13 @@ export type ViewList = string[]; // list of views, if set as a value => those vi
 export type BooleanOrViews = boolean | ViewList;
 
 export interface StyleConfig {
-  topbarSize: TopbarSize;
-  topbarColor: string;
+  topbarSize?: TopbarSize;
+  topbarColor?: string;
   HideSignIn?: BooleanOrViews;
   HideLinksInLiriasRecords?: BooleanOrViews;
   HideLoginBannerInFullRecordView?: BooleanOrViews;
   HideHowToGetIt?: BooleanOrViews;
-  HideWhereToFindIt: BooleanOrViews;
+  HideWhereToFindIt?: BooleanOrViews;
 }
 
 export const TOPBAR_STYLE_MAP = {
@@ -22,11 +22,11 @@ export const TOPBAR_STYLE_MAP = {
 } as const;
 
 export const DEFAULT_STYLE_CONFIG: StyleConfig = {
-  topbarSize: 'thin',
-  topbarColor: 'red',
-  HideSignIn: true, // if a view is included -> value will be true
-  HideLinksInLiriasRecords: true, // if a view is included -> value will be true
-  HideLoginBannerInFullRecordView: true, // if a view is included -> value will be true
+  // topbarSize: 'thin',
+  // topbarColor: 'red',
+  HideSignIn: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
+  HideLinksInLiriasRecords: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
+  HideLoginBannerInFullRecordView: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
   HideHowToGetIt: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
   HideWhereToFindIt: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
 };

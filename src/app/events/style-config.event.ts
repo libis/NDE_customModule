@@ -122,7 +122,7 @@ export class styleConfigEvent extends NDEEventBase {
     const styleId = 'nde-custom-topbar-styles';
     if (document.getElementById(styleId)) return;
 
-    const specs = TOPBAR_STYLE_MAP[this.config.topbarSize];
+    const specs = TOPBAR_STYLE_MAP[this.config.topbarSize ?? 'thin'];
 
     const style = document.createElement('style');
     style.id = styleId;
