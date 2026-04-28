@@ -35,10 +35,6 @@ private store = inject(Store);
 private isLoading: boolean = true;
 tooltipTest: string = "nde.permalink.copiedTooltip";
 
-// Benodigde Primo NDE data voor search also:
-// - viewCode om te checken een een link moet aangemaakt worden voor elke search also bron
-// - activatie status simple versus advanced search
-// - search params die nu actief zijn
 private viewCode: Signal<string|undefined> = this.viewConfigState.vidSignal(); // de facto nooit undefined, want de view is ingeladen voordat je search kan uitvoeren
 private searchParams: Signal<SearchParams|null> = this.searchState.searchParamsSignal();
 
@@ -62,11 +58,6 @@ constructor(private searchState: SearchStateService,
   private searchAlsoService: LIBISSearchAlsoService,
   private translate: TranslateService,
   private renderer: Renderer2) {
-  console.log('Initializing Search also component');
-  console.log('Current view code: ', this.viewCode());
-  console.log('Current search params: ', this.searchParams());
-  console.log('Current advanced search status: ', this.advancedSearch());
-  console.log('Initial generated search also links: ', this.searchAlsoLinks());
 }
 
 

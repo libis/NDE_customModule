@@ -40,24 +40,7 @@ export class LIBISPermalinkService {
   private store = inject(Store);
 
   constructor(private http:HttpClient) {
-    //console.log('HttpClient provider:', this.envInjector.get(HttpClient, null));
-    console.log('Initializing LIBIS permalink service');
-    console.log('Mapping for LIMO permalinks: ', this.limo_map);
-    console.log('LIMO permalinks service ready for service');
-
-    // console.log('Testing mappings loading via http client');
-    // this.http.get<{ [key: string]: libViewMap }>('https://assets.libis.be/_/files/limo/Limo_mappings/permalink_map.json')
-    // .subscribe({
-    //   next: (data) => {
-    //     this.limo_http_map = data;
-    //     console.log('Successfully loaded LIMO mappings via HttpClient: ', this.limo_http_map);
-    //   },
-    //   error: (error) => {
-    //     console.error('Error loading LIMO mappings via HttpClient: ', error);
-    //   }
-    // });
-
-  }
+ }
 
   public calculateLIBISPermalink(
     primoRecord: Doc,
@@ -71,7 +54,7 @@ export class LIBISPermalinkService {
         : primoRecord.pnx.control.sourceid;
     let lang_code = this.store.selectSignal(selectCurrentLanguage);
     let permalinkID = this.getPermalinkID(primoRecord, sourceSys, sourceID);
-    console.log('Calculated permalinkID: ', permalinkID)
+    //console.log('Calculated permalinkID: ', permalinkID)
 
     // Calculate permalink - method varies for Lirias and LIBIS permalinks
     if (sourceSys.includes('Webhook') && sourceID.includes('lirias')) {
