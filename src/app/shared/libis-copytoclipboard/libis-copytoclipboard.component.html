@@ -1,0 +1,35 @@
+<link
+  href="https://fonts.googleapis.com/icon?family=Material+Icons"
+  rel="stylesheet"
+/>
+
+<div class="copy-to-clipboard-cont flex-row flex-layout-space-end">
+  <libis-progress-spinner *ngIf="isLoading; else loadingFalse"></libis-progress-spinner>
+  <ng-template #loadingFalse>
+  <div #richTextDiv [innerHTML]="text"></div>
+
+  <button mat-icon-button
+          (click)="onCopyToClipboard()"
+          [attr.aria-label]="'nui.aria.share.copy' | translate"
+          matTooltip=" {{(btnClicked ? tooltipSuccessText : tooltipText) | translate}}">
+    <div *ngIf="btnClicked; else btnClickedFalse">
+        <mat-icon>done_outline</mat-icon>
+          <!---*ndeIcon="'copied-to-clipboard'; let svgName=svgName"
+          [svgIcon]="svgName">
+        </mat-icon>-->
+      <!--Text indication for screen reader that the copy was successful-->
+      <span class="sr-only " role="alert">{{ successMessage}}</span>
+    </div>
+    <ng-template #btnClickedFalse>
+      <div>
+        <mat-icon>content_copy</mat-icon>
+         <!---<mat-icon
+           *ndeIcon="'copy-to-clipboard'; let svgName=svgName"
+           [svgIcon]="svgName">
+      </mat-icon>-->
+      </div>
+    </ng-template>
+  </button>
+  </ng-template>
+
+</div>
