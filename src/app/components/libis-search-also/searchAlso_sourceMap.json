@@ -1,0 +1,70 @@
+{
+	"searchAlso_map": {
+	"general":{
+		"iconURL": "https://assets.libis.be/limo/icons/searchAlso",
+		"tooltipPath": "nde.custom.search_also.tooltip"
+	},
+	"sources":{
+		"Bibliotheek.be":{
+			"name": "Bibliotheek.be",
+			"baseURL": "https://www.bibliotheek.be/catalogus?q=",
+			"icon": {
+				"type": "file",
+				"value": "de_bib.png"
+			},
+			"tooltip": "deBib",
+			"showInView": "^32KUL_KATHO:VIVES_NDE|^32KUL_HUB:ODISEE_NDE|^32KUL_VCV:FARO_NDE|^32KUL_KHK:TMOREK_NDE|^32KUL_KHM:TMOREMA_NDE|^32KUL_KHL:UCLL_NDE|^32KUL_LUCAWENK:LUCA_NDE|^32KUL_DOCVB:docvlaamsbrabant_NDE|^32KUL_LIBS.LIBS_NDE|^32KUL_LIBS.PLEC_NDE|^32KUL_LIBS.RVAONEM_NDE"
+		},
+		"Google scholar": {
+			"name": "Google Scholar",
+			"baseURL": "https://scholar.google.com/scholar?q=",
+			"icon": {
+				"type": "URL",
+				"value": "https://scholar.google.com/favicon.ico"
+			},
+			"tooltip": "google_scolar",
+			"showInView": "^32KUL_KATHO:VIVES_NDE|^32KUL_HUB:ODISEE_NDE|^32KUL_VCV:FARO_NDE|^32KUL_KHK:TMOREK_NDE|^32KUL_KHM:TMOREMA_NDE|^32KUL_KHL:UCLL_NDE|^32KUL_VLER.*_NDE"
+		},
+		"Unicat (standard)":{
+			"name": "UniCat",
+			"baseURL": "https://unicat.be/uniCat?func=search&query=",
+			"icon": {
+				"type": "file",
+				"value": "unicat.ico"
+			},
+			"tooltip": "unicat",
+			"showInView": "^32KUL_KATHO:VIVES_NDE|^32KUL_VCV:FARO_NDE|^32KUL_KHL:UCLL_NDE|^32KUL_LUCAWENK:LUCA_NDE|^32KUL_VLER.*_NDE|^32KUL_LIBS.LIBS_NDE|^32KUL_LIBS.RVAONEM_NDE"
+		},
+		"Unicat (KUL EZProxy)":{
+			"name": "UniCat",
+			"baseURL": "https://kuleuven.e-bronnen.be/login?url=https://unicat.be/uniCat?func=search&query=",
+			"icon": {
+				"type": "file",
+				"value": "unicat.ico"
+			},
+			"tooltip": "unicat",
+			"showInView": "^32KUL_KUL:KULeuven_NDE"
+		},
+		"VLP main":{
+			"name": "Parlementair Informatiecentrum",
+			"baseURL": "https://libis-vlp.primo.exlibrisgroup.com/discovery/search?vid=32KUL_VLP:VLP&query=any,contains,",
+			"icon": {
+				"type": "file",
+				"value": "limo.ico"
+			},
+			"tooltip": "vlp",
+			"showInView": "^32KUL_VLP:Archief_NDE"
+		},
+		"Worldcat":{
+			"name": "Worldcat",
+			"baseURL": "https://www.worldcat.org/search?q=",
+			"icon": {
+				"type": "file",
+				"value": "worldcat.ico"
+			},
+			"tooltip": "worldcat",
+			"showInView": "^32KUL_VCV:FARO_NDE|^32KUL_KUL:KULeuven_NDE|^32KUL_LIBS.LIBS_NDE|^32KUL_LIBS.RVAONEM_NDE"
+		}
+	}
+}
+}

@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "nde": {
     "addonName": "",
-    "assetBaseUrl": "",
+    "assetBaseUrl": "https://libis-kul-psb.primo.exlibrisgroup.com",
     "environments": {
       "kuleuven": {
         "host": "https://libis-kul-psb.primo.exlibrisgroup.com",
@@ -55,7 +55,6 @@
   },
   "private": true,
   "dependencies": {
-    "@libis/primo-shared-state": "file:nde/libis-primo-shared-state-2026.3.1.tgz",
     "@angular-architects/module-federation": "^19.0.3",
     "@angular/animations": "^19.2.20",
     "@angular/cdk": "19.2.19",
@@ -68,6 +67,7 @@
     "@angular/platform-browser": "^19.2.20",
     "@angular/platform-browser-dynamic": "^19.2.20",
     "@angular/router": "^19.2.20",
+    "@libis/primo-shared-state": "file:nde/libis-primo-shared-state-2026.3.1.tgz",
     "@ngrx/entity": "^19.2.1",
     "@ngrx/store": "^19.2.1",
     "@ngrx/store-devtools": "^19.2.1",
@@ -75,11 +75,13 @@
     "@ngx-translate/http-loader": "^8.0.0",
     "@webcomponents/custom-elements": "^1.6.0",
     "dotenv": "^16.4.5",
+    "lottie-web": "^5.13.0",
+    "ngx-lottie": "^13.0.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.4.1",
     "zone.js": "~0.15.1"
   },
-  "devDependencies": {    
+  "devDependencies": {
     "@angular-architects/module-federation-tools": "^19.0.3",
     "@angular-devkit/build-angular": "^19.2.24",
     "@angular-devkit/core": "^19.2.24",
