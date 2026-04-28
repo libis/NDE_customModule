@@ -11,7 +11,7 @@ import { HostStylesService } from 'src/app/services/libis-host-styles.service';
 
 
 
-@NDEComponent({selector:'nde-permalink-dialog', position:'after', viewPattern: /32KUL.*/})
+@NDEComponent({selector:'nde-permalink-dialog', position:'replace', viewPattern: /32KUL.*/})
 @Component({
   selector: 'libis-permalink',
   standalone: true,

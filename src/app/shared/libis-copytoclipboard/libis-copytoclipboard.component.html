@@ -3,7 +3,7 @@
   rel="stylesheet"
 />
 
-<div class="copy-to-clipboard-cont flex-row flex-layout-space-end">
+<div class="copy-to-clipboard-cont flex-row">
   <libis-progress-spinner *ngIf="isLoading; else loadingFalse"></libis-progress-spinner>
   <ng-template #loadingFalse>
   <div #richTextDiv [innerHTML]="text"></div>
