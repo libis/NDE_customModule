@@ -1,6 +1,5 @@
 // import {ApplicationRef, DoBootstrap, Injector, NgModule} from '@angular/core';
 // import {BrowserModule} from '@angular/platform-browser';
-import { AppComponent } from './app.component';
 import { createCustomElement, NgElementConstructor } from '@angular/elements';
 // import {Router} from "@angular/router";
 import { selectorComponentMap } from './custom1-module/customComponentMappings';
@@ -24,7 +23,7 @@ export const AppModule = ({
   shellRouter: Router;
 }) => {
   @NgModule({
-    declarations: [AppComponent, AutoAssetSrcDirective],
+    declarations: [AutoAssetSrcDirective],
     exports: [AutoAssetSrcDirective],
     imports: [BrowserModule, CommonModule, TranslateModule.forRoot({})],
     providers: [
