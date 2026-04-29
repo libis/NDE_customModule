@@ -9,7 +9,7 @@ import { AnalyticsService } from '../../services/analytics.service';
   { 
     selector: NDE_SLOTS.HEADER, 
     position: NDE_POSITION.BEFORE,
-    viewPattern: /32KUL.*/
+    viewPattern: /DISABLED_32KUL.*/
 })
 @Component({
     selector: 'custom-search-stats',
