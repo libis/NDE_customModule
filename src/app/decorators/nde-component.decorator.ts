@@ -53,7 +53,8 @@ export interface NDEComponentConfig {
    * Optional description for documentation purposes
    */
   description?: string;
-     /**
+  
+  /**
    * Optional viewPattern that specifies in which view the component should be included.
    */
   viewPattern?: RegExp;
@@ -87,11 +88,9 @@ export function NDEComponent(config: NDEComponentConfig) {
     // Build the full selector with position suffix
 
     const fullSelector = buildFullSelector(config.selector, config.position);
-    
     const bootstrapCfg = (window as any).__BOOTSTRAP_CFG__ ?? {};
     let currentVid = bootstrapCfg.vid;
-
-    let componentIsRegistered = false
+    let componentIsRegistered = false    
 
     // Validate selector format
     if (!isValidSelector(fullSelector)) {
@@ -127,13 +126,14 @@ export function NDEComponent(config: NDEComponentConfig) {
     }
     
     // Component registration only if view matches the viewPattern
-    // Or if viewPattern is missing
+    // Or if viewPattern is missing (default Registered == true)
     if (config.viewPattern !== undefined) {
       if ( currentVid.match(config.viewPattern) ) {
+        // console.log(`View [${currentVid}] and Components viewPattern [${config.viewPattern}]`);
         componentRegistry.set(fullSelector, entry);
         componentIsRegistered = true;
-      }else{
-        console.log(`Mismatch between View [${currentVid}] and Components viewPattern [${config.viewPattern}]n`);
+      //}else{
+      //  console.log(`Mismatch between View [${currentVid}] and Components viewPattern [${config.viewPattern}]`);
       }
     }else{
       componentRegistry.set(fullSelector, entry);
@@ -144,14 +144,14 @@ export function NDEComponent(config: NDEComponentConfig) {
     const position = config.position || 'replace';
     if (componentIsRegistered){
       console.log(
-            `[NDEComponent] Registered: ${constructor.name}\n` +
-            `  Selector: ${config.selector}\n` +
-            `  Position: ${position}\n` +
-            `  Full Selector: ${fullSelector}\n` +
-            `  viewPattern: ${config.viewPattern}\n`
+        `[NDEComponent] Registered: ${constructor.name}\n` +
+        `  Selector: ${config.selector}\n` +
+        `  Position: ${position}\n` +
+        `  Full Selector: ${fullSelector}\n` +
+        `  viewPattern: ${config.viewPattern}\n`
       );
-    }
-    
+    }   
+
     return constructor;
   };
 }

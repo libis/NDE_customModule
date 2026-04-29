@@ -5,13 +5,13 @@ import { SearchStateService, Doc } from '@libis/primo-shared-state';
 import { GlobalHttpEventService } from '../services/global-http-event.service';
 import { ConfigService } from 'src/app/services/config.service'
 
+@Injectable()
 @NDEEvent({
   stream: 'response',
   match: /delivery|pnxs/,
   order: 30,
   description: 'Modify the doc.pnx.display fields returned in search responses.'
 })
-@Injectable()
 export class SearchEvent extends NDEEventBase {
 
   // private storeSub: Subscription;
@@ -45,7 +45,8 @@ export class SearchEvent extends NDEEventBase {
     if (Array.isArray(docs)) {
       for (const doc of docs) {
         console.log('[SearchEvent] Layer 1: Check vid :', currentVid);
-        this.reverseTitle(doc);
+        
+        // this.reverseTitle(doc);
 
         if ( currentVid.match(/32KUL_KUL:Lirias_NDE/) ) {
           console.log('[SearchEvent] Layer 1: addHrefToIdentifiers for doc');
