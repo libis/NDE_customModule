@@ -95,3 +95,4 @@ console.log('Prebuild completed successfully!');
  It also updates the webpack.config.js file with the addon name and the new bootstrap file.
  Finally, it writes the assetBaseUrl value to a new file asset-base.generated.ts.
 */
+}

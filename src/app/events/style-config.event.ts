@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@angular/core';
 import { NDEEvent, NDEEventBase } from '../decorators/nde-event.decorator';
 import { GlobalHttpEventService } from '../services/global-http-event.service';
+
 import {
   STYLE_CONFIG,
   StyleConfig,
@@ -60,6 +61,7 @@ export class styleConfigEvent extends NDEEventBase {
   }
 
   private getHideSignInStyles(): string {
+    console.log('test');
     if (!this.isActive(this.config.HideSignIn)) return '';
     return `nde-user-area { display: none !important; }`;
   }
