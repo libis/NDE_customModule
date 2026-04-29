@@ -130,6 +130,31 @@ Three services are available: **SearchStateService**, **UserStateService**, and 
 
 > **Tip:** If you are new to Observables, see the [RxJS guide](https://rxjs.dev/guide/overview). For NgRx, see the [NgRx Store documentation](https://ngrx.io/guide/store).
 
+#### Upgrading @libis/primo-shared-state
+
+The library is consumed as a local tarball (see the `file:` reference in `package.json`), not from npm. Upgrading is a manual three-step process:
+
+1. Copy the new tarball into the `nde/` directory.
+2. Update the `file:` reference in `package.json` to point to the new filename.
+3. Remove the stale install from `node_modules` and reinstall.
+
+```bash
+cp {path_to}/primo-shared-state/libis-primo-shared-state-{version}.tgz \
+   {path_to}/NDE_customModule/nde/libis-primo-shared-state-{version}.tgz
+
+cd {path_to}/NDE_customModule
+rm -rf node_modules/@libis/primo-shared-state
+npm install
+```
+
+Then in `package.json`, update the dependency entry:
+
+```jsonc
+"@libis/primo-shared-state": "file:nde/libis-primo-shared-state-{version}.tgz"
+```
+
+> The `rm -rf node_modules/@libis/primo-shared-state` step is required — without it, npm reuses the previously resolved package and the new tarball is ignored.
+
 ### A Note on Angular Signals vs Observables
 
 Angular 18 ships with **Signals** as a stable reactive primitive. Signals are well suited for synchronous, fine-grained state (local component state, computed values, NgRx store reads via `store.selectSignal()`), and they can simplify templates by removing the need for the `| async` pipe.
