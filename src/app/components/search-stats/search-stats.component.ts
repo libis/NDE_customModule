@@ -15,7 +15,8 @@ import { AnalyticsService } from '../../services/analytics.service';
     selector: 'custom-search-stats',
     imports: [CommonModule],
     templateUrl: './search-stats.component.html',
-    styleUrls: ['./search-stats.component.scss']
+    styleUrls: ['./search-stats.component.scss'],
+    standalone: true
 })
 export class SearchStatsComponent {
   docs$ = this.searchState.selectAllDocs$();
