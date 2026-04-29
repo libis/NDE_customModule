@@ -12,8 +12,9 @@ import { SHELL_ROUTER } from './injection-tokens';
 import { Router } from '@angular/router';
 import { ApplicationRef, DoBootstrap, Injector, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { provideLottieOptions } from 'ngx-lottie';
-import {player} from 'lottie-web';
+//import lottie from 'lottie-web';
+//import { provideLottieOptions } from 'ngx-lottie';
+//import player from 'lottie-web';
 
 export const AppModule = ({
   providers,
@@ -28,10 +29,10 @@ export const AppModule = ({
     imports: [BrowserModule, CommonModule, TranslateModule.forRoot({})],
     providers: [
       ...providers, 
-      { provide: SHELL_ROUTER, useValue: shellRouter },
-      provideLottieOptions({
-         player: () => player,
-      }),
+      // { provide: SHELL_ROUTER, useValue: shellRouter },
+      // provideLottieOptions({
+      //    player: () => player,
+      // }),
 
       
     ],
