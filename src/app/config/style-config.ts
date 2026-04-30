@@ -24,11 +24,11 @@ export const TOPBAR_STYLE_MAP = {
 export const DEFAULT_STYLE_CONFIG: StyleConfig = {
   topbarSize: 'thin',
   topbarColor: 'red',
-  HideSignIn: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
-  HideLinksInLiriasRecords: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
-  HideLoginBannerInFullRecordView: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
-  HideHowToGetIt: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
-  HideWhereToFindIt: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
+  HideSignIn: ['32KUL_KUL:Lirias_NDE'], // if a view is included -> value will be true
+  HideLinksInLiriasRecords: ['32KUL_KUL:Lirias_NDE'], // if a view is included -> value will be true
+  HideLoginBannerInFullRecordView: ['32KUL_KUL:Lirias_NDE'], // if a view is included -> value will be true
+  HideHowToGetIt: ['32KUL_KUL:Lirias_NDE'], // if a view is included -> value will be true
+  HideWhereToFindIt: ['32KUL_KUL:Lirias_NDE'], // if a view is included -> value will be true
 };
 
 export const STYLE_CONFIG = new InjectionToken<StyleConfig>('STYLE_CONFIG', {

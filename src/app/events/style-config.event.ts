@@ -25,9 +25,19 @@ export class styleConfigEvent extends NDEEventBase {
     private translate: TranslateService, // Now available here
   ) {
     super(globalHttp);
+    this.config.topbarColor = this.getStyleValueFromCodeTable(this.config.topbarColor, "nde.style_config.topbarColor");
+    this.config.topbarSize = this.getStyleValueFromCodeTable(this.config.topbarSize, "nde.style_config.topbarSize");
+    console.log("[styleConfigEvent] config", this.config)
     this.currentView = this.resolveCurrentView();
     this.injectStyles();
   }
+
+  private getStyleValueFromCodeTable(param: any, code: string): any {
+    const value = this.translate.instant(code) 
+    if (value == code) return param
+    return value
+  }
+
 
   private resolveCurrentView(): string {
     const params = new URLSearchParams(window.location.search);
@@ -61,7 +71,6 @@ export class styleConfigEvent extends NDEEventBase {
   }
 
   private getHideSignInStyles(): string {
-    console.log('test');
     if (!this.isActive(this.config.HideSignIn)) return '';
     return `nde-user-area { display: none !important; }`;
   }
