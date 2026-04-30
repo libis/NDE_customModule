@@ -1,7 +1,0 @@
-<!-- For testing make it not an observable 
-  <ng-container *ngIf="termsList$ | async as termsList">
-  -->
-<ng-container *ngIf="termsList$ as termsList">
-  <span [innerHTML]="generateHighlightedText(termsList)" dir="auto" class="mat-body-medium"></span>
-</ng-container>
-

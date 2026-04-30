@@ -1,0 +1,17 @@
+a.ext-link-on-identifier .material-icons,
+a.ext-link-on-identifier .material-icons:active,
+a.ext-link-on-identifier .material-icons:hover
+{
+  color: fuchsia;
+  font-size: 1em;
+}
+
+/*
+header.top-bar.flex-column.header {
+  background-color: tomato  !important;
+}
+
+nde-app-layout {
+  display: inline;
+}
+*/

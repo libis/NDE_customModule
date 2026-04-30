@@ -46,4 +46,5 @@ export class SearchStatsComponent {
       error: (err) => console.error('[TestPing] Error:', err)
     });
   }
+
 }
