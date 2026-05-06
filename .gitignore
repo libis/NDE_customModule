@@ -41,3 +41,7 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Auto-generated files
+/src/app/custom1-module/customComponentMappings.ts
+/src/app/events/_registry.ts
