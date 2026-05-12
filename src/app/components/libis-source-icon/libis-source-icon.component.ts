@@ -2,7 +2,6 @@ import { Component, Input } from '@angular/core';
 import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 import { MatIconModule } from '@angular/material/icon';
 import {MatDividerModule} from '@angular/material/divider';
-import { Doc } from '@libis/primo-shared-state';
 
 @NDEComponent({selector: 'nde-record-indications', position: 'bottom', viewPattern: /^(?!32KUL_KUL:Lirias)/})
 @Component({

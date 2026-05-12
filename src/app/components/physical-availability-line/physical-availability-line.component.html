@@ -1,0 +1,91 @@
+<div
+  *ngIf="viewModel$ | async as viewModel"
+  data-qa="brief_result_availability"
+  class="flex-row availability-status"
+>
+
+
+<ng-container [ngSwitch]="getAvailabilityStatus(viewModel.availabilityCode)">
+
+   
+    <ng-container *ngSwitchCase="AvailabilityStatusType.Unavailable">
+      <mat-icon
+        class="nde-mat-icon-size-small margin-right-small"
+        *ndeIcon="'Unavailable-record-indicator'; let svgName = svgName"
+        [svgIcon]="svgName">
+      </mat-icon>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="AvailabilityStatusType.Available">
+      <mat-icon
+        class="nde-mat-icon-size-small margin-right-small"
+        *ndeIcon="'Available-record-indicator'; let svgName = svgName"
+        [svgIcon]="svgName">
+      </mat-icon>
+    </ng-container>
+
+  </ng-container>
+
+  @if (viewModel.availabilityCode.includes('ngrs')) {
+    <span class="light-text availability-ngrs-prefix margin-right-small">
+      {{ viewModel.availabilityCode | translate }}
+    </span>
+  }
+  
+  <button
+    mat-button
+    class="available-at-button margin-right-small basic-button"
+    [disableRipple]="true"
+    [attr.aria-label]="
+      (getAvailabilityAriaLabel() | async) + ' (' + getTitle() + ')'
+    "
+    (click)="onPhysicalAvailabilityClicked()"
+  >
+    @if (!viewModel.availabilityCode.includes('ngrs')) {
+      <span
+        class="availability-code">
+         <span class="light-text"
+        [innerHTML]="
+          (viewModel.availabilityCode | translate).replace('{{idx_1}}','')
+        ">
+        </span>
+      </span>
+    }
+
+    @if ((viewModel.availabilityCode | translate).includes('idx_1')) {
+
+      <ng-container *ngFor="let inst of almaInstitutionsList; let i = index; let last = last">
+        <span
+          [style.color]="positiveAvailabilityStatus.includes(inst.availabilityStatus) ? 'green' : 'grey'"
+        >
+          {{ inst.instName }}
+        </span>
+
+        <!-- Separator logic -->
+        <ng-container *ngIf="!last">
+          <span *ngIf="i < almaInstitutionsList.length - 2">, </span>
+          <span *ngIf="i === almaInstitutionsList.length - 2"> AND </span>
+        </ng-container>
+      </ng-container>
+    }
+
+<!--
+    @if (isAvailableAtOtherLocations(viewModel.physicalAvailability)) {
+      <span [innerHTML]="'delivery.and.other.locations' | translate"></span>
+    }
+-->
+    @if (isGlobalRapidoRecord()) {
+      <span>
+        {{ ' ' }}{{ 'delivery.code.ngrs.other_libraries' | translate }}
+      </span>
+    }
+
+    @if (isUnavailableRapidoRecord(viewModel.physicalAvailability)) {
+      <span>
+        {{ ' ' }}{{
+          'delivery.code.ngrs.other_libraries_self_owned' | translate
+        }}
+      </span>
+    }
+  </button>
+</div>

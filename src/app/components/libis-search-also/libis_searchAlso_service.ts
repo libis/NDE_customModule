@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { SearchParams } from "src/app/Models/search.model";
+import { SearchParams } from "@libis/primo-shared-state"
 import searchAlso_map from '../libis-search-also/searchAlso_sourceMap.json';
 import { HttpClient } from "@angular/common/http";
 

@@ -1,17 +1,24 @@
-// import {ApplicationRef, DoBootstrap, Injector, NgModule} from '@angular/core';
-// import {BrowserModule} from '@angular/platform-browser';
-import { AppComponent } from './app.component';
+import { ApplicationRef, DoBootstrap, Injector, NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
 import { createCustomElement, NgElementConstructor } from '@angular/elements';
-// import {Router} from "@angular/router";
+import { Router } from '@angular/router';
 import { selectorComponentMap } from './custom1-module/customComponentMappings';
-import { sharedComponentMap } from "./shared/index";
 import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { AutoAssetSrcDirective } from './services/auto-asset-src.directive';
 import { SHELL_ROUTER } from './injection-tokens';
-import { Router } from '@angular/router';
-import { ApplicationRef, DoBootstrap, Injector, NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+import {
+  provideHttpClient,
+  withInterceptorsFromDi,
+} from '@angular/common/http';
+import { getInterceptorProviders } from './decorators/nde-interceptor.decorator';
+import { getEventProviders } from './decorators/nde-event.decorator';
+import { GlobalHttpEventService } from './services/global-http-event.service';
+import { AnalyticsService } from './services/analytics.service';
+import { provideLottieOptions } from 'ngx-lottie';
+import player from 'lottie-web';
+import './interceptors/_registry';
+import './events/_registry';
 
 export const AppModule = ({
   providers,
@@ -21,14 +28,19 @@ export const AppModule = ({
   shellRouter: Router;
 }) => {
   @NgModule({
-    declarations: [AppComponent, AutoAssetSrcDirective],
+    declarations: [AutoAssetSrcDirective],
     exports: [AutoAssetSrcDirective],
     imports: [BrowserModule, CommonModule, TranslateModule.forRoot({})],
     providers: [
-      ...providers, 
-      { provide: SHELL_ROUTER, useValue: shellRouter }
-
-      
+      ...providers,
+      { provide: SHELL_ROUTER, useValue: shellRouter },
+      provideHttpClient(withInterceptorsFromDi()),
+      ...getInterceptorProviders(),
+      GlobalHttpEventService,
+      provideLottieOptions({
+        player: () => player,
+      }),
+      ...getEventProviders(),
     ],
     bootstrap: [],
   })
@@ -41,21 +53,39 @@ export const AppModule = ({
     constructor(
       private injector: Injector,
       private router: Router,
+      globalHttp: GlobalHttpEventService,
+      analytics: AnalyticsService,
     ) {
       router.dispose(); //this prevents the router from being initialized and interfering with the shell app router
+
+      // Wire analytics tracking to the global HTTP event stream
+      globalHttp.all$.subscribe((event) => {
+        analytics.track({
+          type: event.type,
+          method: event.method,
+          url: event.url,
+          timestamp: event.timestamp,
+          duration: event.duration,
+          status: event.status,
+          error: event.error,
+        });
+      });
     }
 
     ngDoBootstrap(appRef: ApplicationRef) {
-      
-      for (const [key, value] of sharedComponentMap) {
-        const customWebComponent = createCustomElement(value, {injector: this.injector});
-        customElements.define(key, customWebComponent);
-      }      
       for (const [key, value] of selectorComponentMap) {
-        const customElement = createCustomElement(value, {
-          injector: this.injector,
-        });
-        this.webComponentSelectorMap.set(key, customElement);
+        try {
+          const customElement = createCustomElement(value, {
+            injector: this.injector,
+          });
+          this.webComponentSelectorMap.set(key, customElement);
+          console.log(`[AppModule] Registered custom element: ${key}`);
+        } catch (error) {
+          console.warn(
+            `[AppModule] Failed to register custom element: ${key}`,
+            error,
+          );
+        }
       }
     }
 
