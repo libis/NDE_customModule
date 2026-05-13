@@ -5,6 +5,7 @@ import { getComponentRegistry } from '../decorators/nde-component.decorator';
 import '../components/libis-permalink/libis-permalink.component';
 import '../components/libis-search-also/libis-search-also.component';
 import '../components/libis-source-icon/libis-source-icon.component';
+import '../components/physical-availability-line/physical-availability-line.component';
 import '../components/search-stats/search-stats.component';
 
 // Export the auto-populated registry

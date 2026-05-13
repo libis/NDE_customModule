@@ -67,7 +67,7 @@
     "@angular/platform-browser": "^19.2.20",
     "@angular/platform-browser-dynamic": "^19.2.20",
     "@angular/router": "^19.2.20",
-    "@libis/primo-shared-state": "file:nde/libis-primo-shared-state-2026.5.2.tgz",
+    "@libis/primo-shared-state": "file:nde/libis-primo-shared-state-2026.5.3.tgz",
     "@ngrx/entity": "^19.2.1",
     "@ngrx/store": "^19.2.1",
     "@ngrx/store-devtools": "^19.2.1",
