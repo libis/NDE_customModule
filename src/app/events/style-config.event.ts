@@ -27,6 +27,7 @@ export class styleConfigEvent extends NDEEventBase {
     super(globalHttp);
     this.config.topbarColor = this.getStyleValueFromCodeTable(this.config.topbarColor, "nde.style_config.topbarColor");
     this.config.topbarSize = this.getStyleValueFromCodeTable(this.config.topbarSize, "nde.style_config.topbarSize");
+    console.log("[styleConfigEvent] config", this.config)
     this.currentView = this.resolveCurrentView();
     this.injectStyles();
   }
@@ -70,7 +71,6 @@ export class styleConfigEvent extends NDEEventBase {
   }
 
   private getHideSignInStyles(): string {
-    console.log('test');
     if (!this.isActive(this.config.HideSignIn)) return '';
     return `nde-user-area { display: none !important; }`;
   }

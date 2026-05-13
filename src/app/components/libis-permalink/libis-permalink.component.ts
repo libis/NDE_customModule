@@ -5,7 +5,7 @@ import {selectSearchScope } from '../libis-permalink/permalink_utils.selector';
 import { LIBISPermalinkService } from './libis_permalinks_service.service';
 import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 import { CommonModule } from '@angular/common';
-import { LibisCopytoclipboardComponent } from '../../shared/libis-copytoclipboard/libis-copytoclipboard.component';
+import { LibisCopytoclipboardComponent } from '../../shared/components/libis-copytoclipboard/libis-copytoclipboard.component';
 //import { HostStylesService } from 'src/app/services/libis-host-styles.service';
 
 @NDEComponent({selector:'nde-permalink-dialog', position:'replace', viewPattern: /32KUL.*/})
