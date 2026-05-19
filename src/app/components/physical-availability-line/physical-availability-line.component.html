@@ -55,16 +55,18 @@
     @if ((viewModel.availabilityCode | translate).includes('idx_1')) {
 
       <ng-container *ngFor="let inst of almaInstitutionsList; let i = index; let last = last">
+        <!--
         <span
           [style.color]="positiveAvailabilityStatus.includes(inst.availabilityStatus) ? 'green' : 'grey'"
         >
           {{ inst.instName }}
         </span>
-
+        -->
+        {{ inst.instName }}
         <!-- Separator logic -->
         <ng-container *ngIf="!last">
-          <span *ngIf="i < almaInstitutionsList.length - 2">, </span>
-          <span *ngIf="i === almaInstitutionsList.length - 2"> AND </span>
+          <span *ngIf="i < almaInstitutionsList.length - 2" style="font-weight: 400; font-style: normal;">, </span>
+          <span *ngIf="i === almaInstitutionsList.length - 2" style="font-weight: 400; font-style: normal;"> AND </span>
         </ng-container>
       </ng-container>
     }
