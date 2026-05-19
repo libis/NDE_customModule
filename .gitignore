@@ -45,3 +45,4 @@ Thumbs.db
 # Auto-generated files
 /src/app/custom1-module/customComponentMappings.ts
 /src/app/events/_registry.ts
+/src/app/state/asset-base.generated.ts
