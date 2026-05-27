@@ -2,7 +2,7 @@
   "name": "custom-module",
   "version": "2.0.0",
   "nde": {
-    "addonName": "CustomModuleCentral",
+    "addonName": "",
     "assetBaseUrl": "https://libis-kul-psb.primo.exlibrisgroup.com",
     "environments": {
       "kuleuven": {
@@ -16,7 +16,7 @@
         "view": "CENTRAL_PACKAGE"
       }
     },
-    "defaultEnvironment": "central",
+    "defaultEnvironment": "kuleuven",
     "proxyUrlTemplate": "/nde/home?vid={institution}:{view}&lang=en",
     "customization": {
       "favIcon": "custom/MOCKINST-MOCKVID/assets/images/favicon.ico",
