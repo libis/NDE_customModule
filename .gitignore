@@ -42,7 +42,7 @@ testem.log
 .DS_Store
 Thumbs.db
 
-# Auto-generated files
-/src/app/custom1-module/customComponentMappings.ts
-/src/app/events/_registry.ts
-/src/app/state/asset-base.generated.ts
+# NDE Auto-generated files
+customComponentMappings.ts
+_registry.ts
+asset-base.generated.ts
