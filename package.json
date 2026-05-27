@@ -55,6 +55,10 @@
       "autoRegister": true,
       "directory": "src/app/interceptors"
     },
+    "events": {
+      "autoRegister": true,
+      "directory": "src/app/events"
+    },
     "localResourceDirs": [
       "./dist"
     ]
