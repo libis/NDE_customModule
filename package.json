@@ -93,6 +93,7 @@
     "@angular/cli": "^19.2.24",
     "@angular/compiler-cli": "^19.2.20",
     "@types/jasmine": "~4.3.0",
+    "@types/lodash": "^4.17.24",
     "@types/node": "^25.0.10",
     "archiver": "^7.0.1",
     "jasmine-core": "~4.6.0",
