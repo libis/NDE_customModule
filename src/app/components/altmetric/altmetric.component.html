@@ -1,0 +1,29 @@
+<div class="layout-row">
+  {{ doi() }} {{ isbn() }}
+  <ng-container *ngIf="shouldRender()">
+    <div
+      *ngIf="doi()"
+      [id]="'altmetric-doi-' + id()"
+      aria-label="Altmetric"
+      (click)="$event.stopPropagation()"
+      data-link-target="_blank"
+      rel="noopener"
+      class="altmetric-embed"
+      data-hide-no-mentions="false"
+      data-badge-type="4"
+      data-badge-popover="right"
+      [attr.data-doi]="doi()"></div>
+    <div
+      *ngIf="isbn()"
+      [id]="'altmetric-isbn-' + id()"
+      aria-label="Altmetric"
+      (click)="$event.stopPropagation()"
+      data-link-target="_blank"
+      rel="noopener"
+      class="altmetric-embed"
+      data-hide-no-mentions="false"
+      data-badge-type="4"
+      data-badge-popover="right"
+      [attr.data-isbn]="isbn()"></div>
+  </ng-container>
+</div>

@@ -1,4 +1,4 @@
-import('./bootstrapCustomModuleCentral').catch((err) => console.error(err));
+import('./bootstrap').catch((err) => console.error(err));
 
 // // test go back issue
 // window.addEventListener('pageshow', (event) => {
