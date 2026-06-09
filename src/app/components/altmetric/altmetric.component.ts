@@ -9,21 +9,15 @@ import {
   untracked,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SearchStateService, SUCCESS } from '@libis/primo-shared-state';
 import {
   NDE_POSITION,
+  NDE_SLOTS,
   NDEComponent,
 } from 'src/app/decorators/nde-component.decorator';
-import { ScriptLoaderService } from 'src/app/services/script-loader.service';
-
-declare global {
-  interface Window {
-    _altmetric_embed_init: (parent?: Element | Document) => void;
-  }
-}
+import { AltmetricEmbedService } from 'src/app/services/altmetric-embed.service';
 
 @NDEComponent({
-  selector: 'nde-record-availability',
+  selector: NDE_SLOTS.RECORD_AVAILABILITY,
   position: NDE_POSITION.BOTTOM,
 })
 @Component({
@@ -36,10 +30,10 @@ declare global {
 })
 export class AltmetricComponent {
   private host = signal<any>(null);
-  private scriptLoader = inject(ScriptLoaderService);
-  private scriptReady = this.scriptLoader.isLoaded('Altmetric');
-  private searchState = inject(SearchStateService);
-  private searchStatus = this.searchState.searchStatusSignal();
+
+  // Inject the embed service so its singleton effect spins up
+  // and listens for search-status + script-ready changes.
+  private _embedService = inject(AltmetricEmbedService);
 
   @Input() set hostComponent(value: any) {
     this.host.set(value);
@@ -59,8 +53,8 @@ export class AltmetricComponent {
   public shouldRender = signal<boolean>(true);
 
   constructor() {
-    // Recreate the badge DOM whenever this row's doi/isbn changes,
-    // so Altmetric sees fresh, unprocessed elements.
+    // Recreate this row's badge DOM whenever doi/isbn changes,
+    // so Altmetric sees fresh, unprocessed elements when it scans.
     effect(() => {
       const doi = this.doi();
       const isbn = this.isbn();
@@ -71,17 +65,6 @@ export class AltmetricComponent {
         this.shouldRender.set(false);
       });
       queueMicrotask(() => untracked(() => this.shouldRender.set(true)));
-    });
-
-    // Trigger a global scan once the search results are loaded
-    // and the embed script is ready.
-    effect(() => {
-      const ready = this.scriptReady();
-      const status = this.searchStatus();
-      if (!ready || status !== SUCCESS) return;
-
-      // Defer to let the result rows render before scanning.
-      setTimeout(() => window._altmetric_embed_init(document.body), 0);
     });
   }
 }

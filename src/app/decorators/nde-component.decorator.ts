@@ -247,6 +247,7 @@ export const NDE_SLOTS = {
   // Record display
   BRIEF_RESULT: 'nde-brief-result',
   FULL_DISPLAY: 'nde-full-display',
+  RECORD_AVAILABILITY: 'nde-record-availability',
   
   // Features
   RECOMMENDATIONS: 'nde-recommendations',
