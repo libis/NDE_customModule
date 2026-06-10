@@ -30,6 +30,36 @@ const resolvedPath = proxyUrlTemplate
 
 const proxyUrl = `http://localhost:4201${resolvedPath}`;
 const PROXY_TARGET = envConfig.host;
-const customizationConfigOverride = ndeConfig.customization;
+
+// Resolve configurable assets URL template — used to prefix every relative
+// path in the active environment's `assets` block so it ends up as a fully
+// qualified custom-package URL (e.g. custom/<institution>-<view>/assets/...).
+const defaultAssetsTemplate = 'custom/{institution}-{view}/assets';
+const assetsUrlTemplate = ndeConfig.assetsUrlTemplate || defaultAssetsTemplate;
+const resolvedAssetsPrefix = assetsUrlTemplate
+    .replace(/{institution}/g, envConfig.institution)
+    .replace(/{view}/g, envConfig.view)
+    .replace(/\/+$/, '');
+
+function resolveAssetPaths(node) {
+    if (typeof node === 'string') {
+        // Leave absolute URLs and root-relative paths untouched.
+        if (/^(https?:)?\/\//.test(node) || node.startsWith('/')) return node;
+        return `${resolvedAssetsPrefix}/${node.replace(/^\/+/, '')}`;
+    }
+    if (Array.isArray(node)) return node.map(resolveAssetPaths);
+    if (node && typeof node === 'object') {
+        const out = {};
+        for (const [k, v] of Object.entries(node)) out[k] = resolveAssetPaths(v);
+        return out;
+    }
+    return node;
+}
+
+// Prefer the per-environment `assets` block; fall back to the legacy
+// top-level `customization` block for backward compatibility.
+const customizationConfigOverride = envConfig.assets
+    ? resolveAssetPaths(envConfig.assets)
+    : (ndeConfig.customization || {});
 
 export {resolvedPath, proxyUrl, PROXY_TARGET, customizationConfigOverride, ndeConfig};

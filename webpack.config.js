@@ -12,6 +12,25 @@ sharedMappings.register(path.join(__dirname, "tsconfig.json"), [
   /* mapped paths to share */
 ]);
 
+// Read auto-discovery settings from package.json `nde` config so each
+// plugin (components / interceptors / events) can be toggled and pointed
+// at a custom directory without editing this file.
+const ndeConfig =
+  (JSON.parse(fs.readFileSync(path.resolve(__dirname, "package.json"), "utf8"))
+    .nde) || {};
+
+function discoveryOptions(key, defaultDir) {
+  const cfg = ndeConfig[key] || {};
+  return {
+    autoRegister: cfg.autoRegister !== false, // default true
+    directory: path.resolve(__dirname, cfg.directory || defaultDir),
+  };
+}
+
+const componentsCfg = discoveryOptions("components", "src/app/components");
+const interceptorsCfg = discoveryOptions("interceptors", "src/app/interceptors");
+const eventsCfg = discoveryOptions("events", "src/app/events");
+
 /**
  * Webpack plugin that auto-generates component imports in customComponentMappings.ts.
  * Scans the components directory before each compilation so `ng build` and `ng serve`
@@ -105,8 +124,7 @@ class NdeInterceptorDiscoveryPlugin {
       options.interceptorsDir ||
       path.resolve(__dirname, "src/app/interceptors");
     this.registryFile =
-      options.registryFile ||
-      path.resolve(__dirname, "src/app/interceptors/_registry.ts");
+      options.registryFile || path.join(this.interceptorsDir, "_registry.ts");
     this.registryDir = path.dirname(this.registryFile);
   }
 
@@ -175,8 +193,7 @@ class NdeEventDiscoveryPlugin {
     this.eventsDir =
       options.eventsDir || path.resolve(__dirname, "src/app/events");
     this.registryFile =
-      options.registryFile ||
-      path.resolve(__dirname, "src/app/events/_registry.ts");
+      options.registryFile || path.join(this.eventsDir, "_registry.ts");
     this.registryDir = path.dirname(this.registryFile);
   }
 
@@ -261,9 +278,15 @@ module.exports = {
     ],
   },
   plugins: [
-    new NdeComponentDiscoveryPlugin(),
-    new NdeInterceptorDiscoveryPlugin(),
-    new NdeEventDiscoveryPlugin(),
+    ...(componentsCfg.autoRegister
+      ? [new NdeComponentDiscoveryPlugin({ componentsDir: componentsCfg.directory })]
+      : []),
+    ...(interceptorsCfg.autoRegister
+      ? [new NdeInterceptorDiscoveryPlugin({ interceptorsDir: interceptorsCfg.directory })]
+      : []),
+    ...(eventsCfg.autoRegister
+      ? [new NdeEventDiscoveryPlugin({ eventsDir: eventsCfg.directory })]
+      : []),
     new CopyWebpackPlugin({
       patterns: [
         {
