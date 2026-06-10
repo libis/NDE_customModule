@@ -2,7 +2,11 @@
   "name": "custom-module",
   "version": "2.0.0",
   "nde": {
-    "addonName": "",
+    "_comments" : [
+      "https://supportcenter.clarivate.com/s/known-issues/knowledge-detail?language=en_US&recordId=kA2QO000000zA2T0AU",
+      "https://developers.exlibrisgroup.com/blog/primo-nde-programming-an-add-on/",
+      "\"addonName\": \"CustomModuleCentral\""
+    ],
     "assetBaseUrl": "https://libis-kul-psb.primo.exlibrisgroup.com",
     "environments": {
       "kuleuven": {
@@ -13,7 +17,7 @@
       "central": {
         "host": "https://libis-kul-psb.primo.exlibrisgroup.com",
         "institution": "32KUL_LIBIS_NETWORK",
-        "view": "CENTRAL_PACKAGE"
+        "view": "AddOn_CENTRAL_PACKAGE"
       }
     },
     "defaultEnvironment": "kuleuven",
