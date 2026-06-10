@@ -32,15 +32,39 @@ export const AppModule = ({
     exports: [AutoAssetSrcDirective],
     imports: [BrowserModule, CommonModule, TranslateModule.forRoot({})],
     providers: [
+      
       ...providers,
+     
       { provide: SHELL_ROUTER, useValue: shellRouter },
+      
+
+      HostStylesService,
+      {
+        provide: APP_INITIALIZER,
+        useFactory: (hostStylesService: HostStylesService) => {
+          return () => hostStylesService.initializeHostStyles();
+        },
+        deps: [HostStylesService],
+        multi: true,
+      },
+      
+      {
+        provide: APP_INITIALIZER,
+        useFactory: initApp,
+        deps: [ConfigService],
+        multi: true,
+      },
       provideHttpClient(withInterceptorsFromDi()),
+      
       ...getInterceptorProviders(),
+      
       GlobalHttpEventService,
       provideLottieOptions({
         player: () => player,
       }),
+      
       ...getEventProviders(),
+    
     ],
     bootstrap: [],
   })

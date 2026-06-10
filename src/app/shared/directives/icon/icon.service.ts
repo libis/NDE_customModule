@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import {MatIconRegistry} from "@angular/material/icon";
 import {DomSanitizer} from "@angular/platform-browser";
 import {catchError, map, of, switchMap} from "rxjs";
-import {customizationEnabled} from "../../../infra/customization-util";
+import {customizationEnabled} from "src/app/infra/customization-util";
 
 export const VID_ICON_NAMESPACE_COLON_REPLACEMENT = '-';
 @Injectable({

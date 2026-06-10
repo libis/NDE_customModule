@@ -12,7 +12,7 @@ import {
     selector: '[autoAssetSrc]' // <img autoAssetSrc src="assets/..." />
     ,
     standalone: false
-})
+  })
   export class AutoAssetSrcDirective implements OnInit {
     @Input() src: string = '';
   
