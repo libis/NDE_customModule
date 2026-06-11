@@ -1,0 +1,27 @@
+<!---<p>libis-search-also works!</p>-->
+@if (searchAlsoLinks().length > 0) {
+    <div class="search-also-container">
+
+    <button mat-button [matMenuTriggerFor]="searchAlsoList" class="search-also-button">
+        <mat-icon>travel_explore</mat-icon>
+        Search also 
+        <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+
+    <mat-menu #searchAlsoList [overlapTrigger]="false" panelClass="search-also-menu">
+        @for(link of searchAlsoLinks(); track link.name) {
+        <a mat-menu-item matTooltip="{{ link.tooltip | translate}}"
+        [href]="link.URL" target="_blank">
+            <img
+            [src]="link.icon"
+            width="22"
+            height="22"
+            rel="noopener"
+            />
+            <span> {{link.name}}</span>
+        </a>
+    }
+    </mat-menu>
+    </div>
+}
+

@@ -1,6 +1,6 @@
 import { NDEComponent } from '../../decorators/nde-component.decorator';
 import { Component, OnInit, Input, CUSTOM_ELEMENTS_SCHEMA, ViewEncapsulation } from '@angular/core';
-import { CommonModule, JsonPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { HostBindings } from 'src/app/services/host-bindings.service'
 import { Observable } from 'rxjs';
 import { AsyncPipe, NgIf, NgFor } from '@angular/common';
@@ -16,14 +16,15 @@ import { ConfigService } from 'src/app/services/config.service'
 
 @NDEComponent({
   selector: 'nde-full-display-details',
-  position: 'replace',
-  viewPattern: /32KUL.*/
+  position: 'before',
+  viewPattern: /Disable_32KUL.*/
 })
+
 
 @Component({
   selector: 'custom-full-display-details-override',
   standalone: true,
-  imports: [RouterLink, TranslateModule, AsyncPipe, NgIf, NgFor, JsonPipe],
+  imports: [RouterLink, TranslateModule, AsyncPipe, NgIf, NgFor],
   templateUrl: './full-display-details-override.component.html',
   styleUrl: './full-display-details-override.component.scss',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -32,6 +33,7 @@ import { ConfigService } from 'src/app/services/config.service'
 export class FullDisplayDetailsOverrideComponent implements OnInit {
 
   // Host bindings (copied from host as passthroughs if you need them in template)
+  
   getDetailLabel$!: (label: string) => Observable<string>;
   displayHypertextLinkingInJournalAndDB!: () => boolean;
   onHyperTextLinking!: (value: any) => void;
@@ -57,7 +59,7 @@ export class FullDisplayDetailsOverrideComponent implements OnInit {
   ngOnInit(): void {
 
     const host = this.hostComponent;
-    
+   
     this.cfg = this.configService.getConfig();
     this.prefix = this.configService.getValue<string>('prefix');
 

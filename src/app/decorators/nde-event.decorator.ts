@@ -52,7 +52,13 @@
  * ```
  */
 
-import { Type, Provider, APP_INITIALIZER, Injectable, OnDestroy } from '@angular/core';
+import {
+  Type,
+  Provider,
+  APP_INITIALIZER,
+  Injectable,
+  OnDestroy,
+} from '@angular/core';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { GlobalHttpEventService } from '../services/global-http-event.service';
@@ -63,7 +69,10 @@ import {
 import 'reflect-metadata';
 
 // Re-export so subclasses can import from one place
-export { GlobalHttpEvent, RequestModification } from '../services/global-http-interceptor';
+export {
+  GlobalHttpEvent,
+  RequestModification,
+} from '../services/global-http-interceptor';
 
 /* ------------------------------------------------------------------ */
 /*  Public types                                                       */
@@ -118,11 +127,19 @@ export function NDEEvent(config: NDEEventConfig = {}) {
       enabled: config.enabled ?? true,
     };
 
-    Reflect.defineMetadata(NDE_EVENT_METADATA_KEY, normalizedConfig, constructor);
+    Reflect.defineMetadata(
+      NDE_EVENT_METADATA_KEY,
+      normalizedConfig,
+      constructor,
+    );
 
-    const existingIndex = eventRegistry.findIndex(e => e.constructor === constructor);
+    const existingIndex = eventRegistry.findIndex(
+      (e) => e.constructor === constructor,
+    );
     if (existingIndex >= 0) {
-      console.warn(`[NDEEvent] ${constructor.name} is already registered. Updating configuration.`);
+      console.warn(
+        `[NDEEvent] ${constructor.name} is already registered. Updating configuration.`,
+      );
       eventRegistry[existingIndex] = { constructor, config: normalizedConfig };
     } else {
       eventRegistry.push({ constructor, config: normalizedConfig });
@@ -131,7 +148,7 @@ export function NDEEvent(config: NDEEventConfig = {}) {
 
     console.log(
       `[NDEEvent] Registered: ${constructor.name} ` +
-      `(stream: ${normalizedConfig.stream}, order: ${normalizedConfig.order})`
+        `(stream: ${normalizedConfig.stream}, order: ${normalizedConfig.order})`,
     );
 
     return constructor;
@@ -163,8 +180,10 @@ export abstract class NDEEventBase implements OnDestroy {
   private __removeResponseHandler: (() => void) | null = null;
 
   constructor(protected globalHttp: GlobalHttpEventService) {
-    const config: NDEEventConfig | undefined =
-      Reflect.getMetadata(NDE_EVENT_METADATA_KEY, this.constructor);
+    const config: NDEEventConfig | undefined = Reflect.getMetadata(
+      NDE_EVENT_METADATA_KEY,
+      this.constructor,
+    );
 
     const streamName: EventStream = config?.stream ?? 'all';
     const matchFn = buildMatchFn(config?.match);
@@ -172,14 +191,18 @@ export abstract class NDEEventBase implements OnDestroy {
 
     // ---- Layer 2: RxJS observation (onEvent) -------------------------
     if (this.hasOnEvent()) {
-      const stream$ = streamName === 'request'  ? this.globalHttp.request$
-                    : streamName === 'response' ? this.globalHttp.response$
-                    : streamName === 'error'    ? this.globalHttp.error$
-                    :                             this.globalHttp.all$;
+      const stream$ =
+        streamName === 'request'
+          ? this.globalHttp.request$
+          : streamName === 'response'
+            ? this.globalHttp.response$
+            : streamName === 'error'
+              ? this.globalHttp.error$
+              : this.globalHttp.all$;
 
       this.__sub = stream$
         .pipe(filter(matchFn))
-        .subscribe(event => this.onEvent(event));
+        .subscribe((event) => this.onEvent(event));
     }
 
     // ---- Layer 1: request handler (onRequest) ------------------------
@@ -188,7 +211,7 @@ export abstract class NDEEventBase implements OnDestroy {
         (method, url, headers, body) => {
           if (!urlMatchFn(url)) return;
           return this.onRequest(method, url, headers, body);
-        }
+        },
       );
     }
 
@@ -198,19 +221,21 @@ export abstract class NDEEventBase implements OnDestroy {
         (method, url, status, body) => {
           if (!urlMatchFn(url)) return;
           return this.onResponse(method, url, status, body);
-        }
+        },
       );
     }
 
     const hooks = [
-      this.hasOnEvent()    && 'onEvent',
-      this.hasOnRequest()  && 'onRequest',
+      this.hasOnEvent() && 'onEvent',
+      this.hasOnRequest() && 'onRequest',
       this.hasOnResponse() && 'onResponse',
-    ].filter(Boolean).join(', ');
+    ]
+      .filter(Boolean)
+      .join(', ');
 
     console.log(
       `[${this.constructor.name}] Active on "${streamName}" stream ` +
-      `[hooks: ${hooks || 'none'}]`
+        `[hooks: ${hooks || 'none'}]`,
     );
   }
 
@@ -233,7 +258,7 @@ export abstract class NDEEventBase implements OnDestroy {
     _method: string,
     _url: string,
     _headers: Record<string, string>,
-    _body: unknown
+    _body: unknown,
   ): void {}
 
   /**
@@ -245,7 +270,7 @@ export abstract class NDEEventBase implements OnDestroy {
     _method: string,
     _url: string,
     _status: number,
-    _body: unknown
+    _body: unknown,
   ): void {}
 
   // ---- Lifecycle -------------------------------------------------------
@@ -264,15 +289,22 @@ export abstract class NDEEventBase implements OnDestroy {
    * to avoid unnecessary handler chains.
    */
   private hasOnEvent(): boolean {
-    return this.constructor.prototype.onEvent !== NDEEventBase.prototype.onEvent;
+    return (
+      this.constructor.prototype.onEvent !== NDEEventBase.prototype.onEvent
+    );
   }
 
   private hasOnRequest(): boolean {
-    return this.constructor.prototype.onRequest !== NDEEventBase.prototype.onRequest;
+    return (
+      this.constructor.prototype.onRequest !== NDEEventBase.prototype.onRequest
+    );
   }
 
   private hasOnResponse(): boolean {
-    return this.constructor.prototype.onResponse !== NDEEventBase.prototype.onResponse;
+    return (
+      this.constructor.prototype.onResponse !==
+      NDEEventBase.prototype.onResponse
+    );
   }
 }
 
@@ -283,7 +315,9 @@ export abstract class NDEEventBase implements OnDestroy {
 /**
  * Build a predicate for GlobalHttpEvent objects (Layer 2 streams).
  */
-function buildMatchFn(match: RegExp | string | undefined): (e: GlobalHttpEvent) => boolean {
+function buildMatchFn(
+  match: RegExp | string | undefined,
+): (e: GlobalHttpEvent) => boolean {
   if (match === undefined) return () => true;
   if (match instanceof RegExp) return (e) => match.test(e.url);
   return (e) => e.url.includes(match);
@@ -292,7 +326,9 @@ function buildMatchFn(match: RegExp | string | undefined): (e: GlobalHttpEvent) 
 /**
  * Build a predicate for raw URL strings (Layer 1 handlers).
  */
-function buildUrlMatchFn(match: RegExp | string | undefined): (url: string) => boolean {
+function buildUrlMatchFn(
+  match: RegExp | string | undefined,
+): (url: string) => boolean {
   if (match === undefined) return () => true;
   if (match instanceof RegExp) return (url) => match.test(url);
   return (url) => url.includes(match);
@@ -309,19 +345,23 @@ function buildUrlMatchFn(match: RegExp | string | undefined): (url: string) => b
  *     at bootstrap time (not lazily like HTTP_INTERCEPTORS).
  */
 export function getEventProviders(): Provider[] {
-  const enabled = eventRegistry.filter(e => e.config.enabled);
+  const enabled = eventRegistry.filter((e) => e.config.enabled);
 
   // Each event class needs to be a regular provider so Angular can create it
-  const classProviders: Provider[] = enabled.map(e => e.constructor);
+  const classProviders: Provider[] = enabled.map((e) => e.constructor);
 
   // APP_INITIALIZER that pulls every event from the injector — forcing instantiation
   const initializer: Provider = {
     provide: APP_INITIALIZER,
     multi: true,
-    useFactory: (...instances: any[]) => () => {
-      console.log(`[NDEEvent] Eagerly instantiated ${instances.length} event(s).`);
-    },
-    deps: enabled.map(e => e.constructor),
+    useFactory:
+      (...instances: any[]) =>
+      () => {
+        console.log(
+          `[NDEEvent] Eagerly instantiated ${instances.length} event(s).`,
+        );
+      },
+    deps: enabled.map((e) => e.constructor),
   };
 
   return [...classProviders, initializer];
@@ -339,7 +379,7 @@ export function getEventInfo(): Array<{
   match?: RegExp | string;
   description?: string;
 }> {
-  return eventRegistry.map(e => ({
+  return eventRegistry.map((e) => ({
     name: e.constructor.name,
     stream: (e.config.stream ?? 'all') as EventStream,
     order: e.config.order,
@@ -354,7 +394,7 @@ export function getNDEEventConfig(cls: Type<any>): NDEEventConfig | undefined {
 }
 
 export function disableEvent(cls: Type<any>): void {
-  const entry = eventRegistry.find(e => e.constructor === cls);
+  const entry = eventRegistry.find((e) => e.constructor === cls);
   if (entry) {
     entry.config.enabled = false;
     console.log(`[NDEEvent] Disabled: ${cls.name}`);
@@ -362,7 +402,7 @@ export function disableEvent(cls: Type<any>): void {
 }
 
 export function enableEvent(cls: Type<any>): void {
-  const entry = eventRegistry.find(e => e.constructor === cls);
+  const entry = eventRegistry.find((e) => e.constructor === cls);
   if (entry) {
     entry.config.enabled = true;
     console.log(`[NDEEvent] Enabled: ${cls.name}`);

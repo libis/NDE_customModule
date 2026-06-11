@@ -1,39 +1,12 @@
 import {deepMerge, logRequest, findLocalResource, serveLocalFile} from "./proxy-utils.mjs";
-import {readFileSync} from 'fs';
-import {fileURLToPath} from 'url';
-import {dirname, join, resolve} from 'path';
 import {exec} from 'child_process';
+import {proxyUrl, PROXY_TARGET, customizationConfigOverride, ndeConfig} from './proxy-url.mjs';
+import {dirname, join, resolve} from 'path';
+import {fileURLToPath} from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const packageJsonPath = join(__dirname, '..', 'package.json');
-const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-const ndeConfig = packageJson.nde;
 
-if (!ndeConfig) {
-    console.error("Error: 'nde' section not found in package.json!");
-    process.exit(1);
-}
-
-const defaultEnv = ndeConfig.defaultEnvironment;
-const envConfig = ndeConfig.environments[defaultEnv];
-
-if (!envConfig) {
-    console.error(`Error: Environment '${defaultEnv}' not found in package.json nde.environments!`);
-    process.exit(1);
-}
-
-const PROXY_TARGET = envConfig.host;
-const customizationConfigOverride = ndeConfig.customization;
-
-// Resolve configurable proxy URL template
-const defaultTemplate = '/nde/home?vid={institution}:{view}&lang=en';
-const proxyUrlTemplate = ndeConfig.proxyUrlTemplate || defaultTemplate;
-const resolvedPath = proxyUrlTemplate
-    .replace(/{institution}/g, envConfig.institution)
-    .replace(/{view}/g, envConfig.view);
-
-const proxyUrl = `http://localhost:4201${resolvedPath}`;
 console.log(`\n  NDE Proxy URL: ${proxyUrl}\n`);
 
 // Auto-open browser after a short delay to let the dev server start
@@ -50,9 +23,7 @@ const localResourceDirs = (ndeConfig.localResourceDirs || ['./dist'])
 
 console.log('  Local resource dirs:', localResourceDirs.join(', '), '\n');
 
-
-
-const proxyRules = [
+const proxyRules = [  
   {
     context: [
       '/custom/*/assets',
@@ -131,7 +102,7 @@ const proxyRules = [
         logRequest(req.originalUrl);
       }
     },
-    onProxyRes(proxyRes, req, res) {
+    onProxyRes(proxyRes, req, res) {    
       // If a local file was found, serve it instead of the proxy response
       if (req._localFile) {
         // Consume and discard the proxy response
@@ -151,7 +122,5 @@ const proxyRules = [
     }
   }
 ];
-
-
 
 export default proxyRules;

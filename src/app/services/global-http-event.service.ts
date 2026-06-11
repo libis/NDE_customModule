@@ -35,22 +35,23 @@ import {
   isInstalled,
   REQUEST_EVENT,
   RESPONSE_EVENT,
-  ERROR_EVENT
+  ERROR_EVENT,
 } from './global-http-interceptor';
 
 @Injectable()
 export class GlobalHttpEventService implements OnDestroy {
-
-  private readonly _request$  = new Subject<GlobalHttpEvent>();
+  private readonly _request$ = new Subject<GlobalHttpEvent>();
   private readonly _response$ = new Subject<GlobalHttpEvent>();
-  private readonly _error$    = new Subject<GlobalHttpEvent>();
+  private readonly _error$ = new Subject<GlobalHttpEvent>();
   private readonly listeners: Array<{ event: string; fn: EventListener }> = [];
 
   /** All request events (emitted before send). */
-  readonly request$: Observable<GlobalHttpEvent> = this._request$.asObservable();
+  readonly request$: Observable<GlobalHttpEvent> =
+    this._request$.asObservable();
 
   /** All successful response events (HTTP 2xx/3xx). */
-  readonly response$: Observable<GlobalHttpEvent> = this._response$.asObservable();
+  readonly response$: Observable<GlobalHttpEvent> =
+    this._response$.asObservable();
 
   /** All error events (network failures or HTTP >= 400). */
   readonly error$: Observable<GlobalHttpEvent> = this._error$.asObservable();
@@ -59,14 +60,16 @@ export class GlobalHttpEventService implements OnDestroy {
   readonly all$: Observable<GlobalHttpEvent> = merge(
     this.request$,
     this.response$,
-    this.error$
+    this.error$,
   );
 
   constructor() {
     this.attachListeners();
     this.drainBuffer();
 
-    console.log('[GlobalHttpEventService] Initialized — listening for HTTP events.');
+    console.log(
+      '[GlobalHttpEventService] Initialized — listening for HTTP events.',
+    );
   }
 
   /**
@@ -116,9 +119,9 @@ export class GlobalHttpEventService implements OnDestroy {
       this.listeners.push({ event: eventName, fn });
     };
 
-    listen(REQUEST_EVENT,  this._request$);
+    listen(REQUEST_EVENT, this._request$);
     listen(RESPONSE_EVENT, this._response$);
-    listen(ERROR_EVENT,    this._error$);
+    listen(ERROR_EVENT, this._error$);
   }
 
   /**
@@ -130,7 +133,7 @@ export class GlobalHttpEventService implements OnDestroy {
     if (!isInstalled()) {
       console.warn(
         '[GlobalHttpEventService] Global interceptor not installed. ' +
-        'Call installGlobalHttpInterceptor() in bootstrap.ts.'
+          'Call installGlobalHttpInterceptor() in bootstrap.ts.',
       );
       return;
     }
@@ -138,14 +141,22 @@ export class GlobalHttpEventService implements OnDestroy {
     const buffered = getEventBuffer();
     for (const event of buffered) {
       switch (event.type) {
-        case 'request':  this._request$.next(event); break;
-        case 'response': this._response$.next(event); break;
-        case 'error':    this._error$.next(event); break;
+        case 'request':
+          this._request$.next(event);
+          break;
+        case 'response':
+          this._response$.next(event);
+          break;
+        case 'error':
+          this._error$.next(event);
+          break;
       }
     }
 
     if (buffered.length > 0) {
-      console.log(`[GlobalHttpEventService] Drained ${buffered.length} buffered event(s).`);
+      console.log(
+        `[GlobalHttpEventService] Drained ${buffered.length} buffered event(s).`,
+      );
     }
     clearEventBuffer();
   }

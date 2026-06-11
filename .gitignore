@@ -41,3 +41,8 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# NDE Auto-generated files
+customComponentMappings.ts
+_registry.ts
+asset-base.generated.ts
