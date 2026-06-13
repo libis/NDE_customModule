@@ -22,7 +22,7 @@ import { Component, OnInit, Input, effect, OnDestroy , ElementRef, ViewChild } f
 
 
 import { CommonModule, DecimalPipe  } from '@angular/common';
-import { UserStateService  } from '@libis/primo-shared-state';
+import { PrimoStateService } from '@libis/primo-shared-state';
 import { TranslateService, TranslateModule} from "@ngx-translate/core";
 import { MATERIAL_IMPORTS } from 'src/app/shared/material.imports';
 
@@ -54,7 +54,7 @@ export class PayFinesComponent implements OnDestroy {
   public finesValue = 0;
   public finesString = ""
   
-  public isLoggedIn = this.userState.isLoggedInSignal();
+  public isLoggedIn = this.primo.user.isLoggedInSignal();
   
   private loadFines() {
 
@@ -96,9 +96,9 @@ export class PayFinesComponent implements OnDestroy {
   @Input({ required: true }) hostComponent!: any;
 
   constructor(
-    private userState: UserStateService,
-  
-    private translate: TranslateService,  
+    private primo: PrimoStateService,
+
+    private translate: TranslateService,
     private decimalPipe: DecimalPipe
     
   ) {

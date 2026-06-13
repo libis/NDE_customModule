@@ -1,5 +1,5 @@
 import { Component, computed, inject, Renderer2, signal, Signal, ViewChild } from '@angular/core';
-import { SearchStateService, ViewConfigStateService } from '@libis/primo-shared-state';
+import { PrimoStateService } from '@libis/primo-shared-state';
 import { createFeatureSelector, createSelector, Store } from '@ngrx/store';
 import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 import { SearchParams } from '@libis/primo-shared-state'
@@ -35,8 +35,8 @@ private store = inject(Store);
 private isLoading: boolean = true;
 tooltipTest: string = "nde.permalink.copiedTooltip";
 
-private viewCode: Signal<string|undefined> = this.viewConfigState.vidSignal(); // de facto nooit undefined, want de view is ingeladen voordat je search kan uitvoeren
-private searchParams: Signal<SearchParams|null> = this.searchState.searchParamsSignal();
+private viewCode: Signal<string|undefined> = this.primo.config.vidSignal(); // de facto nooit undefined, want de view is ingeladen voordat je search kan uitvoeren
+private searchParams: Signal<SearchParams|null> = this.primo.search.searchParamsSignal();
 
 // Calculated property to track active search mode
 private advancedSearch: Signal<boolean> = computed(
@@ -53,8 +53,7 @@ searchAlsoLinks: Signal<SearchAlsoLink[]> = computed(
   }
 )
 
-constructor(private searchState: SearchStateService,
-  private viewConfigState: ViewConfigStateService,
+constructor(private primo: PrimoStateService,
   private searchAlsoService: LIBISSearchAlsoService,
   private translate: TranslateService,
   private renderer: Renderer2) {

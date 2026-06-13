@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { NDE_SLOTS, NDE_POSITION, NDEComponent } from 'src/app/decorators/nde-component.decorator';
-import { SearchStateService } from '@libis/primo-shared-state';
+import { PrimoStateService } from '@libis/primo-shared-state';
 import { AnalyticsService } from '../../services/analytics.service';
 
 @NDEComponent(
@@ -19,15 +19,15 @@ import { AnalyticsService } from '../../services/analytics.service';
     standalone: true
 })
 export class SearchStatsComponent {
-  docs$ = this.searchState.selectAllDocs$();
-  totalResults$ = this.searchState.selectTotalResults$();
-  isLoading$ = this.searchState.selectIsLoading$();
-  status$ = this.searchState.selectSearchStatus$();
-  searchParams$ = this.searchState.selectSearchParams$();
-  metaData$ = this.searchState.selectSearchMetaData$();
+  docs$ = this.primo.search.selectAllDocs$();
+  totalResults$ = this.primo.search.selectTotalResults$();
+  isLoading$ = this.primo.search.selectIsLoading$();
+  status$ = this.primo.search.selectSearchStatus$();
+  searchParams$ = this.primo.search.selectSearchParams$();
+  metaData$ = this.primo.search.selectSearchMetaData$();
 
   constructor(
-    private searchState: SearchStateService,
+    private primo: PrimoStateService,
     private analyticsService: AnalyticsService,
     private http: HttpClient
   ) {}

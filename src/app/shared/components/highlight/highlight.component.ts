@@ -6,7 +6,7 @@ import {Store} from "@ngrx/store";
 import {NgIf} from '@angular/common'; // added 
 // import {selectHighlightListFromSearch} from "../../../state/search/search.selector";
 
-import { SearchStateService } from '@libis/primo-shared-state';
+import { PrimoStateService } from '@libis/primo-shared-state';
 
 @Component({
   selector: 'nde-highlight',
@@ -25,10 +25,10 @@ export class HighlightComponent implements OnInit  {
   // public termsList$!: Observable<string[]>
   public termsList$: string[] = []
 
-  // selectHighlightListFromSearch$ = this.searchState.selectHighlightListFromSearch$(this.field);
+  // selectHighlightListFromSearch$ = this.primo.search.selectHighlightListFromSearch$(this.field);
 
   constructor(
-    private searchState: SearchStateService,
+    private primo: PrimoStateService,
     private highlightService: HighlightService
   ){}
 

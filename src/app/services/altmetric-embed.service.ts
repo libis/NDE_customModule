@@ -1,5 +1,5 @@
 import { Injectable, effect, inject } from '@angular/core';
-import { SearchStateService, SUCCESS } from '@libis/primo-shared-state';
+import { PrimoStateService, SUCCESS } from '@libis/primo-shared-state';
 import { ScriptLoaderService } from './script-loader.service';
 
 declare global {
@@ -11,9 +11,9 @@ declare global {
 @Injectable({ providedIn: 'root' })
 export class AltmetricEmbedService {
   private scriptLoader = inject(ScriptLoaderService);
-  private searchState = inject(SearchStateService);
+  private primo = inject(PrimoStateService);
   private scriptReady = this.scriptLoader.isLoaded('Altmetric');
-  private searchStatus = this.searchState.searchStatusSignal();
+  private searchStatus = this.primo.search.searchStatusSignal();
 
   constructor() {
     effect(() => {

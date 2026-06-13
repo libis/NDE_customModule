@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { NDEEvent, NDEEventBase, GlobalHttpEvent } from '../decorators/nde-event.decorator';
-import { SearchStateService, Doc } from '@libis/primo-shared-state';
+import { PrimoStateService, Doc } from '@libis/primo-shared-state';
 import { GlobalHttpEventService } from '../services/global-http-event.service';
 import { ConfigService } from 'src/app/services/config.service'
 
@@ -19,13 +19,13 @@ export class SearchEvent extends NDEEventBase {
   constructor(
     globalHttp: GlobalHttpEventService,
     private configService: ConfigService,
-    private searchState: SearchStateService
+    private primo: PrimoStateService
   ) {
     super(globalHttp);
 
     // Subscribe to the ngrx store — the single source of truth.
     // When docs arrive, mutate titles in-place on the entity objects.
-    // this.storeSub = this.searchState.selectAllDocs$()
+    // this.storeSub = this.primo.search.selectAllDocs$()
     //   .subscribe(docs => this.transformDocsInStore(docs));
   }
 

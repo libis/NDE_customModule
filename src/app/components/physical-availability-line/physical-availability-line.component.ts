@@ -11,7 +11,7 @@ import { TranslateService, TranslateModule} from "@ngx-translate/core";
 import { IconDirective } from 'src/app/shared/directives.registry';
 import { MATERIAL_IMPORTS } from 'src/app/shared/material.imports';
 
-import { ViewConfigStateService } from '@libis/primo-shared-state';
+import { PrimoStateService } from '@libis/primo-shared-state';
 
 export enum AvailabilityStatus {
   Available, Unavailable, Maybe
@@ -86,7 +86,7 @@ export class PhysicalAvailabilityLineComponent {
   constructor(
     private translate: TranslateService,
     private HostBindings: HostBindings,
-    private viewConfigState: ViewConfigStateService,
+    private primo: PrimoStateService,
   ) {
     
     // this.isNgrs = ngrsUtil.isNgrs(); // ngrsUtil ??? ../../../../../../full-display/full-display-container/full-display-service-container/requests/get-it-other-locations/ngrs-util"
@@ -103,12 +103,12 @@ export class PhysicalAvailabilityLineComponent {
     }
     this.HostBindings.applyBindings(this, this.hostComponent);
 
-    console.log ("[PhysicalAvailabilityLineComponent] this.viewConfigState: ", this.viewConfigState  )
+    console.log ("[PhysicalAvailabilityLineComponent] this.primo.config: ", this.primo.config  )
     console.log ("[PhysicalAvailabilityLineComponent] this.hostComponent: ", this.hostComponent  )
 
     const institutions: any[] = [];
-    const institutionName = await this.viewConfigState.getInstitutionName();
-    const institutionCode = await this.viewConfigState.getInstitutionCode();
+    const institutionName = await this.primo.config.getInstitutionName();
+    const institutionCode = await this.primo.config.getInstitutionCode();
 
     
     // Add Institution of the view when available in library

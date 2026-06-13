@@ -1,7 +1,7 @@
+import { selectSearchScope } from './permalink_utils.selector';
 import { Component, inject, Input, Signal, ViewEncapsulation } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Doc, SearchStateService, ViewConfigStateService } from '@libis/primo-shared-state';
-import {selectSearchScope } from '../libis-permalink/permalink_utils.selector';
+import { Doc, PrimoStateService } from '@libis/primo-shared-state';
 import { LIBISPermalinkService } from './libis_permalinks_service.service';
 import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 import { CommonModule } from '@angular/common';
@@ -26,13 +26,12 @@ public isLoading: boolean = true;
 
 private record!: Doc;
 
-private viewCode: Signal<string|undefined> = this.viewConfigState.vidSignal();
+private viewCode: Signal<string|undefined> = this.primo.config.vidSignal();
 private searchScope = this.store.selectSignal(selectSearchScope);
 
 constructor(
-  private viewConfigState: ViewConfigStateService,
-  private searchState: SearchStateService,
-  //private hostStyles: HostStylesService
+  private primo: PrimoStateService,
+  //private hostStyles: HostStylesService  
 ){
 }
 
