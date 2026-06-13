@@ -102,7 +102,11 @@ export const AppModule = ({
      * @param componentName
      */
     public getComponentRef(componentName: string) {
-      return this.webComponentSelectorMap.get(componentName);
+      const ref = this.webComponentSelectorMap.get(componentName);
+      // Dev-only: report the host's slot query (hit/miss) to the workbench
+      // host-surface probe, if installed. No-op in production.
+      (window as any).__NDE_RECORD_SLOT__?.(componentName, !!ref);
+      return ref;
     }
   }
   return AppModule;

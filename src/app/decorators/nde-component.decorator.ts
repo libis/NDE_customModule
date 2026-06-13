@@ -69,10 +69,39 @@ interface RegistryEntry {
 }
 
 /**
+ * A record of every component decorated with @NDEComponent, regardless of
+ * whether it ended up active in the current view. Unlike `componentRegistry`
+ * (which only holds components whose `viewPattern` matched), this captures the
+ * attempts too — so tooling can explain *why* a component isn't rendering
+ * (e.g. its `viewPattern` did not match the current `vid`).
+ */
+export interface RegistrationRecord {
+  component: any;
+  config: NDEComponentConfig;
+  fullSelector: string;
+  /** The `vid` present at decoration time (`window.__BOOTSTRAP_CFG__.vid`). */
+  vid: string | undefined;
+  /** Whether the component was added to the active registry. */
+  registered: boolean;
+  /**
+   * Why it was (not) registered:
+   * - `no-pattern`  — no `viewPattern`, registered unconditionally
+   * - `matched`     — `viewPattern` matched the current `vid`
+   * - `unmatched`   — `viewPattern` did not match the current `vid`
+   */
+  reason: 'no-pattern' | 'matched' | 'unmatched';
+}
+
+/**
  * Internal component registry
  * Maps full selectors to component classes
  */
 const componentRegistry = new Map<string, RegistryEntry>();
+
+/**
+ * Every decoration attempt, in declaration order. Populated by the decorator.
+ */
+const allRegistrations: RegistrationRecord[] = [];
 
 /**
  * Metadata key for storing NDE configuration on components
@@ -125,18 +154,32 @@ export function NDEComponent(config: NDEComponentConfig) {
     
     // Component registration only if view matches the viewPattern
     // Or if viewPattern is missing (default Registered == true)
+    let reason: RegistrationRecord['reason'];
     if (config.viewPattern !== undefined) {
-      if ( currentVid.match(config.viewPattern) ) {
+      if ( currentVid && currentVid.match(config.viewPattern) ) {
         // console.log(`View [${currentVid}] and Components viewPattern [${config.viewPattern}]`);
         componentRegistry.set(fullSelector, entry);
         componentIsRegistered = true;
-      //}else{
-      //  console.log(`Mismatch between View [${currentVid}] and Components viewPattern [${config.viewPattern}]`);
+        reason = 'matched';
+      } else {
+        // console.log(`Mismatch between View [${currentVid}] and Components viewPattern [${config.viewPattern}]`);
+        reason = 'unmatched';
       }
     }else{
       componentRegistry.set(fullSelector, entry);
       componentIsRegistered = true
+      reason = 'no-pattern';
     }
+
+    // Record the attempt (active or not) for tooling/inspection.
+    allRegistrations.push({
+      component: constructor,
+      config: { ...config, priority: config.priority ?? 100 },
+      fullSelector,
+      vid: currentVid,
+      registered: componentIsRegistered,
+      reason,
+    });
 
     // Log component registration with selector and position
     const position = config.position || 'replace';
@@ -207,6 +250,15 @@ export function getComponentRegistry(): Map<string, any> {
 export function getRegistryInfo(): RegistryEntry[] {
   return Array.from(componentRegistry.values())
     .sort((a, b) => (a.config.priority ?? 100) - (b.config.priority ?? 100));
+}
+
+/**
+ * Get every decoration attempt — including components whose `viewPattern` did
+ * not match the current view and were therefore not registered. Used by the
+ * workbench inspector to explain why a component is or isn't active.
+ */
+export function getAllRegistrations(): RegistrationRecord[] {
+  return [...allRegistrations];
 }
 
 /**
