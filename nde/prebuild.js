@@ -68,6 +68,15 @@ console.log('Extracted assetBaseUrl:', assetBaseUrl);
 fs.writeFileSync(assetBaseOutPath, `export const assetBaseUrl = '${assetBaseUrl}';\n`);
 console.log(`✔ Written to ${assetBaseOutPath}:\nexport const assetBaseUrl = '${assetBaseUrl}';`);
 
+// --- Generate the workbench store manifest from @libis/primo-shared-state ---
+// Best-effort: a failure here must not break the build.
+try {
+    const { extractStoreManifest } = require('./extract-store-manifest');
+    extractStoreManifest(projectRoot);
+} catch (err) {
+    console.warn('⚠ Could not generate store manifest:', err.message);
+}
+
 console.log('Prebuild completed successfully!');
 /*
 

@@ -14,6 +14,17 @@ import {
   ScannedElement,
 } from './host-surface-view';
 import { DefinedElementInfo, ElementOrigin } from './host-probes';
+import {
+  getStoreManifest,
+  isInjectorAvailable,
+  bindField,
+  fieldSnippets,
+  writeSignature,
+  writeSnippet,
+  LiveHandle,
+  StoreDomain,
+  StoreField,
+} from './store-view';
 
 type TabId = 'components' | 'host' | 'store' | 'environments';
 
@@ -34,6 +45,8 @@ export class NdeWorkbenchElement extends HTMLElement {
   private highlighter: HighlightController;
   private activeTab: TabId = 'components';
   private open = false;
+  /** Live store subscriptions, keyed by the field element they feed. */
+  private storeHandles = new Map<HTMLElement, LiveHandle>();
 
   constructor() {
     super();
@@ -94,6 +107,7 @@ export class NdeWorkbenchElement extends HTMLElement {
       this.renderActiveTab();
     } else {
       this.highlighter.clear();
+      this.stopAllStoreHandles();
     }
   }
 
@@ -109,6 +123,7 @@ export class NdeWorkbenchElement extends HTMLElement {
     });
     this.setBadge('components', getInspectorItems().filter((i) => i.registered).length);
     this.setBadge('host', getHostSurfaceView().slots.length);
+    this.setBadge('store', getStoreManifest().domains.length);
   }
 
   private setBadge(tab: TabId, n: number): void {
@@ -122,6 +137,7 @@ export class NdeWorkbenchElement extends HTMLElement {
     const content = this.root.querySelector<HTMLElement>('.wb-content');
     if (!content) return;
     this.highlighter.clear();
+    this.stopAllStoreHandles();
 
     switch (this.activeTab) {
       case 'components':
@@ -131,7 +147,7 @@ export class NdeWorkbenchElement extends HTMLElement {
         this.renderHost(content);
         break;
       case 'store':
-        content.innerHTML = `<div class="wb-placeholder">Store explorer — coming in Phase 3.</div>`;
+        this.renderStore(content);
         break;
       case 'environments':
         content.innerHTML = `<div class="wb-placeholder">Environment editor — coming in Phase 4.</div>`;
@@ -355,6 +371,183 @@ export class NdeWorkbenchElement extends HTMLElement {
         <span class="wb-badge count">${s.count}×</span>
       </div>
     `;
+  }
+
+  // ── Store tab (Phase 3) ────────────────────────────────────────────────────
+
+  private renderStore(content: HTMLElement): void {
+    const manifest = getStoreManifest();
+    const injectorWarn = isInjectorAvailable()
+      ? ''
+      : `<div class="wb-note">Live values unavailable — the host app injector isn't exposed yet. Open this tab after the page finishes loading.</div>`;
+
+    content.innerHTML = `
+      <div class="wb-store-head">
+        <span class="wb-mono">@libis/primo-shared-state</span>
+        <span class="wb-badge count">v${escapeHtml(manifest.version)}</span>
+      </div>
+      ${injectorWarn}
+      ${manifest.domains.map((d) => this.domainHtml(d)).join('')}
+    `;
+
+    content.querySelectorAll<HTMLElement>('.wb-domain').forEach((dEl) => {
+      dEl
+        .querySelector('.wb-domain-head')!
+        .addEventListener('click', () => this.toggleDomain(dEl));
+    });
+
+    content.querySelectorAll<HTMLElement>('.wb-field').forEach((fEl) => {
+      fEl
+        .querySelector('.wb-field-head')!
+        .addEventListener('click', () => this.toggleField(fEl));
+    });
+
+    this.wireCopyButtons(content);
+  }
+
+  private domainHtml(d: StoreDomain): string {
+    const access = d.writable
+      ? `<span class="wb-badge ok" title="exposes write helpers">writable</span>`
+      : `<span class="wb-badge count" title="host owns writes">read-only</span>`;
+    const dispatch = d.hasDispatch
+      ? `<span class="wb-badge count" title="low-level dispatch() available">dispatch</span>`
+      : '';
+    const warnings = d.warnings
+      .map((w) => `<div class="wb-note">${escapeHtml(w)}</div>`)
+      .join('');
+    const writes = d.writes.length
+      ? `<div class="wb-writes-title">Writes</div>${d.writes
+          .map((w) => this.writeHtml(d.name, w))
+          .join('')}`
+      : '';
+
+    return `
+      <div class="wb-domain" data-domain="${escapeHtml(d.name)}">
+        <div class="wb-domain-head">
+          <span class="wb-domain-name">primo.${escapeHtml(d.name)}</span>
+          <span class="wb-spacer"></span>
+          ${dispatch} ${access}
+          <span class="wb-badge count">${d.fields.length}</span>
+        </div>
+        <div class="wb-domain-body">
+          <div class="wb-domain-desc">${escapeHtml(d.description)}</div>
+          ${warnings}
+          ${d.fields.map((f) => this.fieldHtml(d.name, f)).join('')}
+          ${writes}
+        </div>
+      </div>
+    `;
+  }
+
+  private fieldHtml(domain: string, f: StoreField): string {
+    const v = f.variants;
+    const chips = [
+      v.observable ? 'O' : '',
+      v.signal ? 'S' : '',
+      v.promise ? 'P' : '',
+    ]
+      .filter(Boolean)
+      .map((c) => `<span class="wb-vchip" title="Observable/Signal/Promise">${c}</span>`)
+      .join('');
+    const snippets = fieldSnippets(domain, f)
+      .map(
+        (s) => `
+          <div class="wb-snippet">
+            <span class="wb-snippet-kind">${s.kind}</span>
+            <code>${escapeHtml(s.code)}</code>
+            <button class="wb-copy" data-copy="${encodeURIComponent(s.code)}" title="Copy">⧉</button>
+          </div>`,
+      )
+      .join('');
+
+    return `
+      <div class="wb-field" data-domain="${escapeHtml(domain)}" data-key="${escapeHtml(f.key)}">
+        <div class="wb-field-head">
+          <span class="wb-field-name">${escapeHtml(f.label)}</span>
+          <span class="wb-field-type wb-mono">${escapeHtml(f.type)}</span>
+          <span class="wb-spacer"></span>
+          ${chips}
+        </div>
+        <div class="wb-field-body">
+          ${f.jsdoc ? `<div class="wb-field-doc">${escapeHtml(f.jsdoc)}</div>` : ''}
+          <div class="wb-live"><span class="wb-live-label">live</span> <span class="wb-live-val">…</span></div>
+          ${snippets}
+        </div>
+      </div>
+    `;
+  }
+
+  private writeHtml(domain: string, w: { name: string; params: any[]; jsdoc: string }): string {
+    const sig = writeSignature(w as any);
+    const code = writeSnippet(domain, w as any);
+    return `
+      <div class="wb-write">
+        <code class="wb-mono">${escapeHtml(sig)}</code>
+        ${w.jsdoc ? `<span class="wb-write-doc">${escapeHtml(w.jsdoc)}</span>` : ''}
+        <button class="wb-copy" data-copy="${encodeURIComponent(code)}" title="Copy">⧉</button>
+      </div>
+    `;
+  }
+
+  private toggleDomain(dEl: HTMLElement): void {
+    const willOpen = !dEl.classList.contains('expanded');
+    dEl.classList.toggle('expanded', willOpen);
+    if (!willOpen) {
+      // Collapsing — stop any live subscriptions inside it.
+      dEl.querySelectorAll<HTMLElement>('.wb-field.expanded').forEach((fEl) => {
+        fEl.classList.remove('expanded');
+        this.unbindFieldEl(fEl);
+      });
+    }
+  }
+
+  private toggleField(fEl: HTMLElement): void {
+    const willOpen = !fEl.classList.contains('expanded');
+    fEl.classList.toggle('expanded', willOpen);
+    if (willOpen) this.bindFieldEl(fEl);
+    else this.unbindFieldEl(fEl);
+  }
+
+  private bindFieldEl(fEl: HTMLElement): void {
+    if (this.storeHandles.has(fEl)) return;
+    const domain = fEl.dataset['domain']!;
+    const key = fEl.dataset['key']!;
+    const field = getStoreManifest()
+      .domains.find((d) => d.name === domain)
+      ?.fields.find((f) => f.key === key);
+    const valEl = fEl.querySelector<HTMLElement>('.wb-live-val');
+    if (!field || !valEl) return;
+    const handle = bindField(domain, field, (text) => {
+      valEl.textContent = text;
+    });
+    this.storeHandles.set(fEl, handle);
+  }
+
+  private unbindFieldEl(fEl: HTMLElement): void {
+    this.storeHandles.get(fEl)?.stop();
+    this.storeHandles.delete(fEl);
+  }
+
+  private stopAllStoreHandles(): void {
+    this.storeHandles.forEach((h) => h.stop());
+    this.storeHandles.clear();
+  }
+
+  private wireCopyButtons(content: HTMLElement): void {
+    content.querySelectorAll<HTMLButtonElement>('.wb-copy').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const text = decodeURIComponent(btn.dataset['copy'] ?? '');
+        navigator.clipboard?.writeText(text).then(
+          () => {
+            const prev = btn.textContent;
+            btn.textContent = '✓';
+            setTimeout(() => (btn.textContent = prev), 900);
+          },
+          () => {},
+        );
+      });
+    });
   }
 }
 

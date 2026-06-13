@@ -19,6 +19,7 @@ import {
 } from '@angular/common/http';
 import { getInterceptorProviders } from './decorators/nde-interceptor.decorator';
 import { getEventProviders } from './decorators/nde-event.decorator';
+import { isWorkbenchEnabled } from './workbench/workbench-guard';
 import { GlobalHttpEventService } from './services/global-http-event.service';
 import { AnalyticsService } from './services/analytics.service';
 import { loadExternalScripts } from './services/script-loader.service';
@@ -65,6 +66,12 @@ export const AppModule = ({
       analytics: AnalyticsService,
     ) {
       router.dispose(); //this prevents the router from being initialized and interfering with the shell app router
+
+      // Dev-only: expose the root injector so the workbench Store tab can
+      // resolve PrimoStateService and read live store values. Never in prod.
+      if (isWorkbenchEnabled()) {
+        (window as any).__NDE_INJECTOR__ = this.injector;
+      }
 
       // Wire analytics tracking to the global HTTP event stream
       globalHttp.all$.subscribe((event) => {
