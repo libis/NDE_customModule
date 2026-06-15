@@ -55,6 +55,10 @@ export class styleConfigEvent extends NDEEventBase {
     return value.includes(this.currentView);
   }
 
+  private getCallNumberBoldStyles(): string {
+    return `[data-qa="location-call-number"] { font-weight: bold !important; }`;
+  }
+
   private getTopbarStyles(
     specs: (typeof TOPBAR_STYLE_MAP)[keyof typeof TOPBAR_STYLE_MAP],
   ): string {
@@ -112,6 +116,24 @@ export class styleConfigEvent extends NDEEventBase {
     });
   }
 
+  private setDefaultListView(): void {
+    if (!this.isActive(this.config.DefaultListView)) return;
+
+    const observer = new MutationObserver(() => {
+      const listBtn = document.querySelector<HTMLButtonElement>(
+        '[data-qa="view-as-list"]',
+      );
+      if (listBtn) {
+        observer.disconnect();
+        if (listBtn.getAttribute('aria-pressed') === 'false') {
+          listBtn.click();
+        }
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
   private injectHideWhereToFindItStyles(): void {
     if (!this.isActive(this.config.HideWhereToFindIt)) return;
 
@@ -147,11 +169,13 @@ export class styleConfigEvent extends NDEEventBase {
       this.getHideSignInStyles(),
       this.getHideLiriasLinksStyles(),
       this.getHideLoginBannerStyles(),
+      this.getCallNumberBoldStyles(),
     ].join('\n');
 
     document.head.appendChild(style);
     this.injectHideHowToGetItStyles();
     this.injectHideWhereToFindItStyles();
+    this.setDefaultListView();
     console.log(
       'semmi test style injected from config via nde event:',
       this.config,
