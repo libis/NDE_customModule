@@ -36,6 +36,7 @@ export class styleConfigEvent extends NDEEventBase {
     console.log('[styleConfigEvent] config', this.config);
     this.currentView = this.resolveCurrentView();
     this.injectStyles();
+    this.applyDefaultListView();
   }
 
   private getStyleValueFromCodeTable(param: any, code: string): any {
@@ -132,6 +133,32 @@ export class styleConfigEvent extends NDEEventBase {
       `;
       document.head.appendChild(s);
     });
+  }
+
+  private applyDefaultListView(): void {
+    if (!this.isActive(this.config.DefaultListView)) return;
+
+    const observer = new MutationObserver(() => {
+      const listBtn = document.querySelector(
+        '[data-qa="view-as-list"]',
+      ) as HTMLElement;
+      const gridBtn = document.querySelector(
+        '[data-qa="view-as-grid"]',
+      ) as HTMLElement;
+
+      if (listBtn && gridBtn) {
+        const isGridActive = gridBtn.getAttribute('aria-pressed') === 'true';
+
+        if (isGridActive) {
+          console.log('[styleConfigEvent] switching to list view');
+          listBtn.click();
+        }
+
+        observer.disconnect(); // important → avoid loops
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 
   private injectStyles() {
