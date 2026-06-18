@@ -161,6 +161,16 @@ export class styleConfigEvent extends NDEEventBase {
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
+  private getLocationNumberInBoldStyles(): string {
+    if (!this.isActive(this.config.LocationNumberInBold)) return '';
+
+    return `
+    [data-qa="location-call-number"] {
+      font-weight: bold !important;
+    }
+  `;
+  }
+
   private injectStyles() {
     const styleId = 'nde-custom-topbar-styles';
     if (document.getElementById(styleId)) return;
@@ -174,6 +184,7 @@ export class styleConfigEvent extends NDEEventBase {
       this.getHideSignInStyles(),
       this.getHideLiriasLinksStyles(),
       this.getHideLoginBannerStyles(),
+      this.getLocationNumberInBoldStyles(),
     ].join('\n');
 
     document.head.appendChild(style);

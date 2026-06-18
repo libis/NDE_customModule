@@ -14,6 +14,7 @@ export interface StyleConfig {
   HideHowToGetIt?: BooleanOrViews;
   HideWhereToFindIt?: BooleanOrViews;
   DefaultListView?: BooleanOrViews;
+  LocationNumberInBold?: BooleanOrViews;
 }
 
 export const TOPBAR_STYLE_MAP = {
@@ -31,6 +32,7 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
   HideHowToGetIt: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
   HideWhereToFindIt: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
   DefaultListView: ['32KUL_KUL:KULeuven_NDE'],
+  LocationNumberInBold: ['32KUL_KUL:KULeuven_NDE'],
 };
 
 export const STYLE_CONFIG = new InjectionToken<StyleConfig>('STYLE_CONFIG', {
