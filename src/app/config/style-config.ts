@@ -16,6 +16,7 @@ export interface StyleConfig {
   DefaultListView?: BooleanOrViews;
   LocationNumberInBold?: BooleanOrViews;
   AutoLoginFirstOption?: BooleanOrViews;
+  CloseBannerIconWhite?: BooleanOrViews;
 }
 
 export const TOPBAR_STYLE_MAP = {
@@ -39,6 +40,7 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
     '32KUL_LIBS:RVAONEM',
     '32KUL_LIBS:PLEC',
   ],
+  CloseBannerIconWhite: ['32KUL_KUL:KULeuven_NDE'],
 };
 
 export const STYLE_CONFIG = new InjectionToken<StyleConfig>('STYLE_CONFIG', {

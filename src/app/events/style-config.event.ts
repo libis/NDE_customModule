@@ -171,6 +171,21 @@ export class styleConfigEvent extends NDEEventBase {
   `;
   }
 
+  private getCloseBannerIconStyles(): string {
+    return `
+    .banner-close-button mat-icon {
+      background: white !important;
+      border-radius: 50% !important;
+      padding: 4px !important;
+      color: black !important; /* controls SVG fill via currentColor */
+    }
+
+    .banner-close-button mat-icon svg path {
+      fill: black !important;
+    }
+  `;
+  }
+
   private injectStyles() {
     const styleId = 'nde-custom-topbar-styles';
     if (document.getElementById(styleId)) return;
@@ -185,6 +200,7 @@ export class styleConfigEvent extends NDEEventBase {
       this.getHideLiriasLinksStyles(),
       this.getHideLoginBannerStyles(),
       this.getLocationNumberInBoldStyles(),
+      this.getCloseBannerIconStyles(),
     ].join('\n');
 
     document.head.appendChild(style);
