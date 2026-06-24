@@ -887,15 +887,20 @@ All project settings live in the `nde` section of `package.json`:
 
     // Primo environments you work against
     "environments": {
-      "sandbox": {
+      "sandbox-view": {
         "host": "https://my-sandbox-primo.example.com",
         "institution": "MY_INST",
         "view": "MY_VIEW"
       },
-      "production": {
+      "production-view": {
         "host": "https://my-production-primo.example.com",
         "institution": "MY_INST",
         "view": "MY_VIEW"
+      },
+      "central":{
+        "host": "https://my-production-primo.example.com",
+        "institution": "MY_NETWORK",
+        "view": "CENTRAL_PACKAGE"
       }
     },
 
@@ -946,7 +951,7 @@ All project settings live in the `nde` section of `package.json`:
 
 | Setting | Purpose |
 |---|---|
-| `environments` | Define one or more Primo environments (sandbox, production, etc.). Each needs a `host` URL, `institution` code, and `view` code. |
+| `environments` | Define one or more Primo environments (central, <institution>, production, etc.). Each needs a `host` URL, `institution` code, and `view` code. |
 | `defaultEnvironment` | Which environment is used when you run `npm run start:proxy` or `npm run build`. |
 | `customization` | Overrides merged into the Alma view configuration during proxy mode. This lets you preview custom logos, homepage HTML, icons, etc. without uploading to Alma first. |
 | `addonName` | Set this when developing an add-on (not a standard customization package). Changes the bootstrap filename and webpack module name. |
@@ -962,15 +967,16 @@ Components are the building blocks of your customization. Each component targets
 ### Step 1: Generate a component
 
 ```bash
-npm run nde generate component hello-world --target search-bar --position after
+npm run nde -- generate component hello-world --target search-bar --position after --build_target <environement>
 ```
 
-This creates a new component in `src/app/components/hello-world/` with the `@NDEComponent` decorator already configured. The `--position` defaults to `after` and `--target` defaults to `default` if omitted.
+This creates a new component. If build_target is missing it default to central and will create the component in `src/app/components/central/hello-world/` with the `@NDEComponent` decorator already configured. for build_target diferent to central if create the component in `src/app/components/views/<environement>/hello-world/`
+ The `--position` defaults to `after` and `--target` defaults to `default` if omitted.
 
 The generated file looks like:
 
 ```typescript
-import { NDEComponent } from '../../decorators/nde-component.decorator';
+import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 import { Component } from '@angular/core';
 
 @NDEComponent({ selector: 'nde-search-bar', position: 'after' })
@@ -995,7 +1001,21 @@ That's it. Start the dev server and your component will appear after the search 
 
 ### How auto-registration works
 
-You **do not** need to manually register your components. A Webpack plugin (`NdeComponentDiscoveryPlugin`) scans `src/app/components/` before each build, finds all `*.component.ts` files, and auto-generates the import statements in `customComponentMappings.ts`. The `@NDEComponent` decorator registers each component in an internal registry, and during bootstrap they are converted to Web Components and made available to the host.
+
+You **do not** need to manually register your components. A Webpack plugin (`NdeComponentDiscoveryPlugin`) scans the component directories before each build and automatically discovers all `*.component.ts` files.
+
+The directories that are scanned depend on the build type and selected environment:
+- **View build**:  
+  `src/app/components/views/<environment>`
+- **Central build**:  
+  `src/app/components/central`
+
+The plugin generates the import statements in `customComponentMappings.ts` based on the discovered components.
+
+The `@NDEComponent` decorator registers each component in an internal registry. During bootstrap, all registered components are converted into Web Components and made available to the host application.
+
+> **Note:** Only components in the selected directory are included in the final bundle.
+
 
 ### Step 2: Use shared state
 
@@ -1687,8 +1707,36 @@ See [ngx-translate documentation](https://github.com/ngx-translate/core) for det
 
 ## Working with Assets
 
-Place your custom assets in the `src/assets/` directory:
+Assets are organized and resolved based on the selected build type and environment. All assets originate from the `src/assets/` directory and are merged during the build process.
 
+```
+src/assets/
+├── shared/  Base assets (included in all builds)
+│   ├── css/          Custom stylesheets (loaded as custom.css)
+│   ├── images/       Logos, backgrounds, etc.
+│   ├── icons/        SVG icon sets
+│   ├── js/           Custom JavaScript (loaded as custom.js)
+│   ├── homepage/     Homepage HTML and background images
+│   └── header-footer/  Header/footer customization files
+├── views/
+│   ├── /    View-specific overrides
+│   │   ├── css/          Custom stylesheets (loaded as custom.css)
+│   │   ├── images/       Logos, backgrounds, etc.
+│   │   ├── icons/        SVG icon sets
+│   │   ├── js/           Custom JavaScript (loaded as custom.js)
+│   │   ├── homepage/     Homepage HTML and background images
+│   │   └── header-footer/  Header/footer customization files
+│   └── /...    View-specific overrides
+└── central/ Central package overrides
+    ├── css/          Custom stylesheets (loaded as custom.css)
+    ├── images/       Logos, backgrounds, etc.
+    ├── icons/        SVG icon sets
+    ├── js/           Custom JavaScript (loaded as custom.js)
+    ├── homepage/     Homepage HTML and background images
+    └── header-footer/  Header/footer customization files
+```
+
+In the build it will results in
 ```
 src/assets/
 ├── css/          Custom stylesheets (loaded as custom.css)
@@ -1698,6 +1746,21 @@ src/assets/
 ├── homepage/     Homepage HTML and background images
 └── header-footer/  Header/footer customization files
 ```
+
+### Asset Merging Strategy
+
+Assets are applied in layers, where later layers overwrite earlier ones:
+
+#### View build (`npm run build <environment>`)
+1. `src/assets/shared` (base)
+2. `src/assets/views/<environment>` (overrides shared)
+
+#### Central build (`npm run build:central`)
+1. `src/assets/shared` (base)
+2. `src/assets/central` (overrides shared)
+
+> **Note:** If a file exists in multiple layers, the last layer takes precedence ("last-write-wins").
+
 
 ### Asset Resolution in Components
 

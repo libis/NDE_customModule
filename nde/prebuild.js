@@ -52,7 +52,7 @@ if (selectedEnv === 'central'){
     ]
   };
 
-  fs.writeFileSync("tsconfig.generated.json", JSON.stringify(tsconfig, null, 2));
+  fs.writeFileSync(  path.resolve(projectRoot, "tsconfig.generated.json"), JSON.stringify(tsconfig, null, 2));
 }
 
 if (selectedEnv !== 'central'){
@@ -77,7 +77,11 @@ if (selectedEnv !== 'central'){
     ]
   };
 
-  fs.writeFileSync("tsconfig.generated.json", JSON.stringify(tsconfig, null, 2));
+  const tsconfig_generated =  path.resolve(projectRoot, "tsconfig.generated.json")
+  const tsconfig_generated_dir = path.dirname(tsconfig_generated);
+
+  fs.mkdirSync(tsconfig_generated_dir, { recursive: true });
+  fs.writeFileSync( tsconfig_generated, JSON.stringify(tsconfig, null, 2));
 }
 
 const addonName = envConfig.addonName;
