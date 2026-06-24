@@ -4,17 +4,30 @@ import {proxyUrl, PROXY_TARGET, customizationConfigOverride, ndeConfig} from './
 import {dirname, join, resolve} from 'path';
 import {fileURLToPath} from 'url';
 
+import open from 'open';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 console.log(`\n  NDE Proxy URL: ${proxyUrl}\n`);
 
+const env = process.env.npm_config_env || process.env.BUILD_TARGET;
+
+process.env.BUILD_TARGET = env;
+
+
 // Auto-open browser after a short delay to let the dev server start
-setTimeout(() => {
-    const platform = process.platform;
-    const cmd = platform === 'darwin' ? 'open' : platform === 'win32' ? 'start' : 'xdg-open';
-    exec(`${cmd} "${proxyUrl}"`);
+// setTimeout(() => {
+//     const platform = process.platform;
+//     const cmd = platform === 'darwin' ? 'open' : platform === 'win32' ? 'start' : 'xdg-open';
+//     exec(`${cmd} "${proxyUrl}"`);
+// }, 5000);
+
+
+setTimeout(async () => {
+  await open(proxyUrl);
 }, 5000);
+
 
 // Resolve local resource directories (configurable via nde.localResourceDirs)
 const projectRoot = join(__dirname, '..');
@@ -24,23 +37,119 @@ const localResourceDirs = (ndeConfig.localResourceDirs || ['./dist'])
 console.log('  Local resource dirs:', localResourceDirs.join(', '), '\n');
 
 const proxyRules = [  
+  
+  // {
+  //   context: [
+  //     '/custom/*/assets',
+  //     '/custom/*/assets/**',
+  //     '/nde/custom/*/assets',
+  //     '/nde/custom/*/assets/**'
+  //   ],
+  //   target: 'not-needed',
+  //   router: (req) => `${req.protocol}://${req.get('host')}`,
+  //   changeOrigin: false,
+  //   logLevel: 'silent',
+  //   pathRewrite: (path) =>
+  //     path.replace(/^\/(?:nde\/)?custom\/[^/]+\/assets\/?/, '/assets/'),
+  //   onProxyReq(proxyReq, req) {
+  //     logRequest(req.originalUrl, {local: true, localFile: 'dev-server/assets'});
+  //   },
+  // },
+
   {
     context: [
-      '/custom/*/assets',
-      '/custom/*/assets/**',
-      '/nde/custom/*/assets',
       '/nde/custom/*/assets/**'
     ],
-    target: 'not-needed',
-    router: (req) => `${req.protocol}://${req.get('host')}`,
-    changeOrigin: false,
+    target: PROXY_TARGET,
+    secure: true,
+    changeOrigin: true,
     logLevel: 'silent',
-    pathRewrite: (path) =>
-      path.replace(/^\/(?:nde\/)?custom\/[^/]+\/assets\/?/, '/assets/'),
+    selfHandleResponse: true,
+
     onProxyReq(proxyReq, req) {
-      logRequest(req.originalUrl, {local: true, localFile: 'dev-server/assets'});
+      const path = req.originalUrl.replace(/^\/(?:nde\/)?custom\//, '/')
+
+      const localFile = findLocalResource(path, localResourceDirs);
+
+      logRequest(`localFile ${localFile}`);
+
+
+      if (localFile) {
+        req._localFile = localFile;
+        logRequest(req.originalUrl, { local: true, localFile });
+      } else {
+        logRequest(req.originalUrl);
+      }
     },
+
+    onProxyRes(proxyRes, req, res) {
+      if (req._localFile) {
+        proxyRes.on('data', () => {});
+        proxyRes.on('end', () => {
+          serveLocalFile(req._localFile, res);
+        });
+        return;
+      }
+
+      res.statusCode = proxyRes.statusCode;
+      for (const [key, value] of Object.entries(proxyRes.headers)) {
+        try { res.setHeader(key, value); } catch {}
+      }
+      proxyRes.pipe(res);
+    }
   },
+
+  {
+    context: [
+      '/nde/custom/32KUL_LIBIS_NETWORK-CENTRAL_PACKAGE/*',
+      '/nde/custom/32KUL_LIBIS_NETWORK-CENTRAL_PACKAGE/**'
+    ],
+    target: PROXY_TARGET,
+    secure: true,
+    changeOrigin: true,
+    logLevel: 'silent',
+    selfHandleResponse: true,
+    
+    onProxyReq(proxyReq, req) {
+      const path = req.originalUrl.replace(/^\/(?:nde\/)?custom\//, '/')
+      const localFile = findLocalResource(path, localResourceDirs);
+
+      // console.log("\n\npath : " , path)
+
+
+      if (localFile) {
+        req._localFile = localFile;
+        logRequest(req.originalUrl, { local: true, localFile });
+      } else {
+        logRequest(req.originalUrl);
+      }
+
+    },
+
+    onProxyRes(proxyRes, req, res) {
+      if (req._localFile) {
+        proxyRes.on('data', () => {});
+        proxyRes.on('end', () => {
+
+          logRequest("CENTRAL serveLocalFile serveLocalFile serveLocalFile", {local: true, localFile: req._localFile });
+          serveLocalFile(req._localFile, res);
+        });
+        return;
+      }
+
+      res.statusCode = proxyRes.statusCode;
+      for (const [key, value] of Object.entries(proxyRes.headers)) {
+        try { res.setHeader(key, value); } catch {}
+      }
+      proxyRes.pipe(res);
+    }
+  },
+
+
+
+
+
+
   {
     context: ['/primaws/rest/pub/configuration/vid/'],
     target: PROXY_TARGET,
@@ -69,6 +178,24 @@ const proxyRules = [
       });
     }
   },
+
+
+
+
+
+  {
+    context: [
+      '/nde/custom/*/CENTRAL_CODE.txt'
+    ],
+    target: PROXY_TARGET,
+    secure: true,
+    changeOrigin: true,
+    logLevel: 'silent',
+    onProxyReq(proxyReq, req) {
+      logRequest(req.originalUrl);
+    },
+  },
+
   {
     context: [
       '/nde/custom/**'
