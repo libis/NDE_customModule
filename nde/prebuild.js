@@ -21,58 +21,74 @@ if (!ndeConfig) {
     process.exit(1);
 }
 
-const addonName = ndeConfig.addonName;
+const selectedEnv = process.env.BUILD_TARGET || ndeConfig.defaultEnvironment;
+const envConfig = ndeConfig.environments[selectedEnv];
 
-if (addonName) {
-    const newBootstrapPath = path.resolve(projectRoot, `src/bootstrap${addonName}.ts`);
-
-    // Restore bootstrap.ts from previous version if needed
-    if (!fs.existsSync(bootstrapPath) && fs.existsSync(newBootstrapPath)) {
-        fs.copyFileSync(newBootstrapPath, bootstrapPath);
-        console.log(`Restored bootstrap.ts from bootstrap${addonName}.ts`);
-    }
-
-    // Rename bootstrap.ts if not already renamed
-    if (fs.existsSync(bootstrapPath) && !fs.existsSync(newBootstrapPath)) {
-        fs.renameSync(bootstrapPath, newBootstrapPath);
-        console.log(`Renamed bootstrap.ts to bootstrap${addonName}.ts`);
-    }
-
-    // Update main.ts import
-    let mainContent = fs.readFileSync(mainPath, 'utf8');
-    mainContent = mainContent.replace(
-        /import\(['"]\.\/bootstrap.*?['"]\)/g,
-        `import('./bootstrap${addonName}')`
-    );
-    fs.writeFileSync(mainPath, mainContent);
-    console.log(`Updated main.ts to import('./bootstrap${addonName}')`);
-
-    // Update webpack.config.js
-    let webpackConfig = fs.readFileSync(webpackConfigPath, 'utf8');
-    webpackConfig = webpackConfig.replace(/name:\s*["'][^"']+["']/, `name: "${addonName}"`);
-    webpackConfig = webpackConfig.replace(/uniqueName:\s*["'][^"']+["']/, `uniqueName: "${addonName}"`);
-    webpackConfig = webpackConfig.replace(/'\.\/[^']+':\s*'\.\/src\/bootstrap[^']*'/, `'./${addonName}': './src/bootstrap${addonName}.ts'`);
-    fs.writeFileSync(webpackConfigPath, webpackConfig);
-    console.log(`Updated webpack.config.js for addon: ${addonName}`);
-
-} else {
-    console.log("addonName not found in package.json nde section. Skipping renaming.");
+if (!envConfig) {
+  console.error(`Error: Environment '${selectedEnv}' not found in package.json nde.environments!`);
+  console.error(`Invalid environment: ${selectedEnv}`);
+  console.error('Available environments:', Object.keys(ndeConfig.environments));
+  process.exit(1);
 }
 
-// --- Handle ASSET_BASE_URL ---
-const assetBaseUrl = ndeConfig.assetBaseUrl || '';
+console.log(`👉 Prebuild for env: ${selectedEnv}`);
 
-console.log('NDE config:', ndeConfig);
+if (selectedEnv === 'central'){
+  const tsconfig = {
+    extends: "./tsconfig.app.json",
+    compilerOptions: {
+      paths: {
+        "src/*": [
+          "./src/*"
+        ],
+        "@nde/component-mappings": [
+          `./src/app/custom1-module/customComponentMappings.central.ts`
+        ]
+      }
+    },
+    include: [
+      "src/*",
+      "src/app/custom1-module/customComponentMappings.central.ts"
+    ]
+  };
+
+  fs.writeFileSync("tsconfig.generated.json", JSON.stringify(tsconfig, null, 2));
+}
+
+if (selectedEnv !== 'central'){
+
+  const view = process.env.BUILD_TARGET;
+
+  const tsconfig = {
+    extends: "./tsconfig.app.json",
+    compilerOptions: {
+      paths: {
+        "src/*": [
+          "./src/*" 
+        ],
+        "@nde/component-mappings": [
+          `./src/app/custom1-module/customComponentMappings.generated.ts`
+        ]
+      }
+    },
+    include: [
+      "src/*",
+      `./src/app/custom1-module/customComponentMappings.generated.ts`
+    ]
+  };
+
+  fs.writeFileSync("tsconfig.generated.json", JSON.stringify(tsconfig, null, 2));
+}
+
+const addonName = envConfig.addonName;
+const defaultName = "CustomModule"
+
+const assetBaseUrl = envConfig.assetBaseUrl || envConfig.host || '';
+
+console.log('Env config:', envConfig);
 console.log('Extracted assetBaseUrl:', assetBaseUrl);
 
 fs.writeFileSync(assetBaseOutPath, `export const assetBaseUrl = '${assetBaseUrl}';\n`);
 console.log(`✔ Written to ${assetBaseOutPath}:\nexport const assetBaseUrl = '${assetBaseUrl}';`);
 
-console.log('Prebuild completed successfully!');
-/*
-
- The script reads the package.json file and extracts the ADDON_NAME and ASSET_BASE_URL values from the nde section.
- It then renames the bootstrap.ts file to bootstrap{ADDON_NAME}.ts and updates the main.ts file to import the renamed bootstrap file.
- It also updates the webpack.config.js file with the addon name and the new bootstrap file.
- Finally, it writes the assetBaseUrl value to a new file asset-base.generated.ts.
-*/
+console.log('✅ Prebuild completed successfully! with env ' + selectedEnv);
