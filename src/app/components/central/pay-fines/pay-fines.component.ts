@@ -16,7 +16,7 @@
 
 */
 
-import { NDEComponent } from '../../decorators/nde-component.decorator';
+import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 import {
   Component,
   OnInit,

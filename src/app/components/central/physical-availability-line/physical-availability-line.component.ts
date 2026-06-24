@@ -1,4 +1,4 @@
-import { NDEComponent } from '../../decorators/nde-component.decorator';
+import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 import { Component, inject, Input, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { combineLatest, EMPTY, Observable } from "rxjs";
@@ -88,7 +88,6 @@ export class PhysicalAvailabilityLineComponent {
     private HostBindings: HostBindings,
     private viewConfigState: ViewConfigStateService,
   ) {
-    
     // this.isNgrs = ngrsUtil.isNgrs(); // ngrsUtil ??? ../../../../../../full-display/full-display-container/full-display-service-container/requests/get-it-other-locations/ngrs-util"
   }
 

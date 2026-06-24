@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { NDE_SLOTS, NDE_POSITION, NDEComponent } from 'src/app/decorators/nde-component.decorator';
 import { SearchStateService } from '@libis/primo-shared-state';
-import { AnalyticsService } from '../../services/analytics.service';
+import { AnalyticsService } from 'src/app/services/analytics.service';
 
 @NDEComponent(
   { 

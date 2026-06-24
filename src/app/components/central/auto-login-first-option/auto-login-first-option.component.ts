@@ -1,10 +1,10 @@
 import { Component, Input, OnInit, Inject } from '@angular/core';
-import { NDEComponent } from '../../decorators/nde-component.decorator';
+import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 import {
   STYLE_CONFIG,
   StyleConfig,
   BooleanOrViews,
-} from '../../config/style-config';
+} from '../../../config/style-config';
 
 @NDEComponent({
   selector: 'nde-header',
