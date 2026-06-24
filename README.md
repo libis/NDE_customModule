@@ -960,6 +960,39 @@ All project settings live in the `nde` section of `package.json`:
 
 ---
 
+
+
+## Build Target (`--build_target`)
+
+The `--build_target` parameter determines where the component is generated and in which builds it will be included.
+
+### Options
+
+- `central` (default)
+- `<environment>` (e.g. `kuleuven`, `sandbox-view`, ...)
+
+### Behaviour
+
+| build_target     | Component location                                      | Included in build |
+|------------------|--------------------------------------------------------|-------------------|
+| `central`        | `src/app/components/central/<component>`              | `npm run build:central` |
+| `<environment>`  | `src/app/components/views/<environment>/<component>`  | `npm run build <environment>` |
+
+> **Note:** Components are strictly isolated per build target. A component will only be included in the build that matches its target.
+
+### Default behaviour
+
+If `--build_target` is not provided:
+
+```bash
+npm run nde -- generate component my-component
+```
+→ defaults to:
+
+```bash
+--build_target central
+```
+
 ## Creating Components with @NDEComponent
 
 Components are the building blocks of your customization. Each component targets a **slot** in the NDE interface (e.g., the search bar, the header, the search results) and specifies a **position** relative to that slot.
@@ -1858,7 +1891,6 @@ The proxy applies four rules in order:
 ```bash
 npm run build
 ```
-
 This:
 1. Runs `prebuild.js` — generates configuration files (`asset-base.generated.ts`), handles add-on naming
 2. Runs the Angular/Webpack build with Module Federation
@@ -1875,6 +1907,19 @@ dist/
 │   └── ...                   Code-split chunks
 └── MY_INST-MY_VIEW.zip       Ready for upload
 ```
+
+### Component Inclusion
+
+The build only includes components matching the selected build target:
+
+- `npm run build <environment>` → loads components from:
+  `src/app/components/views/<environment>`
+
+- `npm run build:central` → loads components from:
+  `src/app/components/central`
+
+Components in other directories are ignored.
+
 
 ### Deploy to Alma
 
