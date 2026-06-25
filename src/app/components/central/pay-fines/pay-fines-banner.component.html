@@ -1,5 +1,6 @@
 <div *ngIf="hasFines" #banner id="fines-alerting-banner">
   <span>{{ finesString }}</span>
 
-  <button mat-raised-button color="warn" (click)="payFines()">Pay now</button>
+  <button mat-raised-button (click)="dismissFines()">Dismiss</button>
+  <button mat-raised-button (click)="payFines()">Pay Online</button>
 </div>

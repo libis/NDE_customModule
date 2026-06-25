@@ -1,5 +1,12 @@
-<div *ngIf="showAlert" #banner id="general-alerting-banner">
-  test 123 (GENERAL ALERT)
+<ng-container>
+  <div *ngIf="showGeneralAlert" #generalBanner id="general-alerting-banner">
+    <span> GENERAL ALERT</span>
+    <button mat-stroked-button (click)="dismissGeneral()">Dismiss</button>
+  </div>
 
-  <button (click)="dismiss()">Dismiss</button>
-</div>
+  <!-- <div *ngIf="showFinesBanner" #finesBanner id="fines-alerting-banner">
+    <span>{{ finesString }}</span>
+    <button mat-raised-button color="warn" (click)="payFines()">Pay now</button>
+    <button mat-stroked-button (click)="dismissFines()">Dismiss</button>
+  </div> -->
+</ng-container>

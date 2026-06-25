@@ -100,33 +100,6 @@ export class PayFinesComponent implements OnDestroy {
     });
   }
 
-  // payFines() {
-  //   const webhookUrl =
-  //     'https://eu-workflows.hosted.exlibrisgroup.com/19868343-9f49-454d-b9b5-84e5dba9923f/webhook/a027a91c-6603-49b1-b35b-87d70efc4bfb';
-
-  //   const accountService = this.hostComponent?.userAreaService?.accountService;
-
-  //   if (!accountService) {
-  //     console.error('No accountService available');
-  //     return;
-  //   }
-
-  //   const http = accountService.http; // ✅ uses same HTTP layer!
-
-  //   http.get(webhookUrl).subscribe({
-  //     next: (res: any) => {
-  //       console.log('Webhook response:', res);
-
-  //       if (res?.url) {
-  //         window.location.href = res.url;
-  //       }
-  //     },
-  //     error: (err: any) => {
-  //       console.error('Webhook call failed:', err);
-  //     },
-  //   });
-  // }
-
   async payFines() {
     const webhookUrl =
       'https://eu-workflows.hosted.exlibrisgroup.com/19868343-9f49-454d-b9b5-84e5dba9923f/webhook-test/a027a91c-6603-49b1-b35b-87d70efc4bfb';
@@ -198,5 +171,16 @@ export class PayFinesComponent implements OnDestroy {
       ndeHeader.appendChild(el);
       el._moved = true;
     }
+  }
+
+  private finesDismissed = false;
+
+  get showFinesBanner(): boolean {
+    return !this.finesDismissed && this.finesValue > 0;
+  }
+
+  dismissFines() {
+    this.finesDismissed = true;
+    this.banner?.nativeElement?.remove();
   }
 }

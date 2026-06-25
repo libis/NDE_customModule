@@ -1,14 +1,18 @@
 div#fines-alerting-banner {
-
-    width: 100%;
-    padding: 1em;
+  width: 100%;
+  padding: 1em;
+  background-color: crimson;
+  font-weight: bold;
+  color: whitesmoke;
+  gap: 1em;
+  text-align: center;
+  display: flex;
+  justify-content: center; /* horizontaal centreren */
+  align-items: center; /* verticaal centreren */
+  button {
+    color: whitesmoke !important;
+    border-color: whitesmoke !important;
     background-color: crimson;
-    font-weight: bold;
-    color: whitesmoke;
-
-    text-align: center;
-    display: flex;
-    justify-content: center; /* horizontaal centreren */
-    align-items: center;     /* verticaal centreren */
-
+    border: 1px solid white;
+  }
 }

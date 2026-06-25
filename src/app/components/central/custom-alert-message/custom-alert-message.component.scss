@@ -1,13 +1,18 @@
 div#general-alerting-banner {
   width: 100%;
   padding: 1em;
-  background-color: rgb(28, 151, 55);
+  background-color: crimson;
   font-weight: bold;
   color: whitesmoke;
-
   text-align: center;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 1em;
+  border-bottom: 3px solid darkred;
+
+  button {
+    color: whitesmoke !important;
+    border-color: whitesmoke !important;
+  }
 }
