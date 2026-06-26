@@ -45,6 +45,7 @@ Thumbs.db
 # NDE Auto-generated files
 /src/app/custom1-module/customComponentMappings.central.ts
 /src/app/custom1-module/customComponentMappings.generated.ts
-_registry.ts
-asset-base.generated.ts
+/src/app/events/_registry.ts
+/src/app/interceptors/_registry.ts
+/src/app/state/asset-base.generated.ts
 tsconfig.generated.json
