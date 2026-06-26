@@ -13,14 +13,21 @@ import { MATERIAL_IMPORTS } from 'src/app/shared/material.imports';
 
 import { ViewConfigStateService } from '@libis/primo-shared-state';
 
+
+import { HostStylesService } from 'src/app/services/host-styles.service';
+
 export enum AvailabilityStatus {
   Available, Unavailable, Maybe
 }
 
 
 /*
+ * Used codes from "Calculated Availability Text Labels" 
+ *  - 32KUL_KUL:KULeuven_NDE.delivery.code.available_in_library
+ *  - 32KUL_KUL:KULeuven_NDE.delivery.code.available_in_institution
  * ADDED To "View Labels" Code Table nde.separator.and with value and
  * ADDED To "View Labels" Code Table nde.consortium.institution with value and 32KUL_KUL,32KUL_LUCAWENK,32KUL_KHK,32KUL_KHL,32KUL_KATHO,32KUL_KHM 
+ * 
 */
 
 interface AlmaInstitution {
@@ -60,7 +67,6 @@ export class PhysicalAvailabilityLineComponent {
   public store = inject(Store);
   private isNgrs = false;
 
-
   public AvailabilityStatusType = AvailabilityStatus;
 
   getAvailabilityStatus!: (availabilityCode: string) => string;
@@ -77,6 +83,7 @@ export class PhysicalAvailabilityLineComponent {
   cfg?: any;
   prefix?: string;
 
+  andSeperator: string = "-and-" 
   almaInstitutionsList: AlmaInstitution[] = []
   institutionsText: string = ""
   hasAvailableInInstitution = false;
@@ -95,6 +102,7 @@ export class PhysicalAvailabilityLineComponent {
   async ngOnInit() {
     console.log ("[PhysicalAvailabilityLineComponent] ngOnInit")
 
+
     const host = this.hostComponent;
     if (!host) {
       console.warn('[remote] hostComponent not provided.');
@@ -109,7 +117,8 @@ export class PhysicalAvailabilityLineComponent {
     const institutionName = await this.viewConfigState.getInstitutionName();
     const institutionCode = await this.viewConfigState.getInstitutionCode();
 
-    
+    this.andSeperator = this.translate.instant( 'nde.separator.and' );
+
     // Add Institution of the view when available in library
     // if (this.hostComponent.physicalAvailability === 'available_in_library' && institutionName !== undefined) {
     if (this.hostComponent.physicalAvailability !== 'no_inventory' && institutionName !== undefined) {
