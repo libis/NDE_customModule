@@ -4,19 +4,24 @@ const fse = require('fs-extra');
 const path = require('path');
 const archiver = require('archiver');
 
-const projectRoot = path.join(__dirname, '..');
-const packageJsonPath = path.join(projectRoot, 'package.json');
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+const {
+  resolveEnv,
+  writeIfChanged,
+} = require('./env.cjs');
 
-const ndeConfig = packageJson.nde;
+const explicitEnv = process.argv[2];
+const {
+  projectRoot,
+  selectedEnv,
+  envConfig,
+  isCentral,
+  generatedTsconfigPath,
+  generatedMappingsPath,
+} = resolveEnv(explicitEnv);
 
-if (!ndeConfig) {
-  console.error("Error: 'nde' section not found in package.json!");
-  process.exit(1);
-}
+process.env.BUILD_TARGET = selectedEnv;
+process.env.npm_config_env = selectedEnv;
 
-const selectedEnv = process.env.BUILD_TARGET || ndeConfig.defaultEnvironment;
-const envConfig = ndeConfig.environments[selectedEnv];
 
 if (!envConfig) {
   console.error(`Error: Environment '${selectedEnv}' not found in package.json nde.environments!`);

@@ -24,6 +24,25 @@
           }
         }
       },
+      "vives": {
+        "host": "https://libis-kul-psb.primo.exlibrisgroup.com",
+        "institution": "32KUL_KATHO",
+        "view": "VIVES_NDE",
+        "assets": {
+          "favIcon": "images/favicon.ico",
+          "libraryLogo": "images/library-logo.png",
+          "viewSvg": "icons/custom_icons.svg",
+          "homepage": {
+            "homepageBGImage": "homepage/homepage_background.svg",
+            "html": {
+              "en": "homepage/homepage_en.html",
+              "nl": "homepage/homepage_nl.html",
+              "fr": "homepage/homepage_fr.html",
+              "de": "homepage/homepage_de.html"
+            }
+          }
+        }
+      },      
       "central": {
         "host": "https://libis-kul-psb.primo.exlibrisgroup.com",
         "institution": "32KUL_LIBIS_NETWORK",

@@ -48,4 +48,7 @@ Thumbs.db
 /src/app/events/_registry.ts
 /src/app/interceptors/_registry.ts
 /src/app/state/asset-base.generated.ts
-tsconfig.generated.json
+tsconfig.generated*.json
+building.lock
+.nde/*
+

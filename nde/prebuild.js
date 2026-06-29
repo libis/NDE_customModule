@@ -1,98 +1,83 @@
 const fs = require('fs');
 const path = require('path');
 
-const projectRoot = path.resolve(__dirname, '..');
-const packageJsonPath = path.resolve(projectRoot, 'package.json');
-const bootstrapPath = path.resolve(projectRoot, 'src/bootstrap.ts');
-const mainPath = path.resolve(projectRoot, 'src/main.ts');
-const webpackConfigPath = path.resolve(projectRoot, 'webpack.config.js');
-const assetBaseOutPath = path.resolve(projectRoot, 'src/app/state/asset-base.generated.ts');
+const {
+  resolveEnv,
+  writeIfChanged,
+} = require('./env.cjs');
 
-if (!fs.existsSync(packageJsonPath)) {
-    console.error("Error: package.json file not found!");
-    process.exit(1);
-}
+const explicitEnv = process.argv[2];
+const {
+  projectRoot,
+  selectedEnv,
+  envConfig,
+  isCentral,
+  generatedTsconfigPath,
+  generatedMappingsPath,
+} = resolveEnv(explicitEnv);
 
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-const ndeConfig = packageJson.nde;
-
-if (!ndeConfig) {
-    console.error("Error: 'nde' section not found in package.json!");
-    process.exit(1);
-}
-
-const selectedEnv = process.env.BUILD_TARGET || ndeConfig.defaultEnvironment;
-const envConfig = ndeConfig.environments[selectedEnv];
-
-if (!envConfig) {
-  console.error(`Error: Environment '${selectedEnv}' not found in package.json nde.environments!`);
-  console.error(`Invalid environment: ${selectedEnv}`);
-  console.error('Available environments:', Object.keys(ndeConfig.environments));
-  process.exit(1);
-}
+process.env.BUILD_TARGET = selectedEnv;
+process.env.npm_config_env = selectedEnv;
 
 console.log(`👉 Prebuild for env: ${selectedEnv}`);
 
-if (selectedEnv === 'central'){
-  const tsconfig = {
-    extends: "./tsconfig.app.json",
-    compilerOptions: {
-      paths: {
-        "src/*": [
-          "./src/*"
-        ],
-        "@nde/component-mappings": [
-          `./src/app/custom1-module/customComponentMappings.central.ts`
-        ]
-      }
-    },
-    include: [
-      "src/*",
-      "src/app/custom1-module/customComponentMappings.central.ts"
-    ]
-  };
-
-  fs.writeFileSync(  path.resolve(projectRoot, "tsconfig.generated.json"), JSON.stringify(tsconfig, null, 2));
-}
-
-if (selectedEnv !== 'central'){
-
-  const view = process.env.BUILD_TARGET;
-
-  const tsconfig = {
-    extends: "./tsconfig.app.json",
-    compilerOptions: {
-      paths: {
-        "src/*": [
-          "./src/*" 
-        ],
-        "@nde/component-mappings": [
-          `./src/app/custom1-module/customComponentMappings.generated.ts`
-        ]
-      }
-    },
-    include: [
-      "src/*",
-      `./src/app/custom1-module/customComponentMappings.generated.ts`
-    ]
-  };
-
-  const tsconfig_generated =  path.resolve(projectRoot, "tsconfig.generated.json")
-  const tsconfig_generated_dir = path.dirname(tsconfig_generated);
-
-  fs.mkdirSync(tsconfig_generated_dir, { recursive: true });
-  fs.writeFileSync( tsconfig_generated, JSON.stringify(tsconfig, null, 2));
-}
-
-const addonName = envConfig.addonName;
-const defaultName = "CustomModule"
+const assetBaseOutPath = path.resolve(
+  projectRoot,
+  '.nde',
+  'generated',
+  selectedEnv,
+  'asset-base.generated.ts'
+);
 
 const assetBaseUrl = envConfig.assetBaseUrl || envConfig.host || '';
 
-console.log('Env config:', envConfig);
-console.log('Extracted assetBaseUrl:', assetBaseUrl);
+writeIfChanged(
+  assetBaseOutPath,
+  `export const assetBaseUrl = '${assetBaseUrl}';\n`
+);
 
-fs.writeFileSync(assetBaseOutPath, `export const assetBaseUrl = '${assetBaseUrl}';\n`);
-console.log(`✔ Written to ${assetBaseOutPath}:\nexport const assetBaseUrl = '${assetBaseUrl}';`);
 
-console.log('✅ Prebuild completed successfully! with env ' + selectedEnv);
+const relativeMappingsPath =
+  path.relative(
+    path.dirname(generatedTsconfigPath),
+    generatedMappingsPath
+  ).replace(/\\/g, '/');
+
+
+const tsconfig = {
+  extends: "./tsconfig.app.json",
+  compilerOptions: {
+    rootDir: "./",
+    paths: {
+      "src/*": [
+        "./src/*"
+      ],
+      "@nde/component-mappings": [
+        relativeMappingsPath
+      ],
+      "@nde/asset-base": [
+        "./asset-base.generated.ts"
+      ]
+    }
+  },
+  include: [
+    "./src/*.ts",
+    relativeMappingsPath,
+    "./asset-base.generated.ts"
+  ],
+  exclude: [
+    "./src/**/*.spec.ts",
+    "./src/test.ts"
+  ]
+};
+
+writeIfChanged(
+  generatedTsconfigPath,
+  JSON.stringify(tsconfig, null, 2) + '\n'
+);
+
+console.log(`✔ Generated env tsconfig: ${generatedTsconfigPath}`);
+console.log(`✔ Generated mapping target: ${generatedMappingsPath}`);
+console.log(`✔ Relative mapping : ${relativeMappingsPath}`);
+console.log(`✔ Asset base: ${assetBaseUrl}`);
+console.log('✅ Prebuild completed successfully');
