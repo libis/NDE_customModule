@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { SearchParams } from "@libis/primo-shared-state"
-import searchAlso_map from './searchAlso_sourceMap.json';
+import searchAlso_map from '../libis-search-also/searchAlso_sourceMap.json';
 import { HttpClient } from "@angular/common/http";
 
 export interface SearchAlsoConfig {

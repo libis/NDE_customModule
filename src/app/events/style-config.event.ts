@@ -36,6 +36,7 @@ export class styleConfigEvent extends NDEEventBase {
     console.log('[styleConfigEvent] config', this.config);
     this.currentView = this.resolveCurrentView();
     this.injectStyles();
+    this.applyDefaultListView();
   }
 
   private getStyleValueFromCodeTable(param: any, code: string): any {
@@ -134,6 +135,57 @@ export class styleConfigEvent extends NDEEventBase {
     });
   }
 
+  private applyDefaultListView(): void {
+    if (!this.isActive(this.config.DefaultListView)) return;
+
+    const observer = new MutationObserver(() => {
+      const listBtn = document.querySelector(
+        '[data-qa="view-as-list"]',
+      ) as HTMLElement;
+      const gridBtn = document.querySelector(
+        '[data-qa="view-as-grid"]',
+      ) as HTMLElement;
+
+      if (listBtn && gridBtn) {
+        const isGridActive = gridBtn.getAttribute('aria-pressed') === 'true';
+
+        if (isGridActive) {
+          console.log('[styleConfigEvent] switching to list view');
+          listBtn.click();
+        }
+
+        observer.disconnect(); // important → avoid loops
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  private getLocationNumberInBoldStyles(): string {
+    if (!this.isActive(this.config.LocationNumberInBold)) return '';
+
+    return `
+    [data-qa="location-call-number"] {
+      font-weight: bold !important;
+    }
+  `;
+  }
+
+  private getCloseBannerIconStyles(): string {
+    return `
+    .banner-close-button mat-icon {
+      background: white !important;
+      border-radius: 50% !important;
+      padding: 4px !important;
+      color: black !important; /* controls SVG fill via currentColor */
+    }
+
+    .banner-close-button mat-icon svg path {
+      fill: black !important;
+    }
+  `;
+  }
+
   private injectStyles() {
     const styleId = 'nde-custom-topbar-styles';
     if (document.getElementById(styleId)) return;
@@ -147,6 +199,8 @@ export class styleConfigEvent extends NDEEventBase {
       this.getHideSignInStyles(),
       this.getHideLiriasLinksStyles(),
       this.getHideLoginBannerStyles(),
+      this.getLocationNumberInBoldStyles(),
+      this.getCloseBannerIconStyles(),
     ].join('\n');
 
     document.head.appendChild(style);

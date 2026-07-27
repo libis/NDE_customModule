@@ -1,8 +1,14 @@
-import { ApplicationRef, DoBootstrap, Injector, NgModule } from '@angular/core';
+import {
+  ApplicationRef,
+  DoBootstrap,
+  Injector,
+  NgModule,
+  provideAppInitializer,
+} from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { createCustomElement, NgElementConstructor } from '@angular/elements';
 import { Router } from '@angular/router';
-import { selectorComponentMap } from './custom1-module/customComponentMappings';
+import { selectorComponentMap } from '@nde/component-mappings';
 import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { AutoAssetSrcDirective } from './services/auto-asset-src.directive';
@@ -15,6 +21,7 @@ import { getInterceptorProviders } from './decorators/nde-interceptor.decorator'
 import { getEventProviders } from './decorators/nde-event.decorator';
 import { GlobalHttpEventService } from './services/global-http-event.service';
 import { AnalyticsService } from './services/analytics.service';
+import { loadExternalScripts } from './services/script-loader.service';
 import { provideLottieOptions } from 'ngx-lottie';
 import player from 'lottie-web';
 import './interceptors/_registry';
@@ -41,6 +48,7 @@ export const AppModule = ({
         player: () => player,
       }),
       ...getEventProviders(),
+      provideAppInitializer(loadExternalScripts),
     ],
     bootstrap: [],
   })

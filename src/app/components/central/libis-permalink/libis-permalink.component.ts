@@ -1,11 +1,11 @@
 import { Component, inject, Input, Signal, ViewEncapsulation } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Doc, SearchStateService, ViewConfigStateService } from '@libis/primo-shared-state';
-import {selectSearchScope } from './permalink_utils.selector';
+import {selectSearchScope } from '../libis-permalink/permalink_utils.selector';
 import { LIBISPermalinkService } from './libis_permalinks_service.service';
 import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 import { CommonModule } from '@angular/common';
-import { LibisCopytoclipboardComponent } from '../../../shared/components/libis-copytoclipboard/libis-copytoclipboard.component';
+import { LibisCopytoclipboardComponent } from 'src/app/shared/components/libis-copytoclipboard/libis-copytoclipboard.component';
 //import { HostStylesService } from 'src/app/services/libis-host-styles.service';
 
 @NDEComponent({selector:'nde-permalink-dialog', position:'replace', viewPattern: /32KUL.*/})

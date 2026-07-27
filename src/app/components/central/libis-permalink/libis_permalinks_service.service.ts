@@ -2,9 +2,9 @@ import {
   inject,
   Injectable,
 } from '@angular/core';
-import limo_map from './permalink_map.json';
+import limo_map from '../libis-permalink/permalink_map.json';
 import { Doc } from '@libis/primo-shared-state';
-import { selectCurrentLanguage } from './permalink_utils.selector';
+import { selectCurrentLanguage } from '../libis-permalink/permalink_utils.selector';
 import { Store } from '@ngrx/store';
 import { HttpClient } from '@angular/common/http';
 

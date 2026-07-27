@@ -8,30 +8,64 @@
       "kuleuven": {
         "host": "https://libis-kul-psb.primo.exlibrisgroup.com",
         "institution": "32KUL_KUL",
-        "view": "KULeuven_NDE"
+        "view": "KULeuven_NDE",
+        "assets": {
+          "favIcon": "images/favicon.ico",
+          "libraryLogo": "images/library-logo.png",
+          "viewSvg": "icons/custom_icons.svg",
+          "homepage": {
+            "homepageBGImage": "homepage/homepage_background.svg",
+            "html": {
+              "en": "homepage/homepage_en.html",
+              "nl": "homepage/homepage_nl.html",
+              "fr": "homepage/homepage_fr.html",
+              "de": "homepage/homepage_de.html"
+            }
+          }
+        }
       },
+      "vives": {
+        "host": "https://libis-kul-psb.primo.exlibrisgroup.com",
+        "institution": "32KUL_KATHO",
+        "view": "VIVES_NDE",
+        "assets": {
+          "favIcon": "images/favicon.ico",
+          "libraryLogo": "images/library-logo.png",
+          "viewSvg": "icons/custom_icons.svg",
+          "homepage": {
+            "homepageBGImage": "homepage/homepage_background.svg",
+            "html": {
+              "en": "homepage/homepage_en.html",
+              "nl": "homepage/homepage_nl.html",
+              "fr": "homepage/homepage_fr.html",
+              "de": "homepage/homepage_de.html"
+            }
+          }
+        }
+      },      
       "central": {
         "host": "https://libis-kul-psb.primo.exlibrisgroup.com",
         "institution": "32KUL_LIBIS_NETWORK",
-        "view": "CENTRAL_PACKAGE"
+        "view": "CENTRAL_PACKAGE",
+        "assets": {
+          "favIcon": "images/favicon.ico",
+          "libraryLogo": "images/library-logo.png",
+          "viewSvg": "icons/custom_icons.svg",
+          "homepage": {
+            "homepageBGImage": "homepage/homepage_background.svg",
+            "html": {
+              "en": "homepage/homepage_en.html",
+              "nl": "homepage/homepage_nl.html",
+              "fr": "homepage/homepage_fr.html",
+              "de": "homepage/homepage_de.html"
+            }
+          }
+        }
       }
     },
     "defaultEnvironment": "kuleuven",
     "proxyUrlTemplate": "/nde/home?vid={institution}:{view}&lang=en",
-    "customization": {
-      "favIcon": "custom/MOCKINST-MOCKVID/assets/images/favicon.ico",
-      "libraryLogo": "custom/MOCKINST-MOCKVID/assets/images/library-logo.png",
-      "viewSvg": "custom/MOCKINST-MOCKVID/assets/icons/custom_icons.svg",
-      "homepage": {
-        "homepageBGImage": "custom/MOCKINST-MOCKVID/assets/homepage/homepage_background.svg",
-        "html": {
-          "en": "custom/MOCKINST-MOCKVID/assets/homepage/homepage_en.html",
-          "nl": "custom/MOCKINST-MOCKVID/assets/homepage/homepage_nl.html",
-          "fr": "custom/MOCKINST-MOCKVID/assets/homepage/homepage_fr.html",
-          "de": "custom/MOCKINST-MOCKVID/assets/homepage/homepage_de.html"
-        }
-      }
-    },
+    "assetsUrlTemplate": "custom/{institution}-{view}/assets",
     "components": {
       "autoRegister": true,
       "directory": "src/app/components"
@@ -39,6 +73,10 @@
     "interceptors": {
       "autoRegister": true,
       "directory": "src/app/interceptors"
+    },
+    "events": {
+      "autoRegister": true,
+      "directory": "src/app/events"
     },
     "localResourceDirs": [
       "./dist"
@@ -48,14 +86,15 @@
     "ng": "ng",
     "nde": "node nde/nde-cli.js",
     "start": "ng serve",
-    "prestart": "node nde/prebuild.js",
+    "prestart": "",
     "start:no-prebundle": "ng serve --prebundle=false",
     "start:proxy": "ng serve --proxy-config ./nde/proxy.conf.mjs",
-    "build": "ng build",
+    "build": "node nde/build.js",
+    "build:central": "cross-env BUILD_TARGET=central node nde/build.js",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "postbuild": "node nde/postbuild.js",
-    "prebuild": "node nde/prebuild.js",
+    "postbuild": "",
+    "prebuild": "",
     "run:all": "node node_modules/@angular-architects/module-federation/src/server/mf-dev-server.js"
   },
   "private": true,
@@ -80,6 +119,7 @@
     "@ngx-translate/http-loader": "^8.0.0",
     "@webcomponents/custom-elements": "^1.6.0",
     "dotenv": "^16.4.5",
+    "fs-extra": "^11.3.5",
     "lottie-web": "^5.13.0",
     "ngx-lottie": "^13.0.1",
     "rxjs": "~7.8.0",
@@ -96,6 +136,7 @@
     "@types/lodash": "^4.17.24",
     "@types/node": "^25.0.10",
     "archiver": "^7.0.1",
+    "cross-env": "^10.1.0",
     "jasmine-core": "~4.6.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
