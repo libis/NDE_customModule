@@ -1,4 +1,4 @@
-import { NDEComponent } from '../../decorators/nde-component.decorator';
+import { NDEComponent } from '../../../decorators/nde-component.decorator';
 import { Component, inject, Input, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { combineLatest, EMPTY, Observable } from "rxjs";

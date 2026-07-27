@@ -1,6 +1,6 @@
 import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NDEComponent } from '../../decorators/nde-component.decorator';
+import { NDEComponent } from '../../../decorators/nde-component.decorator';
 
 @NDEComponent({
   selector: 'nde-user-area',

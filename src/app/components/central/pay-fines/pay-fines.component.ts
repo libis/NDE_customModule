@@ -17,7 +17,7 @@
 
 */
 
-import { NDEComponent } from '../../decorators/nde-component.decorator';
+import { NDEComponent } from '../../../decorators/nde-component.decorator';
 import { Component, OnInit, Input, effect, OnDestroy , ElementRef, ViewChild } from '@angular/core';
 
 

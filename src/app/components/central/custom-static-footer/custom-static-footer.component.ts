@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateService } from '@ngx-translate/core';
-import { NDEComponent } from '../../decorators/nde-component.decorator';
+import { NDEComponent } from '../../../decorators/nde-component.decorator';
 
 @NDEComponent({
   selector: 'nde-footer',
