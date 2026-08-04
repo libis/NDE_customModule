@@ -1,0 +1,72 @@
+{
+    "opening_hours_map": {
+        "base_URL": "https://services.libis.be/opening_hours/32KUL",
+        "default_lang": "en",
+        "field_map": {
+            "lib_name": "name",
+            "lib_photo": "lib_photo",
+            "address": [
+                "address_building",
+                "address_line1",
+                "address_line2",
+                "address_line3",
+                "email",
+                "tel",
+                "lib_website"
+            ],
+            "social_media": [
+                {
+                    "field":"facebook",
+                    "platform":"Facebook"
+                },
+                {
+                    "field":"instagram",
+                    "platform": "Instagram"
+                }
+            ],
+            "extra": [
+            {
+                "field": "route",
+                "tool_type": "route",
+                "label": {
+                    "type": "NDE",
+                    "value": "",
+                    "default":""
+                }
+            },
+            {
+                "field": "general_note",
+                "tool_type": "note",
+                "label": {
+                    "type": "text",
+                    "value": "",
+                    "default":""
+                }
+            }
+    ],
+        "consultation": [
+            {
+                "field":"opening_hours_note",
+                "tool_type":"note",
+                "label": {
+                    "type": "text",
+                    "value": "",
+                    "default":""
+                }
+            }
+        ]    
+        },
+        "appointment": "appointment_only",
+        "opening_hours_config": {
+            "title": {
+                "field":"",
+                "default":""
+            },
+            "subtitle": {
+                "field":"",
+                "default":""
+            },
+            "start_day": 1
+        }
+    }
+}
