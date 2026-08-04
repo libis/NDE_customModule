@@ -11,7 +11,7 @@ export interface credentialResponse {
   credentials: string;
 }
 
-@NDEComponent({selector:'nde-view-it-card', position:'bottom', viewPattern: /32KUL.*/})
+@NDEComponent({selector:'nde-view-it-card', position:'bottom', viewPattern: /332KUL.*/})
 @Component({
   selector: 'custom-libis-password-note',
   standalone: true,
