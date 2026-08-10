@@ -1,3 +1,42 @@
+// .source-icon-wrapper {
+//   display: flex;
+//   align-items: inherit;
+// }
+
+// .source-icon-cont {
+//   display: flex;
+//   align-items: inherit;
+// }
+
+.record-indication-wrapper {
+    vertical-align: middle;
+}
+
+.record-indication-wrapper .mat-divider.mat-divider-vertical {
+  display: inline;
+}
+
+.mat-divider.mat-divider-vertical {
+  margin-inline-start: 0.5rem;
+  margin-inline-end: 0.5rem;
+}
+
+.record-indication {
+  color: var(--sys-outline);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
 .source-icon {
-    margin: 0.5rem;
+   height: 1em;
+   object-fit: contain;
+   vertical-align: middle;
+}
+
+@media only screen and (max-width: 599.98px) {
+  .record-indication-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
 }

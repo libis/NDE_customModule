@@ -1,3 +1,18 @@
 button.available-at-button {
     padding: 0;
 }
+
+nde-physical-availability-line-from-remote-0 {
+    display: inline-block;
+    word-break: break-word;
+    box-sizing: inherit;
+    gap: 1.375rem;
+}
+
+nde-physical-availability-line-from-remote-0 > div[data-qa=brief_result_availability] {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    flex: 1 1 0;
+    margin-block-end: .5rem;
+}

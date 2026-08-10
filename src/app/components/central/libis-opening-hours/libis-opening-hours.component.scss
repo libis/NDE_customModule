@@ -1,0 +1,247 @@
+// CSS grid area definitions
+.zone-1a {
+  grid-area: photo;
+  justify-self: center;
+  align-self: center;
+  justify-items: center;
+  align-items: center;
+}
+
+.zone-1b {
+  grid-area: status;
+  justify-self: center;
+  align-self: start;
+  justify-items: center;
+  align-items: center;
+  text-align: center;
+}
+
+.zone-2a {
+  grid-area: address;
+  justify-self: left;
+  align-self: start;
+  justify-items: left;
+  align-items: start;
+  text-align: left;
+}
+
+.zone-2b {
+  grid-area: extra;
+  justify-self: left;
+  align-self: start;
+  justify-items: left;
+  align-items: start;
+  text-align: left;
+}
+
+.zone-3a {
+  grid-area: opening_hours;
+  justify-self: center;
+  align-self: start;
+  justify-items: center;
+  align-items: start;
+  background-color: var(--sys-primary-container);
+  color: var(--sys-on-primary-container);
+  border-radius: 5%;
+}
+
+.zone-3b {
+  grid-area: consultation;
+  justify-self: left;
+  align-self: start;
+  justify-items: left;
+  align-items: start;
+  text-align: left;
+}
+
+.zone-1a,
+.zone-1b,
+.zone-2a,
+.zone-2b,
+.zone-3a,
+.zone-3b {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  width: 100%;
+  height: 100%;
+}
+
+.opening-hours-wrapper {
+  display: block;
+  container-type: inline-size;
+  container-name: opening-hours-wrapper;
+  background-color: white;
+  border-color: var(--sys-primary);
+  border-width: 5px;
+  border-style: solid;
+}
+
+.opening-hours-container {
+  //background-color: plum;
+  padding: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: grid;
+  gap: 2rem;
+  grid-template-areas:
+    "photo address opening_hours"
+    "photo address opening_hours"
+    "photo address opening_hours"
+    "status extra opening_hours"
+    ". extra consultation"
+    ". extra consultation";
+}
+
+@container (max-width:749.99px) {
+  .opening-hours-container {
+    //background-color: aquamarine;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "photo opening_hours"
+      "photo opening_hours"
+      "photo opening_hours"
+      "status opening_hours"
+      "address consultation"
+      "address consultation"
+      "address extra"
+      "address extra"
+      "address extra";
+  }
+}
+
+@container (max-width:499.99px) {
+  .opening-hours-container {
+    //background-color:lightsalmon;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "address"
+      "extra"
+      "opening_hours"
+      "consultation";
+  }
+  .zone-1a,
+  .zone-1b {
+    display: none;
+  }
+}
+
+// Settings for content
+.library_photo img {
+  max-width: 250px;
+  height: auto;
+}
+
+.address_line,
+.social_media,
+.tool_field {
+  display: flex;
+  align-items: center;
+  font-size: var(--sys-body-medium-size);
+  gap: 0.5rem;
+}
+
+.address_line mat-icon,
+.social_media mat-icon,
+.tool_field mat-icon {
+  font-size: var(--sys-body-medium-size);
+  width: var(--sys-body-medium-size);
+  height: var(--sys-body-medium-size);
+  line-height: 1;
+  color: var(--sys-primary);
+}
+
+.OH_title {
+  color: var(--sys-primary);
+  font-size: var(--mat-title-medium-size);
+  font-weight: 550;
+}
+
+.status_note {
+  background-color: var(--sys-primary);
+  color: var(--sys-on-primary);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 250px;
+}
+
+.OH_overview {
+  width: 100%;
+  text-align: center;
+}
+
+.OH_overview table {
+  width: 100%;
+}
+
+.OH_overview th,
+.OH_overview td {
+  text-align: center;
+  vertical-align: middle;
+  padding: 0.5rem 1rem;
+  overflow-wrap: anywhere;
+}
+
+// div.status_note {
+//     width: 100%;
+//     background-color: var(--sys-primary);
+//     color: var(--sys-on-primary);
+//     border-radius: 5%;
+// }
+
+// .mdc-button{
+//     padding: 0.5rem;
+//     background-color: var(--sys-primary);
+//     color: var(--whiteText);
+//     font-size: var(--sys-body-medium-size);
+//     border-radius: 5px;
+// }
+
+// .address-line mat-icon{
+//     display: inline-block;
+//     font-size: var(--mat-body-medium-size);
+//     line-height: 1;
+//     vertical-align: text-bottom;
+// }
+
+// .opening-hours-container * {
+//     font-size: 1rem;
+// }
+
+// .opening-hours-container div {
+//     min-width: 0;
+// }
+
+// .zone-2a, .zone-2b {
+//     align-self: start;
+// }
+
+// .address-line{
+// display: flex;
+// min-width: 0;
+// align-items: center;
+// gap: 0.25rem;
+// font-size: var(--mat-body-medium-size);
+// }
+
+// .address-line * {
+//     word-break: break-all;
+// }
+
+// .OH_timeslot{
+//     display: block;
+// }
+
+// .week-view{
+//     padding: 1rem;
+//     border-collapse: separate;
+//     border-spacing: 2rem;
+//     border-color: greenyellow;
+//     border-width: 2px;
+//     border-style: solid;
+// }
+
+// .week-view td {
+//     padding: 20px;
+//     text-align: center;
+//     vertical-align: middle;
+//     background-color: yellow;
+// }

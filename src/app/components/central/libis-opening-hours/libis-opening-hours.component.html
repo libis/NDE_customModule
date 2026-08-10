@@ -1,0 +1,157 @@
+
+    <!--<button mat-button class="mdc-button contact-button" (click)="toggle_info_card()">Opening hours</button>-->
+
+<div class="opening-hours-wrapper">
+  @if (opening_hours(); as openings){
+  <div class="opening-hours-container">
+    @if(contact_details(); as contact){
+    <div class="zone-1a grid-item">
+      <div class="library_photo">
+        @if(contact.lib_photo !== undefined){
+        <img [attr.src]="contact.lib_photo.value" alt="library photo">
+        }
+        @else{
+        <img [attr.src]="'https://assets.libis.be/limo/library_info/library_default.png'" alt="library standard icon">
+        }
+      </div>
+    </div>
+    <div class="zone-1b grid-item">
+      <div class="status_note">
+        @if (openings.curr_status.open_now){
+          <div>Open now <span *ngIf="openings.curr_status.next_change"><br>until {{ parse_status_change(openings.curr_status.next_change.closed) }}</span></div>
+        }
+        @else {
+          <div>Closed now<span *ngIf="openings.curr_status.next_change"> <br>Opens on {{ weekdays()[openings.curr_status.next_change.open.getDay()] | titlecase}} at {{ parse_status_change(openings.curr_status.next_change.open) }}</span></div>
+        }
+      </div>
+    </div>
+    <div class="zone-2a grid-item">
+      <div class="address_area">
+      @if(contact.lib_name !== undefined){
+      <div class="OH_title">{{ contact.lib_name.value}}</div>
+      }
+
+      @for(line of contact.address; track line){
+
+      @switch (line.type) {
+      @case('text'){
+      <div class="address_line">
+        {{ line.value }}
+      </div>
+      }
+      @case('url'){
+      <div class="address_line">
+        <mat-icon class="mat-icon gap-05">language</mat-icon>
+        <span><a [attr.href]="line.value" target="_blank">Library website</a></span>
+      </div>
+      }
+      @case('email'){
+      <div class="address_line">
+        <mat-icon class="mat-icon gap-05">mail</mat-icon>
+        <a [attr.href]="'mailto:' + line.value" target="_blank">{{ line.value }}</a>
+      </div>
+      }
+      @case('tel'){
+      <div class="address_line">
+        <mat-icon class="mat-icon gap-05">phone</mat-icon>
+        <a [attr.href]="'tel:' + line.value">{{ line.value }}</a>
+      </div>
+      }
+      @default(){
+      <div class="address_line">
+        {{ line.value }}
+      </div>
+      }
+      }
+      }
+
+      @for(link of contact.social_media; track link){
+
+      <div class="social_media">
+        @switch(link.platform){
+        @case('Facebook'){
+        <mat-icon svgSrc="/assets/icons/facebook.svg">facebook</mat-icon>
+        }
+        @case('Instagram'){
+        <mat-icon svgSrc="/assets/icons/instagram.svg">instagram</mat-icon>
+        }
+        @default{
+        <mat-icon>group</mat-icon>
+        }
+        }
+        <a [attr.href]="link.field.value"
+          target="_blank">Find us on {{ link.platform }}</a>
+
+      </div>
+      }
+    </div>
+    </div>
+    <div class="zone-2b grid-item">
+
+      @for(tool of contact.extra; track tool){
+
+      @switch(tool.tool_type){
+
+      <!--@case('note'){
+      <div class="tool_field general_note">
+        <p>{{ tool.field.value }}</p>
+      </div>
+    }-->
+      @case('route'){
+      <div class="tool_field route_description">
+        <mat-icon>directions</mat-icon>
+        <a [attr.href]="tool.field.value"
+          target="_blank">Route to the library</a>
+      </div>
+      }
+      }
+      }
+    </div>
+    <div class="zone-3b grid-item">
+      @for(tool of contact.consultation; track tool){
+
+      @switch(tool.tool_type){
+
+      @case('note'){
+      <div class="general_note">
+        <p>{{ tool.field.value }}</p>
+      </div>
+      }
+      @case('reservation_tool'){
+
+      }
+      }
+      }
+    </div>
+  }
+    <div class="zone-3a grid-item">
+      <div class="OH_overview">
+      <div class="OH_title">Opening hours</div>
+      <table class="week_view">
+        @for(day of openings.this_week; track day){
+        <tr>
+          <td>
+            <div>{{ weekdays()[toNum(day.week_day)] | titlecase }}</div>
+          </td>
+          <td>
+            @if(day.hours.length === 0){
+              <p>Closed</p>
+            }
+            @else{
+              @for(timeslot of day.hours; track timeslot){
+                <div>{{ timeslot.open }} - {{ timeslot.closed }}</div>
+                @if(day.description !== ""){
+                  <div>({{day.description}})</div>
+                }
+              }
+            }
+            </td>
+        </tr>
+        }
+      </table>
+    </div>
+    </div>
+
+  </div>
+}
+</div>

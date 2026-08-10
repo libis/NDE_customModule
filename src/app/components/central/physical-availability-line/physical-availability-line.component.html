@@ -4,9 +4,7 @@
   class="flex-row availability-status"
 >
 
-
 <ng-container [ngSwitch]="getAvailabilityStatus(viewModel.availabilityCode)">
-
    
     <ng-container *ngSwitchCase="AvailabilityStatusType.Unavailable">
       <mat-icon
@@ -44,17 +42,17 @@
     @if (!viewModel.availabilityCode.includes('ngrs')) {
       <span
         class="availability-code">
-         <span class="light-text"
-        [innerHTML]="
-          (viewModel.availabilityCode | translate).replace('{{idx_1}}','')
-        ">
-        </span>
+        <span class="light-text">
+          {{  (viewModel.availabilityCode | translate).replace('{{idx_1}}','') }}
+        </span> 
       </span>
     }
 
     @if ((viewModel.availabilityCode | translate).includes('idx_1')) {
 
-      <ng-container *ngFor="let inst of almaInstitutionsList; let i = index; let last = last">
+      <ng-container *ngFor="let inst of almaInstitutionsList; let i = index; let last = last let l = count";>
+
+
         <!--
         <span
           [style.color]="positiveAvailabilityStatus.includes(inst.availabilityStatus) ? 'green' : 'grey'"
@@ -62,12 +60,32 @@
           {{ inst.instName }}
         </span>
         -->
+
+        <span
+          [style.color]="'grey'"
+          [style.font-weight]="'bold'"
+        >
         {{ inst.instName }}
-        <!-- Separator logic -->
+        </span>
+
+       
+
         <ng-container *ngIf="!last">
-          <span *ngIf="i < almaInstitutionsList.length - 2" style="font-weight: 400; font-style: normal;">, </span>
-          <span *ngIf="i === almaInstitutionsList.length - 2" style="font-weight: 400; font-style: normal;"> AND </span>
+          <span
+            [style.color]="'grey'"
+            [style.font-style]="'normal'"
+          >
+            <ng-container *ngIf="last === false && i === almaInstitutionsList.length - 2">
+              {{ andSeperator }}
+            </ng-container>
+            <ng-container *ngIf="i < almaInstitutionsList.length - 2">
+              , 
+            </ng-container>
+          </span>
         </ng-container>
+
+
+
       </ng-container>
     }
 
