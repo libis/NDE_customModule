@@ -191,9 +191,44 @@ const proxyRules = [
     secure: true,
     changeOrigin: true,
     logLevel: 'silent',
+    selfHandleResponse: true,
+
     onProxyReq(proxyReq, req) {
-      logRequest(req.originalUrl);
+      const path =
+        req.originalUrl.replace(
+          /^\/(?:nde\/)?custom\//,
+          '/'
+        );
+
+      const localFile =
+        findLocalResource(path, localResourceDirs);
+
+      if (localFile) {
+        req._localFile = localFile;
+        logRequest(req.originalUrl, {
+          local: true,
+          localFile
+        });
+      } else {
+        logRequest(req.originalUrl);
+      }
     },
+
+    onProxyRes(proxyRes, req, res) {
+      if (req._localFile) {
+        proxyRes.on('data', () => {});
+        proxyRes.on('end', () => {
+          serveLocalFile(req._localFile, res);
+        });
+        return;
+      }
+
+      res.statusCode = proxyRes.statusCode;
+      for (const [key, value] of Object.entries(proxyRes.headers)) {
+        try { res.setHeader(key, value); } catch {}
+      }
+      proxyRes.pipe(res);
+    }
   },
 
   {
