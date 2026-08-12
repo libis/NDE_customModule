@@ -13,7 +13,7 @@
       data-badge-popover="right"
       [attr.data-doi]="doi()"></div>
     <div
-      *ngIf="isbn()"
+      *ngIf="!doi() && isbn()"
       [id]="'altmetric-isbn-' + id()"
       aria-label="Altmetric"
       (click)="$event.stopPropagation()"

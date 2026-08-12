@@ -39,37 +39,14 @@ export const AppModule = ({
     exports: [AutoAssetSrcDirective],
     imports: [BrowserModule, CommonModule, TranslateModule.forRoot({})],
     providers: [
-      
       ...providers,
-     
       { provide: SHELL_ROUTER, useValue: shellRouter },
-      
-
-      HostStylesService,
-      {
-        provide: APP_INITIALIZER,
-        useFactory: (hostStylesService: HostStylesService) => {
-          return () => hostStylesService.initializeHostStyles();
-        },
-        deps: [HostStylesService],
-        multi: true,
-      },
-      
-      {
-        provide: APP_INITIALIZER,
-        useFactory: initApp,
-        deps: [ConfigService],
-        multi: true,
-      },
       provideHttpClient(withInterceptorsFromDi()),
-      
       ...getInterceptorProviders(),
-      
       GlobalHttpEventService,
       provideLottieOptions({
         player: () => player,
       }),
-      
       ...getEventProviders(),
       provideAppInitializer(loadExternalScripts),
     ],
@@ -102,29 +79,8 @@ export const AppModule = ({
         });
       });
     }
-  
 
     ngDoBootstrap(appRef: ApplicationRef) {
-    
-      /* TEST Maar werkt niet
-      const combinedComponentMap = new Map<string, any>([
-        ...sharedComponentMap,
-        ...selectorComponentMap
-      ]); // (selector overrides shared)
-      */
-
-      // const combinedComponentMap = selectorComponentMap;
-
-      /*
-       Create webcomponents to use inside the remote Angular Components 
-       (Angular Components are converted tp Web Components in the host 
-       code\host\source\src_bootstrap_ts.c52827332bfd336c\src\app\components\base-custom\web-component-wrapper.component.ts) 
-      */
-      for (const [key, value] of sharedComponentMap) {
-        const customWebComponent = createCustomElement(value, {injector: this.injector});
-        customElements.define(key, customWebComponent);
-      }
-
       for (const [key, value] of selectorComponentMap) {
         try {
           const customElement = createCustomElement(value, {

@@ -100,7 +100,7 @@ export class PhysicalAvailabilityLineComponent {
 
 
   async ngOnInit() {
-    console.log ("[PhysicalAvailabilityLineComponent] ngOnInit")
+    // console.log ("[PhysicalAvailabilityLineComponent] ngOnInit")
 
 
     const host = this.hostComponent;
@@ -110,8 +110,8 @@ export class PhysicalAvailabilityLineComponent {
     }
     this.HostBindings.applyBindings(this, this.hostComponent);
 
-    console.log ("[PhysicalAvailabilityLineComponent] this.viewConfigState: ", this.viewConfigState  )
-    console.log ("[PhysicalAvailabilityLineComponent] this.hostComponent: ", this.hostComponent  )
+    // console.log ("[PhysicalAvailabilityLineComponent] this.viewConfigState: ", this.viewConfigState  )
+    // console.log ("[PhysicalAvailabilityLineComponent] this.hostComponent: ", this.hostComponent  )
 
     const institutions: any[] = [];
     const institutionName = await this.viewConfigState.getInstitutionName();
@@ -126,7 +126,6 @@ export class PhysicalAvailabilityLineComponent {
     }
     
     // Add institution names from docDelivery
-
     institutions.push(
       ...this.hostComponent.docDelivery.almaInstitutionsList.map(
         (item: { instName: string; availabilityStatus: string; instCode: string }) => ({
@@ -142,20 +141,20 @@ export class PhysicalAvailabilityLineComponent {
     this.almaInstitutionsList = Array.from(
       new Map(
         institutions
-          .filter(item =>
-            this.almaInstitutionsCodeFilterList.includes(item.instCode)
+          .filter(item => {
+              return this.almaInstitutionsCodeFilterList.includes(item.instCode)
+            }
           )
           .map(item => [item.instName, item])
       ).values()
     );
 
-
     this.hasAvailableInInstitution =
-      this.almaInstitutionsList.some(item =>
-      (
-        this.positiveAvailabilityStatus.includes(item.availabilityStatus)
-      )
-      );
+      this.almaInstitutionsList.some(item => {
+        console.log ("[PhysicalAvailabilityLineComponent] almaInstitutionsList item: ", item.availabilityStatus );
+        return this.positiveAvailabilityStatus.includes(item.availabilityStatus);
+      }
+    );
 
 
     if (this.hasAvailableInInstitution){ 
@@ -168,11 +167,27 @@ export class PhysicalAvailabilityLineComponent {
 
 
   /* COPY FROM host:///src/app/components/search/search-results-container/search-results/search-result-item-container/record-availability/physical-availability-line/physical-availability-line.component.ts */
-  get viewModel$(): Observable<{physicalAvailability: string, availabilityCode: string}> {
-    // console.log ("[PhysicalAvailabilityLineComponent] get viewModel", this);
-    return combineLatest([this.physicalAvailability$(), this.availabilityCode$(), ]).pipe(
+  get viewModel$(): Observable<{
+    physicalAvailability: string;
+    availabilityCode: string;
+  }> {
+
+    if (!this.physicalAvailability$ || !this.availabilityCode$) {
+
+      console.warn(
+        "[PhysicalAvailabilityLineComponent] bindings not ready"
+      );
+
+      return EMPTY;
+    } 
+
+    return combineLatest([
+      this.physicalAvailability$(),
+      this.availabilityCode$(),
+    ]).pipe(
       map(([physicalAvailability, availabilityCode]) => ({
-        physicalAvailability, availabilityCode
+        physicalAvailability,
+        availabilityCode
       }))
     );
   }

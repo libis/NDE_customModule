@@ -19,6 +19,7 @@ import { AltmetricEmbedService } from 'src/app/services/altmetric-embed.service'
 @NDEComponent({
   selector: NDE_SLOTS.RECORD_AVAILABILITY,
   position: NDE_POSITION.BOTTOM,
+  viewPattern: /32KUL.*/
 })
 @Component({
   selector: 'custom-altmetric',
