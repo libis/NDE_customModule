@@ -87,7 +87,7 @@ export class PayFinesComponent implements OnDestroy {
             );
           }
 
-          let finesString: string = this.translate.instant('fines.banner');
+          let finesString: string = this.translate.instant('nde.fines.banner');
           const formatted =
             this.decimalPipe.transform(this.finesValue, '1.2-2') ?? '';
 

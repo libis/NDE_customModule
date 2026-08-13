@@ -32,21 +32,15 @@ export class CustomAlertMessageComponent implements AfterViewInit {
     console.log('[CustomAlert] component constructed');
   }
 
-  // ✅ TEMP: force TRUE to verify rendering
   get showAlert(): boolean {
     const finesDismissed = localStorage.getItem('finesDismissed') === 'true';
 
-    console.log('[CustomAlert] isLoggedIn:', this.isLoggedIn());
-    console.log('[CustomAlert] finesDismissed:', finesDismissed);
-
     // 👉 TEST MODE (forces display)
-    return true;
+    // return true;
 
-    // ✅ later switch back to:
-    /*
     if (!this.isLoggedIn()) return true;
     return finesDismissed;
-    */
+    
   }
 
   ngAfterViewInit() {
