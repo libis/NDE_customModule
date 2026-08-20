@@ -1,5 +1,10 @@
-<div *ngIf="showAlert" #banner id="general-alerting-banner">
+<!-- <div *ngIf="showAlert" #banner id="general-alerting-banner">
   test 123 (GENERAL ALERT)
+
+  <button (click)="dismiss()">Dismiss</button>
+</div> -->
+<div *ngIf="showAlert" #banner id="general-alerting-banner">
+  <span>{{ alertMessage }}</span>
 
   <button (click)="dismiss()">Dismiss</button>
 </div>
