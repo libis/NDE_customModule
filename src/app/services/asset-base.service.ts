@@ -1,6 +1,6 @@
 // asset-base.service.ts
 import { Injectable } from '@angular/core';
-import { assetBaseUrl } from '../state/asset-base.generated';
+import { assetBaseUrl } from '@nde/asset-base';
 
 @Injectable({
   providedIn: 'root'

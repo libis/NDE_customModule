@@ -14,6 +14,7 @@ const {
   isCentral,
   generatedTsconfigPath,
   generatedMappingsPath,
+  generatedAssetBaseOutPath,
 } = resolveEnv(explicitEnv);
 
 process.env.BUILD_TARGET = selectedEnv;
@@ -21,26 +22,50 @@ process.env.npm_config_env = selectedEnv;
 
 console.log(`👉 Prebuild for env: ${selectedEnv}`);
 
-const assetBaseOutPath = path.resolve(
-  projectRoot,
-  '.nde',
-  'generated',
-  selectedEnv,
-  'asset-base.generated.ts'
+console.log(`✔ projectRoot: ${projectRoot}`);
+console.log(`✔ generatedTsconfigPath: ${generatedTsconfigPath}`);
+console.log(`✔ generatedMappingsPath: ${generatedMappingsPath}`);
+
+
+const rootTsConfig = JSON.parse(
+  fs.readFileSync(
+    path.join(projectRoot, 'tsconfig.json'),
+    'utf8'
+  )
 );
+
+const existingPaths =
+  rootTsConfig.compilerOptions?.paths || {};
+
+const relativeAssetBaseOutPath =
+  path.relative(
+    path.dirname(generatedTsconfigPath),
+    generatedAssetBaseOutPath
+  ).replace(/\\/g, '/');
 
 const assetBaseUrl = envConfig.assetBaseUrl || envConfig.host || '';
 
 writeIfChanged(
-  assetBaseOutPath,
+  generatedAssetBaseOutPath,
   `export const assetBaseUrl = '${assetBaseUrl}';\n`
 );
-
 
 const relativeMappingsPath =
   path.relative(
     path.dirname(generatedTsconfigPath),
     generatedMappingsPath
+  ).replace(/\\/g, '/');
+
+const relativeTsConfigAppPath =
+  path.relative(
+    path.dirname(generatedTsconfigPath),
+    path.join(projectRoot, "./tsconfig.app.json")
+  ).replace(/\\/g, '/');
+
+const relativeSrcPath =
+  path.relative(
+    path.dirname(generatedTsconfigPath),
+    path.join(projectRoot, 'src')
   ).replace(/\\/g, '/');
 
 
@@ -49,21 +74,19 @@ const tsconfig = {
   compilerOptions: {
     rootDir: "./",
     paths: {
-      "src/*": [
-        "./src/*"
-      ],
+      ...existingPaths,
       "@nde/component-mappings": [
         relativeMappingsPath
       ],
       "@nde/asset-base": [
-        "./asset-base.generated.ts"
+        relativeAssetBaseOutPath
       ]
     }
   },
   include: [
     "./src/*.ts",
     relativeMappingsPath,
-    "./asset-base.generated.ts"
+    relativeAssetBaseOutPath
   ],
   exclude: [
     "./src/**/*.spec.ts",
@@ -76,8 +99,9 @@ writeIfChanged(
   JSON.stringify(tsconfig, null, 2) + '\n'
 );
 
-console.log(`✔ Generated env tsconfig: ${generatedTsconfigPath}`);
-console.log(`✔ Generated mapping target: ${generatedMappingsPath}`);
-console.log(`✔ Relative mapping : ${relativeMappingsPath}`);
+console.log(`✔ Generated generatedTsconfigPath: ${generatedTsconfigPath}`);
+console.log(`✔ relativeMappingsPath : ${relativeMappingsPath}`);
+console.log(`✔ relativeAssetBaseOutPath : ${relativeAssetBaseOutPath}`);
+
 console.log(`✔ Asset base: ${assetBaseUrl}`);
 console.log('✅ Prebuild completed successfully');

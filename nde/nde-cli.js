@@ -18,9 +18,7 @@ if (command === 'generate' && type === 'component') {
     ? args[args.indexOf('--build_target') + 1]
     : 'central';
 
-
-
-  console.log ( "build_targetbuild_targetbuild_targetbuild_targetv", build_target )
+  console.log ( "build_target", build_target )
 
   let componentDir = 'components/central'
   if (build_target !== "central") {

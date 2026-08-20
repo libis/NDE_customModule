@@ -41,6 +41,8 @@ function resolveEnv(explicitEnv) {
     );
   }
 
+  const generatedDir =  path.join(projectRoot, '.nde', 'generated', selectedEnv)
+
   return {
     projectRoot,
     ndeConfig,
@@ -49,9 +51,13 @@ function resolveEnv(explicitEnv) {
     isCentral: selectedEnv === 'central',
     buildTarget: selectedEnv === 'central' ? 'central' : 'view',
     view: selectedEnv === 'central' ? null : selectedEnv,
-    generatedDir: path.join(projectRoot, '.nde', 'generated', selectedEnv),
+
     generatedTsconfigPath: path.join(projectRoot, `tsconfig.generated_${selectedEnv}.json`),
-    generatedMappingsPath: path.join(projectRoot, 'src', 'app', 'custom1-module', `customComponentMappings.${selectedEnv}.ts`),
+//    generatedMappingsPath: path.join(projectRoot, 'src', 'app', 'custom1-module', `customComponentMappings.${selectedEnv}.ts`),
+    
+    generatedDir: generatedDir,
+    generatedMappingsPath: path.join(generatedDir, `customComponentMappings.ts`),
+    generatedAssetBaseOutPath: path.join(generatedDir, `asset-base.generated.ts`)
   };
 }
 

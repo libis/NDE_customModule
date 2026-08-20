@@ -131,7 +131,7 @@ const proxyRules = [
         proxyRes.on('data', () => {});
         proxyRes.on('end', () => {
 
-          logRequest("CENTRAL serveLocalFile serveLocalFile serveLocalFile", {local: true, localFile: req._localFile });
+          logRequest("CENTRAL serveLocalFile", {local: true, localFile: req._localFile });
           serveLocalFile(req._localFile, res);
         });
         return;

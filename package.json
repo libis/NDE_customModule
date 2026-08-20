@@ -85,12 +85,20 @@
   "scripts": {
     "ng": "ng",
     "nde": "node nde/nde-cli.js",
+
+    "prepare:serve": "node nde/prepare-serve.js",
+    "prestart": "npm run prepare:serve",
+
     "start": "ng serve",
-    "prestart": "",
+    
+    "prestart:no-prebundle": "npm run prepare:serve",
     "start:no-prebundle": "ng serve --prebundle=false",
+    "prestart:proxy": "npm run prepare:serve",
     "start:proxy": "ng serve --proxy-config ./nde/proxy.conf.mjs",
+
     "build": "node nde/build.js",
     "build:central": "cross-env BUILD_TARGET=central node nde/build.js",
+
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "postbuild": "",
