@@ -52,20 +52,27 @@ import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
       }
 
       .footer-container {
-        position: fixed; /* ✅ sticks to screen */
-        bottom: 0;
-        left: 0;
-        width: 100%;
+        // position: fixed; /* sticks to screen */
+        // bottom: 0;
+        // left: 0;
+        // width: 100%;
 
-        z-index: 1000;
+        // z-index: 1000;
 
+        // display: flex;
+        // justify-content: space-between;
+        // align-items: center;
+        // padding: 10px 20px;
+        // font-size: 13px;
+
+        // background-color: inherit; /* keeps your dynamic color */
+        position: relative;
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 10px 20px;
         font-size: 13px;
-
-        background-color: inherit; /* keeps your dynamic color */
+        background-color: inherit;
       }
 
       .footer-left,
