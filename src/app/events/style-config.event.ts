@@ -388,7 +388,7 @@ export class styleConfigEvent extends NDEEventBase {
     width: calc(75vw - 3rem) !important;
     margin-left: 3rem !important;
     margin-top: 0 !important;
-    margin-bottom: 1.5rem !important;
+    margin-bottom: 1.4rem !important;
     font-size: 3.5rem !important;
     font-weight: 600 !important;
     line-height: 1.1 !important;
@@ -430,7 +430,61 @@ export class styleConfigEvent extends NDEEventBase {
   }
 `;
   }
+  private getWelcomeSectionStyles(): string {
+    const styling = this.getMatchedLandingStyling();
 
+    const titleFontFamily =
+      styling?.fonts?.titleFamily || "'Inria Serif', serif";
+    const textFontFamily =
+      styling?.fonts?.textFamily || "'Montserrat', sans-serif";
+
+    return `
+  /* 1. Container alignment & left margin */
+  .welcome.display-flex {
+    margin-left: 5vw !important;
+    padding-left: 0 !important;
+    align-items: flex-start !important;
+  }
+
+  /* 2. "Welcome to the Library" Heading in Dark Green */
+  .welcome .welcome-title,
+  h2.welcome-title {
+    font-family: ${titleFontFamily} !important;
+    color: #056D7C !important; /* Dark Green Title */
+    font-size: 2.75rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.75rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* 3. Subtext Description */
+  .welcome .welcome-content {
+    font-family: ${textFontFamily} !important;
+    font-size: 1.15rem !important;
+    color: #333333 !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  /* 4. "Go to My Library Card" Styled Button */
+  .welcome #myLibraryCard {
+    display: inline-block !important;
+    font-family: ${textFontFamily} !important;
+    background-color: #056D7C !important; /* Dark Green Background */
+    color: #F8EEE8 !important;            /* Cream Text Color */
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    padding: 12px 24px !important;
+    border-radius: 4px !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s ease !important;
+  }
+
+  .welcome #myLibraryCard:hover {
+    background-color: #01434C !important;
+  }
+  `;
+  }
   private getAnnouncementCardStyles(): string {
     const styling = this.getMatchedLandingStyling();
     const titleFontRule = styling?.fonts?.titleFamily
@@ -593,6 +647,7 @@ export class styleConfigEvent extends NDEEventBase {
       padding: 0 !important;
       z-index: 10 !important;
       background: transparent !important;
+      color: var(--nde-dark-green) !important;
     }
 
     /* Target enkel de geavanceerd zoeken knoppen en hun specifieke text/iconen */
@@ -605,7 +660,7 @@ export class styleConfigEvent extends NDEEventBase {
       border: none !important;
       box-shadow: none !important;
       text-decoration: underline !important;
-      color: var(--nde-adv-buttons-color, #FFFFFF) !important;
+      color: var(--nde-dark-green) !important;
       font-size: 1rem !important;
       font-weight: 500 !important;
       cursor: pointer !important;
@@ -619,9 +674,86 @@ export class styleConfigEvent extends NDEEventBase {
     .flex-row.gap-075 prm-icon,
     .flex-row.gap-075 svg,
     .flex-row.gap-075 path {
-      color: var(--nde-adv-buttons-color, #FFFFFF) !important;
+      color: var(--nde-dark-green) !important;
       fill: var(--nde-adv-buttons-color, #FFFFFF) !important;
     }
+  `;
+  }
+  private getQuickLinksStyles(): string {
+    const styling = this.getMatchedLandingStyling();
+
+    const fontFamily =
+      styling?.fonts?.textFamily ||
+      styling?.fonts?.titleFamily ||
+      "'Montserrat', sans-serif";
+
+    return `
+  /* 1. Container bar styling */
+  nde-landing-quick-links,
+  .quick-links-landing-page {
+    width: 100% !important;
+    max-width: 100% !important;
+    background-color: #056D7C !important;
+    margin: 0 !important;
+    padding: 24px 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 2. Menu row layout */
+  .quick-links-landing-page ul.menu {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 48px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+    width: auto !important;
+  }
+
+  .quick-links-landing-page ul.menu li {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .quick-links-landing-page ul.menu a {
+    display: flex !important;
+    align-items: center !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+  }
+
+  /* 3. DIRECT SPAN TARGETING (3x Font Size ~3rem / 48px) */
+  nde-landing-quick-links span,
+  .quick-links-landing-page span,
+  .quick-links-landing-page ul.menu a span,
+  .quick-links-landing-page li a span {
+    font-family: ${fontFamily} !important;
+    font-size: 1.5rem !important; /* 3x baseline font size */
+    line-height: 1.2 !important;
+    font-weight: 600 !important;
+    color: #F8EEE8 !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
+  }
+
+  /* 4. Hide icons completely */
+  .quick-links-landing-page .icon,
+  .quick-links-landing-page mat-icon,
+  .quick-links-landing-page svg {
+    display: none !important;
+  }
   `;
   }
 
@@ -730,6 +862,8 @@ export class styleConfigEvent extends NDEEventBase {
       useCustomLandingLayout ? this.getAnnouncementCardStyles() : '',
       useCustomLandingLayout ? this.getSearchBarStyles() : '',
       useCustomLandingLayout ? this.getAdvancedSearchStyles() : '',
+      useCustomLandingLayout ? this.getQuickLinksStyles() : '',
+      useCustomLandingLayout ? this.getWelcomeSectionStyles() : '',
     ].join('\n');
 
     document.head.appendChild(style);
