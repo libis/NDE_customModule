@@ -627,7 +627,44 @@ export class styleConfigEvent extends NDEEventBase {
     }
   `;
   }
+  private injectAnnouncementScrollLink(): void {
+    const styleId = 'style_announcement_scroll_link';
+    if (!document.getElementById(styleId)) {
+      const s = document.createElement('style');
+      s.id = styleId;
+      s.innerHTML = `
+      nde-landing-announcements .mat-body-large.nde-clickable-announcement {
+        cursor: pointer !important;
+        text-decoration: underline !important;
+      }
+    `;
+      document.head.appendChild(s);
+    }
 
+    const observer = new MutationObserver(() => {
+      const announcementText = document.querySelector(
+        'nde-landing-announcements .mat-body-large',
+      ) as HTMLElement;
+      // Stand-in scroll target for now — swap this selector later for
+      // whichever section the announcement should actually link to.
+      const scrollTarget = document.querySelector('.welcome.display-flex');
+
+      if (
+        announcementText &&
+        scrollTarget &&
+        announcementText.getAttribute('data-nde-scroll-bound') !== 'true'
+      ) {
+        announcementText.setAttribute('data-nde-scroll-bound', 'true');
+        announcementText.classList.add('nde-clickable-announcement');
+
+        announcementText.addEventListener('click', () => {
+          scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
   private getAdvancedSearchStyles(): string {
     return `
     .search-bar-container .flex-row.gap-075,
@@ -870,8 +907,8 @@ export class styleConfigEvent extends NDEEventBase {
 
     if (useCustomLandingLayout) {
       this.repositionAdvancedSearchRow();
+      this.injectAnnouncementScrollLink();
     }
-
     this.injectHideHowToGetItStyles();
     this.injectHideWhereToFindItStyles();
     console.log(
