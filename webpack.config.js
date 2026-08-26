@@ -151,8 +151,9 @@ class NdeComponentDiscoveryPlugin {
 
   generateMappingsContent() {
      console.info(
-        `\n[NdeComponentDiscovery] generateMappingsContent for: ${this.buildTarget} ${this.view}`
+        `\n[NdeComponentDiscovery] generateMappingsContent for: ${this.buildTarget} ${this.view} [${ new Date().toLocaleString() }]`
       );
+    
 
     const scanDirs = this.getScanDirs();
     const componentFiles = [];
@@ -189,7 +190,7 @@ ${imports.join("\n")}
 export const selectorComponentMap = getComponentRegistry();
 
 
-console.log('[ComponentMappings] Build target: ${this.buildTarget} generated at: ${ new Date().toISOString() }' );
+console.log('[ComponentMappings] Build target: ${this.buildTarget} generated at: ${ new Date().toLocaleString() }' );
 console.log('[ComponentMappings] View:', '${this.view ?? ""}');
 console.log('[ComponentMappings] Registry size:', selectorComponentMap.size);
 console.log('[ComponentMappings] Registered components:', Array.from(selectorComponentMap.keys()));
