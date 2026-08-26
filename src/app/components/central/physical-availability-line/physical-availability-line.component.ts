@@ -40,7 +40,7 @@ interface AlmaInstitution {
 @NDEComponent({ 
   selector: 'nde-physical-availability-line', 
   position: 'replace', 
-  viewPattern: /32KUL.*/ 
+  viewPattern: /32KUL_KUL:KULeuven.*/ 
 })
 @Component({
   selector: 'custom-physical-availability-line',
