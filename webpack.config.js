@@ -188,7 +188,8 @@ ${imports.join("\n")}
 // Export the auto-populated registry
 export const selectorComponentMap = getComponentRegistry();
 
-console.log('[ComponentMappings] Build target:', '${this.buildTarget}');
+
+console.log('[ComponentMappings] Build target: ${this.buildTarget} generated at: ${ new Date().toISOString() }' );
 console.log('[ComponentMappings] View:', '${this.view ?? ""}');
 console.log('[ComponentMappings] Registry size:', selectorComponentMap.size);
 console.log('[ComponentMappings] Registered components:', Array.from(selectorComponentMap.keys()));
