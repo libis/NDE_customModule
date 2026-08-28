@@ -441,7 +441,7 @@ export class styleConfigEvent extends NDEEventBase {
     return `
   /* 1. Container alignment & left margin */
   .welcome.display-flex {
-    margin-left: 5vw !important;
+    margin-left: 3vw !important;
     padding-left: 0 !important;
     align-items: flex-start !important;
   }
@@ -862,7 +862,53 @@ export class styleConfigEvent extends NDEEventBase {
 
     observer.observe(document.body, { childList: true, subtree: true });
   }
+  private getAnnouncementAndAboutStyles(): string {
+    const styling = this.getMatchedLandingStyling();
 
+    const titleFontFamily =
+      styling?.fonts?.titleFamily || "'Inria Serif', serif";
+    const textFontFamily =
+      styling?.fonts?.textFamily || "'Montserrat', sans-serif";
+
+    return `
+  /* 1. Announcements Section */
+  .announcements {
+    background-color: #C8D4D2 !important;
+  }
+
+  .announcements :is(h2, h3, p, span, .mat-title-medium, .announcements-item-title, .mat-body-large) {
+    font-family: ${textFontFamily} !important;
+    color: #01434C !important;
+  }
+
+  .announcements :is(h2, h3, .mat-title-medium, .announcements-item-title) {
+    font-family: ${titleFontFamily} !important;
+  }
+
+  /* 2. About Section - Main Background & Container Overrides */
+  nde-landing-about,
+  .about,
+  .about-content,
+  .about-text {
+    background-color: #F8EEE8 !important;
+  }
+
+  /* 3. About Section - Title Typography */
+  .about-text h2,
+  .about-text .about-text-title {
+    font-family: ${titleFontFamily} !important;
+    color: #056D7C !important;
+    font-weight: 700 !important;
+  }
+
+  /* 4. About Section - Body Text, List & Subtext Typography */
+  .about-text,
+  .about-text :is(p, span, .about-text-description, .help-sign-in-container, li) {
+    font-family: ${textFontFamily} !important;
+    color: #01434C !important;
+  }
+  `;
+  }
   private injectLandingPageFonts(): void {
     const styling = this.getMatchedLandingStyling();
     const fonts = styling?.fonts;
@@ -945,6 +991,7 @@ export class styleConfigEvent extends NDEEventBase {
       // useCustomLandingLayout ? this.getAdvancedSearchStyles() : '',
       useCustomLandingLayout ? this.getQuickLinksStyles() : '',
       useCustomLandingLayout ? this.getWelcomeSectionStyles() : '',
+      useCustomLandingLayout ? this.getAnnouncementAndAboutStyles() : '',
     ].join('\n');
 
     document.head.appendChild(style);
