@@ -37,7 +37,7 @@ export class ViewLogoComponent {
 
     this.logoSrc = this.getFromCodeTable(
       'nui.customization.libraryLogo',
-      '/assets/default-logo.png',
+      '/assets/images/default-logo.png',
     );
 
     this.logoUrl = this.getFromCodeTable(
