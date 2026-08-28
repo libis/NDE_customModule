@@ -485,6 +485,32 @@ export class styleConfigEvent extends NDEEventBase {
   }
   `;
   }
+  private getSearchAreaBackgroundStyles(): string {
+    return `
+    nde-top-bar,
+    .filters-container,
+    .search-results-top-bar-wrapper,
+    #expand-results-options-line,
+    nde-expand-options {
+      background-color: #F8EEE8 !important;
+    }
+
+    /* nde-top-bar is reused inside the landing page hero — don't let the
+       search-results background bleed over the hero background image there. */
+    nde-landing-search-section nde-top-bar,
+    .landing-search-background-image nde-top-bar {
+      background-color: transparent !important;
+    }
+  `;
+  }
+
+  private getHighlightColorStyles(): string {
+    return `
+    .ctm-highlight {
+      color: #01434C !important;
+    }
+  `;
+  }
   private getAnnouncementCardStyles(): string {
     const styling = this.getMatchedLandingStyling();
     const titleFontRule = styling?.fonts?.titleFamily
@@ -725,31 +751,49 @@ export class styleConfigEvent extends NDEEventBase {
       "'Montserrat', sans-serif";
 
     return `
-  /* 1. Container bar styling */
-  nde-landing-quick-links,
+  nde-landing-quick-links {
+    display: block !important;
+    position: relative !important;
+    left: 50% !important;
+    right: 50% !important;
+    width: 100vw !important;
+    margin-left: -50vw !important;
+    margin-right: -50vw !important;
+    margin-top: 20vh !important;
+    background-color: #056D7C !important;
+  }
+
   .quick-links-landing-page {
     width: 100% !important;
     max-width: 100% !important;
     background-color: #056D7C !important;
     margin: 0 !important;
-    padding: 24px 0 !important;
+    padding: 24px 16px !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
     box-sizing: border-box !important;
   }
 
-  /* 2. Menu row layout */
   .quick-links-landing-page ul.menu {
     display: flex !important;
     flex-direction: row !important;
+    flex-wrap: wrap !important;
     justify-content: center !important;
     align-items: center !important;
-    gap: 48px !important;
+    row-gap: 16px !important;
+    column-gap: 48px !important;
     margin: 0 !important;
     padding: 0 !important;
     list-style: none !important;
-    width: auto !important;
+    width: 100% !important;
+    max-width: 1200px !important;
+  }
+
+  @media (max-width: 700px) {
+    .quick-links-landing-page ul.menu {
+      column-gap: 24px !important;
+    }
   }
 
   .quick-links-landing-page ul.menu li {
@@ -771,13 +815,12 @@ export class styleConfigEvent extends NDEEventBase {
     cursor: pointer !important;
   }
 
-  /* 3. DIRECT SPAN TARGETING (3x Font Size ~3rem / 48px) */
   nde-landing-quick-links span,
   .quick-links-landing-page span,
   .quick-links-landing-page ul.menu a span,
   .quick-links-landing-page li a span {
     font-family: ${fontFamily} !important;
-    font-size: 1.5rem !important; /* 3x baseline font size */
+    font-size: 1.5rem !important;
     line-height: 1.2 !important;
     font-weight: 600 !important;
     color: #F8EEE8 !important;
@@ -785,7 +828,6 @@ export class styleConfigEvent extends NDEEventBase {
     display: inline-block !important;
   }
 
-  /* 4. Hide icons completely */
   .quick-links-landing-page .icon,
   .quick-links-landing-page mat-icon,
   .quick-links-landing-page svg {
@@ -890,15 +932,17 @@ export class styleConfigEvent extends NDEEventBase {
       this.getLocationNumberInBoldStyles(),
       this.getCloseBannerIconStyles(),
       this.getHideLandingPageOverlayStyles(),
+      this.getSearchAreaBackgroundStyles(),
+      this.getHighlightColorStyles(),
       // Theming (colors/fonts/background) applies to any matched view,
       // e.g. both KU Leuven and Odisee.
       this.getLandingPageStyling(),
       // The bespoke hero/search/announcement layout rebuild only applies
       // to views opted into CustomLandingPageLayout (KU Leuven today).
-      useCustomLandingLayout ? this.getLandingPageLayoutStyles() : '',
-      useCustomLandingLayout ? this.getAnnouncementCardStyles() : '',
-      useCustomLandingLayout ? this.getSearchBarStyles() : '',
-      useCustomLandingLayout ? this.getAdvancedSearchStyles() : '',
+      // useCustomLandingLayout ? this.getLandingPageLayoutStyles() : '',
+      // useCustomLandingLayout ? this.getAnnouncementCardStyles() : '',
+      // useCustomLandingLayout ? this.getSearchBarStyles() : '',
+      // useCustomLandingLayout ? this.getAdvancedSearchStyles() : '',
       useCustomLandingLayout ? this.getQuickLinksStyles() : '',
       useCustomLandingLayout ? this.getWelcomeSectionStyles() : '',
     ].join('\n');
@@ -906,8 +950,8 @@ export class styleConfigEvent extends NDEEventBase {
     document.head.appendChild(style);
 
     if (useCustomLandingLayout) {
-      this.repositionAdvancedSearchRow();
-      this.injectAnnouncementScrollLink();
+      // this.repositionAdvancedSearchRow();
+      // this.injectAnnouncementScrollLink();
     }
     this.injectHideHowToGetItStyles();
     this.injectHideWhereToFindItStyles();
