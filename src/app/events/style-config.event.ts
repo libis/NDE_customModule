@@ -306,7 +306,73 @@ export class styleConfigEvent extends NDEEventBase {
   }
 `;
   }
+  private getGlobalThemeStyles(): string {
+    const styling = this.getMatchedLandingStyling();
 
+    const titleFontFamily =
+      styling?.fonts?.titleFamily || "'Inria Serif', serif";
+    const textFontFamily =
+      styling?.fonts?.textFamily || "'Montserrat', sans-serif";
+
+    return `
+  /* ==========================================================================
+     1. Global Theme Variables
+     ========================================================================== */
+  :root, html, body, nde-app-root, .nde-app {
+    --nde-landing-bg: #F8EEE8 !important;
+    --nde-background-color: #F8EEE8 !important;
+    --nde-title-color: #056D7C !important;
+    --nde-text-color: #01434C !important;
+    
+    --mat-sys-surface: #F8EEE8 !important;
+    --mat-sys-surface-container: #F8EEE8 !important;
+    --mat-sys-background: #F8EEE8 !important;
+    --mat-sys-on-surface: #01434C !important;
+    --mat-sys-primary: #056D7C !important;
+
+    background-color: #F8EEE8 !important;
+    color: #01434C !important;
+  }
+
+  /* ==========================================================================
+     2. Full Display Navigation Bar Override (Detail View)
+     ========================================================================== */
+  nde-full-display-navigation,
+  nde-full-display-navigation > div,
+  nde-back-to-results,
+  .back-to-results,
+  .next-previous-btn {
+    background: #F8EEE8 !important;
+    background-color: #F8EEE8 !important;
+  }
+
+  /* Material Icon Buttons reset in full display */
+  nde-full-display-navigation .mat-mdc-icon-button {
+    --mdc-icon-button-icon-color: #056D7C !important;
+    background-color: transparent !important;
+  }
+
+  nde-full-display-navigation .mat-icon svg {
+    fill: #056D7C !important;
+  }
+
+  /* ==========================================================================
+     3. Global Typography
+     ========================================================================== */
+  body, body * {
+    font-family: ${textFontFamily} !important;
+  }
+
+  :is(h1, h2, h3, h4, h5, h6, .mat-headline-large, .mat-title-medium, [class*="-title"]) {
+    font-family: ${titleFontFamily} !important;
+    color: #056D7C !important;
+  }
+
+  :is(p, span, li, a, label, .mat-body-large) {
+    color: #01434C !important;
+  }
+  `;
+  }
   private getLandingPageLayoutStyles(): string {
     return `
   /* 1. Reset parent containers to 100% width */
@@ -971,6 +1037,7 @@ export class styleConfigEvent extends NDEEventBase {
     const style = document.createElement('style');
     style.id = styleId;
     style.textContent = [
+      this.getGlobalThemeStyles(),
       this.getTopbarStyles(specs),
       this.getHideSignInStyles(),
       this.getHideLiriasLinksStyles(),
