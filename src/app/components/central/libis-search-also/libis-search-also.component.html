@@ -2,10 +2,10 @@
 @if (searchAlsoLinks().length > 0) {
     <div class="search-also-container">
 
-    <button mat-button [matMenuTriggerFor]="searchAlsoList" class="search-also-button">
-        <mat-icon>travel_explore</mat-icon>
-        Search also 
-        <mat-icon>arrow_drop_down</mat-icon>
+    <button mat-button type="button" [matMenuTriggerFor]="searchAlsoList" id="search_also_button" class="btn btn-text btn-rounded outside-button margin-right-medium white-space-nowrap mdc-button mat-mdc-button mat-primary mat-mdc-button-base search-also">
+        <!--<mat-icon>travel_explore</mat-icon>-->
+        <span class="mdc-button__label">Search also</span>
+        <mat-icon iconPositionEnd>arrow_drop_down</mat-icon>
     </button>
 
     <mat-menu #searchAlsoList [overlapTrigger]="false" panelClass="search-also-menu">
