@@ -1,5 +1,7 @@
+import { libViewMap } from "./libis_permalinks_service.service";
+
+export const PERMALINK_MAP: { [key: string]: libViewMap } = 
 {
-  "limo_map": {
     "default": {
       "inst": "11",
       "views": {
@@ -668,4 +670,3 @@
       }
     }
   }
-}

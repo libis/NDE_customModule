@@ -2,7 +2,7 @@ import {
   inject,
   Injectable,
 } from '@angular/core';
-import limo_map from '../libis-permalink/permalink_map.json';
+import { PERMALINK_MAP } from '../libis-permalink/permalink_map';
 import { Doc } from '@libis/primo-shared-state';
 import { selectCurrentLanguage } from '../libis-permalink/permalink_utils.selector';
 import { Store } from '@ngrx/store';
@@ -31,12 +31,12 @@ export interface libScopeMap {
 })
 export class LIBISPermalinkService {
   // Transform Limo-map to an object < standard json import loads it as a module
-  private limo_map: { [key: string]: libViewMap } = limo_map.limo_map as {
-    [key: string]: libViewMap;
-  };
-  private limo_http_map: { [key: string]: libViewMap } = limo_map.limo_map as {
-    [key: string]: libViewMap;
-  };
+  // private limo_map: { [key: string]: libViewMap } = limo_map.limo_map as {
+  //   [key: string]: libViewMap;
+  // };
+  // private limo_http_map: { [key: string]: libViewMap } = limo_map.limo_map as {
+  //   [key: string]: libViewMap;
+  // };
   private store = inject(Store);
 
   constructor(private http:HttpClient) {
@@ -100,20 +100,20 @@ export class LIBISPermalinkService {
 
       let splitCodes = primoView.split(':');
 
-      if (splitCodes[0] in this.limo_map){
+      if (splitCodes[0] in PERMALINK_MAP){
         instCode = splitCodes[0]
 
-        if(splitCodes[1] && splitCodes[1] in this.limo_map[instCode]['views']){
+        if(splitCodes[1] && splitCodes[1] in PERMALINK_MAP[instCode]['views']){
           viewCode = splitCodes[1]
         }
       }
 
-      if (scopeCode !== undefined && scopeCode in this.limo_map[instCode]['views'][viewCode]['scopes']){
+      if (scopeCode !== undefined && scopeCode in PERMALINK_MAP[instCode]['views'][viewCode]['scopes']){
         scopeCode = scopeCode;
       }
     }
 
-    return `${this.limo_map[instCode]['inst']}:${this.limo_map[instCode]['views'][viewCode]['code']}:${this.limo_map[instCode]['views'][viewCode]['scopes'][scopeCode]}`;
+    return `${PERMALINK_MAP[instCode]['inst']}:${PERMALINK_MAP[instCode]['views'][viewCode]['code']}:${PERMALINK_MAP[instCode]['views'][viewCode]['scopes'][scopeCode]}`;
   }
 
 }
