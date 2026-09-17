@@ -216,11 +216,12 @@ export class styleConfigEvent extends NDEEventBase {
     style.textContent = [
       // this.getGlobalThemeStyles(),
       // this.getTopbarStyles(specs),
-      // this.getHideSignInStyles(),
+      this.getHideSignInStyles(),
       this.getHideLiriasLinksStyles(), // niet zeker? lirias in kuleuven relevant?
       // this.getHideLoginBannerStyles(),
       this.getLocationNumberInBoldStyles(),
       this.getCloseBannerIconStyles(),
+      // `nde-landing-page > *:not(custom-landing-about) { display: none !important; }`,
     ].join('\n');
 
     document.head.appendChild(style);
