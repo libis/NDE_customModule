@@ -1,0 +1,13 @@
+<div class="about display-flex width-100" *ngIf="showAbout">
+  <div class="about-content flex-row">
+    <div class="about-text flex-column">
+      <h2 class="about-text-title mat-headline-large" [innerHTML]="title"></h2>
+
+      <p class="about-text-description" [innerHTML]="description"></p>
+    </div>
+
+    <div class="about-image flex-layout-center-center">
+      <img class="about-img" alt="" [src]="aboutImgSrc" />
+    </div>
+  </div>
+</div>

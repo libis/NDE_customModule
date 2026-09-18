@@ -6,12 +6,12 @@ import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 @NDEComponent({
   selector: 'nde-logo',
   position: 'replace',
-  viewPattern: /32KUL.*/,
+  viewPattern: /31KUL.*/,
 })
 @Component({
   selector: 'custom-view-logo',
   standalone: true,
-  imports: [CommonModule ],
+  imports: [CommonModule],
   template: `
     <a [href]="logoUrl" class="logo-link">
       <img [src]="logoSrc" alt="Library logo" class="logo-img" />
@@ -31,9 +31,10 @@ export class ViewLogoComponent {
   dashedVid: string;
 
   constructor(private translate: TranslateService) {
-    
+    console.log('ViewLogoComponent constructor fired and used change to 31KUL');
+
     const bootstrapCfg = (window as any).__BOOTSTRAP_CFG__ ?? {};
-    this.dashedVid = bootstrapCfg.dashedVid || ""; 
+    this.dashedVid = bootstrapCfg.dashedVid || '';
 
     this.logoSrc = this.getFromCodeTable(
       'nui.customization.libraryLogo',
@@ -51,13 +52,12 @@ export class ViewLogoComponent {
       this.logoSrc = this.translate.instant('nui.customization.libraryLogo');
     });
 
-    
     console.log(' [ViewLogoComponent] THIS: ', this);
     console.log(' Logo SRC:', this.logoSrc);
     console.log(' Logo URL:', this.logoUrl);
-    console.log(' Logo SRC:', this.resolveAssetUrl(this.logoSrc) );
-    
-    this.logoSrc = this.resolveAssetUrl(this.logoSrc)
+    console.log(' Logo SRC:', this.resolveAssetUrl(this.logoSrc));
+
+    this.logoSrc = this.resolveAssetUrl(this.logoSrc);
   }
 
   private getFromCodeTable(key: string, fallback: string): string {
@@ -65,12 +65,9 @@ export class ViewLogoComponent {
     return value === key ? fallback : value;
   }
 
-
   private resolveAssetUrl(relativePath: string): string {
     if (!relativePath) return '';
     if (/^(https?:)?\/\//.test(relativePath)) return relativePath;
     return `/nde/custom/${this.dashedVid}/${relativePath.replace(/^\/+/, '')}`;
   }
-
-
 }

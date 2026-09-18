@@ -1,20 +1,20 @@
-/* 
-  Aanmelden is niet voldoende om de 'fines' op te halen en in de state op te slaan
-  @libis/primo-shared-state zal dus geen fines kunnen ophalen zolang er niet is genavigeerd naar account/overview
-  
-  Fines kunnen wel worden opgehaald via hostComponent
-  subscribe to this.hostComponent?.userAreaService?.accountService.makeIlsRequest()
+// /*
+//   Aanmelden is niet voldoende om de 'fines' op te halen en in de state op te slaan
+//   @libis/primo-shared-state zal dus geen fines kunnen ophalen zolang er niet is genavigeerd naar account/overview
 
-  Of via dispatch maar in de shared state staat !!!
-  * ACTIONS INTENTIONALLY NOT EXPORTED (unsafe for remote dispatch):
-  * - All [Account] Start * actions — trigger HTTP calls to ILS
+//   Fines kunnen wel worden opgehaald via hostComponent
+//   subscribe to this.hostComponent?.userAreaService?.accountService.makeIlsRequest()
 
-  this.hostComponent.store.dispatch({
-    type: '[Account] Start Get Account Counters For Menu First Section',
-    path: '/account/overview'
-  });
+//   Of via dispatch maar in de shared state staat !!!
+//   * ACTIONS INTENTIONALLY NOT EXPORTED (unsafe for remote dispatch):
+//   * - All [Account] Start * actions — trigger HTTP calls to ILS
 
-*/
+//   this.hostComponent.store.dispatch({
+//     type: '[Account] Start Get Account Counters For Menu First Section',
+//     path: '/account/overview'
+//   });
+
+// */
 
 import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 import {
@@ -58,8 +58,24 @@ export class PayFinesComponent implements OnDestroy {
   public amountOfFines?: CounterAction;
   public finesValue = 0;
   public finesString = '';
+  public isDismissed = false; // Track dismiss state
 
   public isLoggedIn = this.userState.isLoggedInSignal();
+
+  @Input({ required: true }) hostComponent!: any;
+
+  constructor(
+    private userState: UserStateService,
+    private translate: TranslateService,
+    private decimalPipe: DecimalPipe,
+  ) {
+    effect(() => {
+      if (this.isLoggedIn()) {
+        console.log('[PayFinesComponent : constructor ] loggin effect');
+        this.loadFines();
+      }
+    });
+  }
 
   private loadFines() {
     const accountService = this.hostComponent?.userAreaService?.accountService;
@@ -100,33 +116,6 @@ export class PayFinesComponent implements OnDestroy {
     });
   }
 
-  // payFines() {
-  //   const webhookUrl =
-  //     'https://eu-workflows.hosted.exlibrisgroup.com/19868343-9f49-454d-b9b5-84e5dba9923f/webhook/a027a91c-6603-49b1-b35b-87d70efc4bfb';
-
-  //   const accountService = this.hostComponent?.userAreaService?.accountService;
-
-  //   if (!accountService) {
-  //     console.error('No accountService available');
-  //     return;
-  //   }
-
-  //   const http = accountService.http; // ✅ uses same HTTP layer!
-
-  //   http.get(webhookUrl).subscribe({
-  //     next: (res: any) => {
-  //       console.log('Webhook response:', res);
-
-  //       if (res?.url) {
-  //         window.location.href = res.url;
-  //       }
-  //     },
-  //     error: (err: any) => {
-  //       console.error('Webhook call failed:', err);
-  //     },
-  //   });
-  // }
-
   async payFines() {
     const webhookUrl =
       'https://eu-workflows.hosted.exlibrisgroup.com/19868343-9f49-454d-b9b5-84e5dba9923f/webhook-test/a027a91c-6603-49b1-b35b-87d70efc4bfb';
@@ -143,7 +132,7 @@ export class PayFinesComponent implements OnDestroy {
     fetch(webhookUrl, {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${token}`, //
+        Authorization: `Bearer ${token}`,
       },
     })
       .then((res) => res.json())
@@ -159,24 +148,18 @@ export class PayFinesComponent implements OnDestroy {
       });
   }
 
-  @Input({ required: true }) hostComponent!: any;
+  // Handle dismissing the banner
+  dismiss() {
+    this.isDismissed = true;
 
-  constructor(
-    private userState: UserStateService,
-
-    private translate: TranslateService,
-    private decimalPipe: DecimalPipe,
-  ) {
-    effect(() => {
-      if (this.isLoggedIn()) {
-        console.log('[PayFinesComponent : constructor ] loggin effect');
-        this.loadFines();
-      }
-    });
+    // Clean up DOM element if it was appended manually to nde-header
+    if (this.banner?.nativeElement) {
+      this.banner.nativeElement.remove();
+    }
   }
 
   get hasFines(): boolean {
-    return this.finesValue > 0;
+    return this.finesValue > 0 && !this.isDismissed;
   }
 
   ngOnDestroy() {
@@ -190,9 +173,6 @@ export class PayFinesComponent implements OnDestroy {
     if (!ndeHeader) return;
 
     const el = this.banner.nativeElement;
-
-    console.log(ndeHeader);
-    console.log(el);
 
     if (!el._moved) {
       ndeHeader.appendChild(el);

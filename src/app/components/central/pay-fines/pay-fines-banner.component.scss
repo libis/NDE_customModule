@@ -1,14 +1,28 @@
 div#fines-alerting-banner {
+  width: 100%;
+  padding: 1em;
+  background-color: var(--sys-secondary);
+  font-weight: bold;
+  color: whitesmoke;
 
-    width: 100%;
-    padding: 1em;
-    background-color: crimson;
-    font-weight: bold;
-    color: whitesmoke;
+  display: flex;
+  justify-content: center; /* horizontaal centreren */
+  align-items: center; /* verticaal centreren */
+  gap: 1.5rem;
 
-    text-align: center;
+  .banner-actions {
     display: flex;
-    justify-content: center; /* horizontaal centreren */
-    align-items: center;     /* verticaal centreren */
+    align-items: center;
+    gap: 0.75rem;
 
+    .banner-btn {
+      background-color: var(--sys-primary) !important;
+      color: #ffffff !important;
+
+      /* Ensures hover state stays crisp */
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+  }
 }

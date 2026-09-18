@@ -1,10 +1,9 @@
-<!-- <div *ngIf="showAlert" #banner id="general-alerting-banner">
-
-
-  <button (click)="dismiss()">Dismiss</button>
-</div> -->
 <div *ngIf="showAlert" #banner id="general-alerting-banner">
   <span>{{ alertMessage }}</span>
 
-  <button (click)="dismiss()">Dismiss</button>
+  <div class="banner-actions">
+    <button mat-raised-button class="banner-btn" (click)="dismiss()">
+      Dismiss
+    </button>
+  </div>
 </div>
