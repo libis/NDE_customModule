@@ -1,13 +1,13 @@
 // CSS grid area definitions
-.zone-1a {
-  grid-area: photo;
+.lib_photo {
+  grid-area: lib_photo;
   justify-self: center;
   align-self: center;
   justify-items: center;
   align-items: center;
 }
 
-.zone-1b {
+.status {
   grid-area: status;
   justify-self: center;
   align-self: start;
@@ -16,7 +16,7 @@
   text-align: center;
 }
 
-.zone-2a {
+.address {
   grid-area: address;
   justify-self: left;
   align-self: start;
@@ -25,7 +25,7 @@
   text-align: left;
 }
 
-.zone-2b {
+.extra {
   grid-area: extra;
   justify-self: left;
   align-self: start;
@@ -34,7 +34,7 @@
   text-align: left;
 }
 
-.zone-3a {
+.opening_hours {
   grid-area: opening_hours;
   justify-self: center;
   align-self: start;
@@ -45,7 +45,7 @@
   border-radius: 5%;
 }
 
-.zone-3b {
+.consultation {
   grid-area: consultation;
   justify-self: left;
   align-self: start;
@@ -54,12 +54,7 @@
   text-align: left;
 }
 
-.zone-1a,
-.zone-1b,
-.zone-2a,
-.zone-2b,
-.zone-3a,
-.zone-3b {
+.grid-item {
   min-width: 0;
   overflow-wrap: anywhere;
   width: 100%;
@@ -83,9 +78,9 @@
   display: grid;
   gap: 2rem;
   grid-template-areas:
-    "photo address opening_hours"
-    "photo address opening_hours"
-    "photo address opening_hours"
+    "lib_photo address opening_hours"
+    "lib_photo address opening_hours"
+    "lib_photo address opening_hours"
     "status extra opening_hours"
     ". extra consultation"
     ". extra consultation";
@@ -96,9 +91,9 @@
     //background-color: aquamarine;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-areas:
-      "photo opening_hours"
-      "photo opening_hours"
-      "photo opening_hours"
+      "lib_photo opening_hours"
+      "lib_photo opening_hours"
+      "lib_photo opening_hours"
       "status opening_hours"
       "address consultation"
       "address consultation"
@@ -118,30 +113,31 @@
       "opening_hours"
       "consultation";
   }
-  .zone-1a,
-  .zone-1b {
+  .lib_photo,
+  .status {
     display: none;
   }
 }
 
 // Settings for content
-.library_photo img {
+.lib_photo img {
   max-width: 250px;
   height: auto;
 }
 
-.address_line,
-.social_media,
-.tool_field {
-  display: flex;
+.info_text {
+  //display: flex;
   align-items: center;
   font-size: var(--sys-body-medium-size);
   gap: 0.5rem;
 }
 
-.address_line mat-icon,
-.social_media mat-icon,
-.tool_field mat-icon {
+.section_heading {
+  font-weight: 550;
+  color: var(--sys-primary);
+}
+
+.grid-item mat-icon {
   font-size: var(--sys-body-medium-size);
   width: var(--sys-body-medium-size);
   height: var(--sys-body-medium-size);
