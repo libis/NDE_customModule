@@ -7,7 +7,11 @@
     </div>
 
     <div class="about-image flex-layout-center-center">
-      <img class="about-img" alt="" [src]="aboutImgSrc" />
+      <img *ngIf="isImageUrl" class="about-img" alt="" [src]="aboutImgSrc" />
+
+      <div *ngIf="!isImageUrl" class="about-image-fallback">
+        {{ aboutImgSrc }}
+      </div>
     </div>
   </div>
 </div>
