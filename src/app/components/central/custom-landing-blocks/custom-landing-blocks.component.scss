@@ -1,0 +1,27 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.landing-blocks {
+  display: grid;
+  width: 100%;
+  gap: 2rem;
+}
+
+.three-columns {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.two-columns {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.one-column {
+  grid-template-columns: 1fr;
+}
+
+.landing-block {
+  min-width: 0;
+  box-sizing: border-box;
+}

@@ -1,0 +1,49 @@
+<div *ngIf="numberOfBlocks > 0" class="landing-blocks" [ngClass]="columnClass">
+  <div *ngIf="showBlock1" class="landing-block">
+    <h2 [innerHTML]="block1Title"></h2>
+
+    <img
+      *ngIf="isImageUrl(block1Description)"
+      class="landing-block-image"
+      [src]="block1Description"
+      alt=""
+    />
+
+    <p
+      *ngIf="!isImageUrl(block1Description)"
+      [innerHTML]="block1Description"
+    ></p>
+  </div>
+
+  <div *ngIf="showBlock2" class="landing-block">
+    <h2 [innerHTML]="block2Title"></h2>
+
+    <img
+      *ngIf="isImageUrl(block2Description)"
+      class="landing-block-image"
+      [src]="block2Description"
+      alt=""
+    />
+
+    <p
+      *ngIf="!isImageUrl(block2Description)"
+      [innerHTML]="block2Description"
+    ></p>
+  </div>
+
+  <div *ngIf="showBlock3" class="landing-block">
+    <h2 [innerHTML]="block3Title"></h2>
+
+    <img
+      *ngIf="isImageUrl(block3Description)"
+      class="landing-block-image"
+      [src]="block3Description"
+      alt=""
+    />
+
+    <p
+      *ngIf="!isImageUrl(block3Description)"
+      [innerHTML]="block3Description"
+    ></p>
+  </div>
+</div>
