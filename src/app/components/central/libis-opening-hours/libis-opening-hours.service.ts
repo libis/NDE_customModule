@@ -17,6 +17,7 @@ import {
   LabelField,
   OccupancyField,
 } from './libis-opening-hours-models.model';
+import { TranslateService } from '@ngx-translate/core';
 
 @Injectable({
   providedIn: 'root',
@@ -24,10 +25,13 @@ import {
 export class LIBISOpeningHoursService {
   //private openingHoursMap: OpeningHoursMap =opening_hours_map.opening_hours_map as OpeningHoursMap;
   private http: HttpClient;
+  private transl: TranslateService;
   //opening_hours_default_lang = this.openingHoursMap.default_lang;
 
-  constructor(http: HttpClient) {
+  constructor(http: HttpClient, transl: TranslateService) {
     this.http = http;
+    this.transl = transl;
+
   }
 
   getOpeningHoursDefaultLang(){
@@ -55,8 +59,7 @@ export class LIBISOpeningHoursService {
     let opening_hours_data: OpeningHoursOverview = structuredClone(EMPTY_OH_OVERVIEW);
     
     // Copy fixed settings from the opening hours map
-    opening_hours_data.default_lang = OPENING_HOURS_MAP.default_lang;
-    
+    opening_hours_data.default_lang = OPENING_HOURS_MAP.default_lang;    
 
     // Add general data sections
     opening_hours_data.general = this.parseGeneralFields(raw_OH)
@@ -120,7 +123,8 @@ export class LIBISOpeningHoursService {
 
   // Revised method for contact details prefab translation. Enforces the same language for all text fields to ensure consistent viewing experience
  translateContactDetails(OH_overview:OpeningHoursOverview, curr_lang: string, def_lang: string): {[key:string]:OH_Display_Field[]} {
-    let contact: {[key:string]:OH_Display_Field[]} = {};
+  console.log('Translating contact details: ', OH_overview, curr_lang, def_lang);  
+  let contact: {[key:string]:OH_Display_Field[]} = {};
     console.log('Calculating language-specific contact details: ', contact);
     console.log('Incoming language settings: ', curr_lang, def_lang);
 
@@ -155,11 +159,34 @@ export class LIBISOpeningHoursService {
             transl_field.label.value = field.label.value[curr_lang] ?? field.label.value[def_lang] ?? field.label.value[Object.keys(field.label.value)[0]];
           }
 
+          if(field.label && field.label.type === 'NDE' && typeof field.label.value === 'string' && transl_field.label){
+            console.log('Translating NDE label', field.label.value);
+            console.log('Translated NDE label: ', this.transl.instant(field.label.value));
+            transl_field.label.value = this.transl.instant(field.label.value);
+
+          }
           contact[section].push(transl_field);
         }
       }
+    console.log('Translated contact details: ', contact);
     return contact;
   }
+
+  translateGeneralInfo(OH_overview:OpeningHoursOverview, curr_lang: string, def_lang: string):{[key:string]: {
+        'value':string|{[key:string]:string},
+        'type': 'text'|'NDE'|'OH_db'
+    }}{
+    let translInfo = structuredClone(OH_overview.general);
+    for(const field in OH_overview.general){
+      //let translField = {'type': OH_overview.general[field].type, 'value': OH_overview.general[field].value}
+      if(translInfo[field].type === 'OH_db' && typeof translInfo[field].value === 'object'){
+            translInfo[field].value = translInfo[field].value[curr_lang] ?? translInfo[field].value[def_lang] ?? translInfo[field].value[Object.keys(translInfo[field])[0]];
+      } else if (OH_overview.general[field].type === 'NDE' && typeof translInfo[field].value === 'string'){
+        translInfo[field].value = this.transl.instant(translInfo[field].value);
+      }
+    }
+    return translInfo;
+  } 
 
   // [ready to go] method to calculate current opening status and next change
     private calculateCurrentStatus(OH_data: OHData): OHStatusField {
@@ -247,18 +274,24 @@ export class LIBISOpeningHoursService {
 
 // [ready-to-go] Revised method - use for parsing of new style display fields
 private parseOHField(OH_data: OHData, mapping_field: OHMapField): OH_Display_Field|undefined {
+  let field_value = undefined;
 
   // Try to collect the matching database field
   if(mapping_field.field_name in OH_data.data){
     // Collect and prefilter the database-field. If the value is empty or invalid, the field will be considered absent
-    let field_value = this.preprocessDbField(OH_data.data[mapping_field.field_name]);
-    if(field_value === undefined){
-      // If a default is defined, set value to the default instead.
+    field_value = this.preprocessDbField(OH_data.data[mapping_field.field_name]);
+  }
+
+  // If field value is undefined after this step, apply default value, if defined
+  if(field_value === undefined){
+      // If a default is defined, set value to the default instead. Else, end method with undefined
       // Default values are always hardcoded string, so use with caution
       if(mapping_field.default){
         field_value = mapping_field.default;
       }
+      else{
       return undefined;
+      }
     }
 
     // For future use: add reference to additional pre-processing method for specialized tool_types here
@@ -267,12 +300,8 @@ private parseOHField(OH_data: OHData, mapping_field: OHMapField): OH_Display_Fie
     let display_field: OH_Display_Field = {
       field_name: mapping_field.field_name,
       value: field_value,
-      type: OH_data.data[mapping_field.field_name].type
+      type: mapping_field.tool_type ? mapping_field.tool_type : OH_data.data[mapping_field.field_name].type ?? 'text'
     };
-    // Copy tool_type and icon-settings, if present
-    if(mapping_field.tool_type !== undefined){
-      display_field.type = mapping_field.tool_type;
-    }
     if(mapping_field.field_icon !== undefined){
       display_field.custom_icon = mapping_field.field_icon;
     }
@@ -284,10 +313,7 @@ private parseOHField(OH_data: OHData, mapping_field: OHMapField): OH_Display_Fie
       display_field.label = display_label;
     }
     }
-
     return display_field;
-  }
-  return undefined;
 }
 
 // [ready-to-go] Revised method - used in parsing method for new style display fields

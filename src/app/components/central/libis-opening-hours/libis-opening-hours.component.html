@@ -1,8 +1,24 @@
-<!--<button mat-button class="mdc-button contact-button" (click)="toggle_info_card()">Opening hours</button>-->
-<p>Opening hours works!</p>
 
+<p>Opening hours works!</p>
+@if(opening_hours(); as openings){
+  <div class="opening_hours_button">
+  <button mat-button class="mdc-button contact-button" [attr.open_status] = "getStatus()" (click)="toggle_info_card()">
+    @if(show_info_card){
+      <div>{{ translateCode('nde.custom.opening_hours.close_card') }}</div>
+    }
+    @else{
+    @if (openings.curr_status.open_now){
+          <div>{{ translateCode('nde.custom.opening_hours.open_now') }}<span *ngIf="openings.curr_status.next_change"><br>{{ translateCode('nde.custom.opening_hours.next_closed').replace('{hour}', parse_status_change(openings.curr_status.next_change.closed))}}</span></div>
+        }
+    @else {
+          <div>{{ translateCode('nde.custom.opening_hours.closed') }}<span *ngIf="openings.curr_status.next_change"> <br>{{ translateCode('nde.custom.opening_hours.next_open').replace('{day}', weekdays()[openings.curr_status.next_change.open.getDay()] | titlecase).replace('{hour}', parse_status_change(openings.curr_status.next_change.open)) }}</span></div>
+        }
+      }
+  </button>
+  </div>
+
+  @if(show_info_card){
 <div class="opening-hours-wrapper">
-  @if(opening_hours(); as openings){
   <div class="opening-hours-container">
     <!-- *** Contact details sections *** -->
     @for(section of contact_info() | keyvalue; track section.key){
@@ -110,12 +126,12 @@
 
     <!-- *** Status indicator *** -->
     <div class="status grid-item">
-      <div class="status_note">
+      <div class="status_note" [attr.open_status] = "getStatus()">
         @if (openings.curr_status.open_now){
-          <div>Open now <span *ngIf="openings.curr_status.next_change"><br>until {{ parse_status_change(openings.curr_status.next_change.closed) }}</span></div>
+          <div>{{ translateCode('nde.custom.opening_hours.open_now') }}<span *ngIf="openings.curr_status.next_change"><br>{{ translateCode('nde.custom.opening_hours.next_closed').replace('{hour}', parse_status_change(openings.curr_status.next_change.closed))}}</span></div>
         }
         @else {
-          <div>Closed now<span *ngIf="openings.curr_status.next_change"> <br>Opens on {{ weekdays()[openings.curr_status.next_change.open.getDay()] | titlecase}} at {{ parse_status_change(openings.curr_status.next_change.open) }}</span></div>
+          <div>{{ translateCode('nde.custom.opening_hours.closed') }}<span *ngIf="openings.curr_status.next_change"> <br>{{ translateCode('nde.custom.opening_hours.next_open').replace('{day}', weekdays()[openings.curr_status.next_change.open.getDay()]).replace('{hour}', parse_status_change(openings.curr_status.next_change.open)) }}</span></div>
         }
       </div>
     </div>
@@ -123,7 +139,7 @@
     <!-- *** Opening hours overview *** -->
     <div class="opening_hours grid-item">
       <div class="OH_overview">
-      <div class="OH_title">Opening hours</div>
+      <div class="OH_title">{{general_info()['OH_title'].value}}</div>
       <table class="week_view">
         @for(day of openings.this_week; track day){
         <tr>
@@ -132,7 +148,7 @@
           </td>
           <td>
             @if(day.hours.length === 0){
-              <p>Closed</p>
+              <p>{{ translateCode('nde.custom.opening_hours.closed_day')}}</p>
             }
             @else{
               @for(timeslot of day.hours; track timeslot){
@@ -150,11 +166,9 @@
     </div>
 
 
-  </div>}
-
-
-
-</div>
+  </div>
+</div>}
+}
 
 <ng-template #labelTemplate let-label>
   <span class="field_label">

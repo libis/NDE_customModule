@@ -191,7 +191,7 @@ export interface OpeningHoursOverview {
     default_lang: string,
     general: {[key:string]: {
         'value':string|{[key:string]:string},
-        'type': 'text'|'NDE'
+        'type': 'text'|'NDE'|'OH_db'
     }},
     contact_details: {[key:string]: OH_Display_Field[]},
     this_week: current_OH_field[],
