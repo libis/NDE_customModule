@@ -1,0 +1,327 @@
+// CSS grid area definitions
+.lib_photo {
+  grid-area: lib_photo;
+  justify-self: center;
+  align-self: center;
+  justify-items: center;
+  align-items: center;
+}
+
+.status {
+  grid-area: status;
+  justify-self: center;
+  align-self: start;
+  justify-items: center;
+  align-items: center;
+  text-align: center;
+}
+
+.address {
+  grid-area: address;
+  justify-self: left;
+  align-self: start;
+  justify-items: left;
+  align-items: start;
+  text-align: left;
+}
+
+.extra {
+  grid-area: extra;
+  justify-self: left;
+  align-self: start;
+  justify-items: left;
+  align-items: start;
+  text-align: left;
+}
+
+.opening_hours {
+  grid-area: opening_hours;
+  justify-self: center;
+  align-self: start;
+  justify-items: center;
+  align-items: start;
+  background-color: var(--sys-primary-container);
+  color: var(--sys-on-primary-container);
+  border-radius: 5%;
+}
+
+.consultation {
+  grid-area: consultation;
+  justify-self: center;
+  align-self: start;
+  justify-items: left;
+  align-items: start;
+  text-align: left;
+}
+
+.grid-item {
+  min-width: 0;
+  //max-width: 300px;
+  overflow-wrap: anywhere;
+  width: 100%;
+  height: 100%;
+}
+
+.opening-hours-wrapper {
+  display: block;
+  container-type: inline-size;
+  container-name: opening-hours-wrapper;
+  //background-color: white;
+  background-color: var(--lightBG);
+  //margin-top: -1rem;
+  padding: 0px 1rem 1rem 1rem;
+  //border-width: 5px;
+  //border-style: solid;
+}
+
+.opening-hours-container {
+  padding: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: grid;
+  gap: 1rem;
+  grid-template-areas:
+    "lib_photo address opening_hours"
+    "lib_photo address opening_hours"
+    "lib_photo address opening_hours"
+    "status extra opening_hours"
+    ". extra consultation"
+    ". extra consultation";
+}
+
+@container (max-width:799.99px) {
+  .opening-hours-container {
+    //background-color: aquamarine;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "lib_photo opening_hours"
+      "lib_photo opening_hours"
+      "lib_photo opening_hours"
+      "status opening_hours"
+      "address consultation"
+      "address consultation"
+      "address extra"
+      "address extra"
+      "address extra";
+  }
+}
+
+@container (max-width:549.99px) {
+  .opening-hours-container {
+    //background-color:lightsalmon;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "address"
+      "extra"
+      "opening_hours"
+      "consultation";
+  }
+  .lib_photo,
+  .status {
+    display: none;
+  }
+}
+
+// Settings for content
+.lib_photo img {
+  max-width: 250px;
+  height: auto;
+}
+
+// .info_text {
+//   //display: flex;
+//   align-items: center;
+//   font-size: var(--sys-body-medium-size);
+//   gap: 0.5rem;
+// }
+
+.section_heading {
+  font-weight: bold;
+  font-size: var(--sys-title-medium-size);
+  color: var(--sys-primary);
+}
+
+.mat-icon {
+  width: 1lh;
+  height: 1lh;
+  font-size: inherit;
+  line-height: inherit;
+  //flex-shrink: 0;
+  //font-size: var(--sys-body-medium-size);
+  //width: var(--sys-body-medium-size);
+  //height: var(--sys-body-medium-size);
+  //line-height: inherit;
+  //vertical-align: middle;
+  //color: red;//var(--sys-primary);
+  //background-color: yellow;
+}
+
+.OH_title {
+  padding: .5rem;
+  color: var(--sys-primary);
+  font-size: var(--sys-title-medium-size);
+  font-weight: 550;
+}
+
+// .status_note {
+//   background-color: var(--sys-primary);
+//   color: var(--sys-on-primary);
+//   border-radius: 1%;
+//   width: 100%;
+//   max-width: 250px;
+// }
+
+// .status_note[open_status='open'] {
+//   background-color: mediumseagreen;
+//   color: white;
+// }
+
+// .status_note[open_status='closed'] {
+//   background-color: tomato;
+//   color: white;
+// }
+
+.OH_overview {
+  width: 100%;
+  text-align: center;
+}
+
+.OH_overview table {
+  width: 100%;
+}
+
+.OH_overview th,
+.OH_overview td {
+  font-size: var(--sys-body-large-size);
+  text-align: center;
+  vertical-align: middle;
+  padding: 0.5rem 1rem;
+  overflow-wrap: anywhere;
+}
+
+// div.status_note {
+//     width: 100%;
+//     background-color: var(--sys-primary);
+//     color: var(--sys-on-primary);
+//     border-radius: 20%;
+// }
+
+.status_note {
+  margin: 0 1rem;
+  width: 100%;
+  max-width: 250px;
+}
+
+.contact-button, .status_note{
+  font-size: var(--sys-body-large-size);
+  font-weight: 500;
+  background-color: var(--sys-primary);
+  color: var(--sys-on-primary);
+  padding: 0.5rem;
+  border-style: solid;
+  border-color: var(--sys-primary);
+  border-width: 3px;
+  border-radius: 5px;
+}
+
+.contact-button[open_status='open'], .status_note[open_status='open'] {
+  background-color: mediumseagreen;
+  border-color: mediumseagreen;
+  color: white;
+}
+
+.contact-button[open_status='closed'], .status_note[open_status='closed'] {
+  background-color: tomato;
+  border-color: tomato;
+  color: white;
+}
+
+.contact-button[open_status='open']:hover {
+  color: mediumseagreen;
+  border-color: mediumseagreen;
+  background-color: white;
+}
+
+.contact-button[open_status='closed']:hover {
+  color: tomato;
+  border-color: tomato;
+  background-color: white;
+}
+
+
+// .contact-info {
+// display: flex;
+// min-width: 0;
+// align-items: center;
+// gap: 2rem;
+// font-size: var(--mat-body-medium-size);
+// }
+
+.contact_info {
+  display: flex;
+  //align-items: center;
+  font-size: var(--sys-body-large-size);
+  line-height: var(--sys-body-large-line-height);
+  //gap: .5rem;
+  //remove lines below after testing
+  //background-color: aqua;
+  //border-style:solid;
+  //border-width: 3px;
+  //border-color: yellowgreen;
+  // end of test setup lines
+
+  span, .field-label{
+    font-size: inherit;
+    line-height: inherit;
+  }
+}
+
+// .contact_info mat-icon {
+//   font-size: inherit;
+//   line-height: inherit;
+// }
+
+
+// .address-line mat-icon{
+//     display: inline-block;
+//     font-size: var(--mat-body-medium-size);
+//     line-height: 1;
+//     vertical-align: text-bottom;
+// }
+
+// .opening-hours-container * {
+//     font-size: 1rem;
+// }
+
+// .opening-hours-container div {
+//     min-width: 0;
+// }
+
+// .zone-2a, .zone-2b {
+//     align-self: start;
+// }
+
+
+
+// .address-line * {
+//     word-break: break-all;
+// }
+
+// .OH_timeslot{
+//     display: block;
+// }
+
+// .week-view{
+//     padding: 1rem;
+//     border-collapse: separate;
+//     border-spacing: 2rem;
+//     border-color: greenyellow;
+//     border-width: 2px;
+//     border-style: solid;
+// }
+
+// .week-view td {
+//     padding: 20px;
+//     text-align: center;
+//     vertical-align: middle;
+//     background-color: yellow;
+// }

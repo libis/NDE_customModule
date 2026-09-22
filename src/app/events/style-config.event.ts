@@ -22,7 +22,7 @@ export class styleConfigEvent extends NDEEventBase {
   constructor(
     globalHttp: GlobalHttpEventService,
     @Inject(STYLE_CONFIG) private config: StyleConfig,
-    private translate: TranslateService, // Now available here
+    private translate: TranslateService,
   ) {
     super(globalHttp);
     this.config.topbarColor = this.getStyleValueFromCodeTable(
@@ -36,6 +36,8 @@ export class styleConfigEvent extends NDEEventBase {
     console.log('[styleConfigEvent] config', this.config);
     this.currentView = this.resolveCurrentView();
     this.injectStyles();
+    // this.injectLandingPageFonts();
+    this.applyDefaultListView();
   }
 
   private getStyleValueFromCodeTable(param: any, code: string): any {
@@ -58,21 +60,39 @@ export class styleConfigEvent extends NDEEventBase {
   private getTopbarStyles(
     specs: (typeof TOPBAR_STYLE_MAP)[keyof typeof TOPBAR_STYLE_MAP],
   ): string {
+    const isKulView = this.currentView?.startsWith('32KUL_KUL');
+    const topbarBg = isKulView ? '#F8EEE8' : '#FFFFFF';
     return `
       header.top-bar.flex-column.header {
-        background-color: ${this.config.topbarColor} !important;
+        background-color: ${topbarBg} !important;
         height: ${specs.height} !important;
         min-height: ${specs.minHeight} !important;
+        width: 100% !important;
       }
       header.top-bar .header-container {
         height: 100% !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 3rem !important;
+        padding-right: 3rem !important;
         align-items: center !important;
+        box-sizing: border-box !important;
       }
       nde-logo img {
         transform: scale(${specs.logoScale}) !important;
         transform-origin: left center;
       }
     `;
+  }
+
+  private getHideLandingPageOverlayStyles(): string {
+    alert('overlay gone');
+    if (!this.isActive(this.config.HideLandingPageOverlay)) return '';
+    return `
+    .background-overlay {
+      display: none !important;
+    }
+  `;
   }
 
   private getHideSignInStyles(): string {
@@ -134,6 +154,57 @@ export class styleConfigEvent extends NDEEventBase {
     });
   }
 
+  private applyDefaultListView(): void {
+    if (!this.isActive(this.config.DefaultListView)) return;
+
+    const observer = new MutationObserver(() => {
+      const listBtn = document.querySelector(
+        '[data-qa="view-as-list"]',
+      ) as HTMLElement;
+      const gridBtn = document.querySelector(
+        '[data-qa="view-as-grid"]',
+      ) as HTMLElement;
+
+      if (listBtn && gridBtn) {
+        const isGridActive = gridBtn.getAttribute('aria-pressed') === 'true';
+
+        if (isGridActive) {
+          console.log('[styleConfigEvent] switching to list view');
+          listBtn.click();
+        }
+
+        observer.disconnect();
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  private getLocationNumberInBoldStyles(): string {
+    if (!this.isActive(this.config.LocationNumberInBold)) return '';
+
+    return `
+    [data-qa="location-call-number"] {
+      font-weight: bold !important;
+    }
+  `;
+  }
+
+  private getCloseBannerIconStyles(): string {
+    return `
+    .banner-close-button mat-icon {
+      background: white !important;
+      border-radius: 50% !important;
+      padding: 4px !important;
+      color: black !important;
+    }
+
+    .banner-close-button mat-icon svg path {
+      fill: black !important;
+    }
+  `;
+  }
+
   private injectStyles() {
     const styleId = 'nde-custom-topbar-styles';
     if (document.getElementById(styleId)) return;
@@ -143,13 +214,18 @@ export class styleConfigEvent extends NDEEventBase {
     const style = document.createElement('style');
     style.id = styleId;
     style.textContent = [
-      this.getTopbarStyles(specs),
+      // this.getGlobalThemeStyles(),
+      // this.getTopbarStyles(specs),
       this.getHideSignInStyles(),
-      this.getHideLiriasLinksStyles(),
-      this.getHideLoginBannerStyles(),
+      this.getHideLiriasLinksStyles(), // niet zeker? lirias in kuleuven relevant?
+      // this.getHideLoginBannerStyles(),
+      this.getLocationNumberInBoldStyles(),
+      this.getCloseBannerIconStyles(),
+      // `nde-landing-page > *:not(custom-landing-about) { display: none !important; }`,
     ].join('\n');
 
     document.head.appendChild(style);
+
     this.injectHideHowToGetItStyles();
     this.injectHideWhereToFindItStyles();
     console.log(

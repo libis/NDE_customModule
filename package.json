@@ -3,10 +3,10 @@
   "version": "2.0.0",
   "nde": {
     "addonName": "",
-    "assetBaseUrl": "https://libis-kul-psb.primo.exlibrisgroup.com",
+    "assetBaseUrl": "https://libis-kul.primo.exlibrisgroup.com",
     "environments": {
       "kuleuven": {
-        "host": "https://libis-kul-psb.primo.exlibrisgroup.com",
+        "host": "https://libis-kul.primo.exlibrisgroup.com",
         "institution": "32KUL_KUL",
         "view": "KULeuven_NDE",
         "assets": {
@@ -24,8 +24,27 @@
           }
         }
       },
+      "vives": {
+        "host": "https://libis-kul.primo.exlibrisgroup.com",
+        "institution": "32KUL_KATHO",
+        "view": "VIVES_NDE",
+        "assets": {
+          "favIcon": "images/favicon.ico",
+          "libraryLogo": "images/library-logo.png",
+          "viewSvg": "icons/custom_icons.svg",
+          "homepage": {
+            "homepageBGImage": "homepage/homepage_background.svg",
+            "html": {
+              "en": "homepage/homepage_en.html",
+              "nl": "homepage/homepage_nl.html",
+              "fr": "homepage/homepage_fr.html",
+              "de": "homepage/homepage_de.html"
+            }
+          }
+        }
+      },      
       "central": {
-        "host": "https://libis-kul-psb.primo.exlibrisgroup.com",
+        "host": "https://libis-kul.primo.exlibrisgroup.com",
         "institution": "32KUL_LIBIS_NETWORK",
         "view": "CENTRAL_PACKAGE",
         "assets": {
@@ -66,15 +85,24 @@
   "scripts": {
     "ng": "ng",
     "nde": "node nde/nde-cli.js",
+
+    "prepare:serve": "node nde/prepare-serve.js",
+    "prestart": "npm run prepare:serve",
+
     "start": "ng serve",
-    "prestart": "node nde/prebuild.js",
+    
+    "prestart:no-prebundle": "npm run prepare:serve",
     "start:no-prebundle": "ng serve --prebundle=false",
+    "prestart:proxy": "npm run prepare:serve",
     "start:proxy": "ng serve --proxy-config ./nde/proxy.conf.mjs",
-    "build": "ng build",
+
+    "build": "node nde/build.js",
+    "build:central": "cross-env BUILD_TARGET=central node nde/build.js",
+
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "postbuild": "node nde/postbuild.js",
-    "prebuild": "node nde/prebuild.js",
+    "postbuild": "",
+    "prebuild": "",
     "run:all": "node node_modules/@angular-architects/module-federation/src/server/mf-dev-server.js"
   },
   "private": true,
@@ -91,7 +119,7 @@
     "@angular/platform-browser": "^19.2.20",
     "@angular/platform-browser-dynamic": "^19.2.20",
     "@angular/router": "^19.2.20",
-    "@libis/primo-shared-state": "file:nde/libis-primo-shared-state-2026.6.1.tgz",
+    "@libis/primo-shared-state": "file:nde/libis-primo-shared-state-2026.9.1.tgz",
     "@ngrx/entity": "^19.2.1",
     "@ngrx/store": "^19.2.1",
     "@ngrx/store-devtools": "^19.2.1",
@@ -99,6 +127,7 @@
     "@ngx-translate/http-loader": "^8.0.0",
     "@webcomponents/custom-elements": "^1.6.0",
     "dotenv": "^16.4.5",
+    "fs-extra": "^11.3.5",
     "lottie-web": "^5.13.0",
     "ngx-lottie": "^13.0.1",
     "rxjs": "~7.8.0",
@@ -115,6 +144,7 @@
     "@types/lodash": "^4.17.24",
     "@types/node": "^25.0.10",
     "archiver": "^7.0.1",
+    "cross-env": "^10.1.0",
     "jasmine-core": "~4.6.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",

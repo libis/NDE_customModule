@@ -1,0 +1,355 @@
+<div class="opening-hours-wrapper">
+@if(opening_hours(); as openings){
+  <div class="opening_hours_button">
+  <button mat-button class="mdc-button contact-button" [attr.open_status] = "getStatus()" (click)="toggle_info_card()">
+    @if(show_info_card){
+      <div>{{ translateCode('nde.custom.opening_hours.close_card') }}</div>
+    }
+    @else{
+    @if (openings.curr_status.open_now){
+          <div>{{ translateCode('nde.custom.opening_hours.open_now') }} <span *ngIf="openings.curr_status.next_change">{{ translateCode('nde.custom.opening_hours.next_closed').replace('{hour}', parse_status_change(openings.curr_status.next_change.closed))}}</span></div>
+        }
+    @else {
+          <div>{{ translateCode('nde.custom.opening_hours.closed') }}<!--<span *ngIf="openings.curr_status.next_change"> {{ translateCode('nde.custom.opening_hours.next_open').replace('{day}', weekdays()[openings.curr_status.next_change.open.getDay()] | titlecase).replace('{hour}', parse_status_change(openings.curr_status.next_change.open)) }}</span>--></div>
+        }
+      }
+  </button>
+  </div>
+
+  @if(show_info_card){
+  <div class="opening-hours-container">
+    <!-- *** Contact details sections *** -->
+    @for(section of contact_info() | keyvalue; track section.key){
+
+    <div class="grid-item {{section.key}}" [style.grid-area]="section.key">
+
+      @for(item of section.value; track $index){
+
+      <div class="contact_info {{item.type}} {{item.field_name}}">
+
+        <!-- *** Logic controlling icon display *** -->
+         <!-- If a custom icon is defined, show custom icon -->
+        @if(item.custom_icon){
+          <ng-container [ngTemplateOutlet]="iconTemplate" [ngTemplateOutletContext]="{ $implicit: item.custom_icon }">
+          </ng-container>
+        }
+        <!-- In absence of custom icon, add standard icon to selected field types-->
+        @else {
+          @switch(item.type){
+            @case('tel'){
+              <mat-icon class="mat-icon gap-05">phone</mat-icon>
+            }
+            @case('email'){
+              <mat-icon class="mat-icon gap-05">mail</mat-icon>
+            }
+            @case('url'){
+              <mat-icon class="mat-icon gap-05">language</mat-icon>
+            }
+            @case('route'){
+              <mat-icon class="mat-icon gap-05">directions</mat-icon>
+            }
+          }
+        }
+
+        <!-- *** Display custom labels as headers above text fields-->
+        @if(['text', 'text-area','html_text'].includes(item.type) && item.label){
+        <ng-container [ngTemplateOutlet]="labelTemplate" [ngTemplateOutletContext]="{ $implicit: item.label }">
+        </ng-container>
+        }
+
+        <!-- *** Define logic for display of field value *** -->
+         @switch(item.type){
+          @case('text'){
+            <span class="info_text">{{ item.value }}</span>
+          }
+          @case('textarea'){
+            <span class="info_text">{{ item.value }}</span>
+          }
+          @case('html_text'){
+            <span [innerHTML]="item.value" class="info_text"></span>
+          }
+          @case('section_heading'){
+            <span class="mat-title-medium">{{ item.value }}</span>
+          }
+          @case ('image') {
+            <img [src]="item.value" [alt]="`${item.field_name}`">
+          }
+          @case('url'){
+            <span class="info_text">
+            <a [href]="item.value" target="_blank">
+              @if(item.label){
+                <ng-container [ngTemplateOutlet]="labelTemplate" [ngTemplateOutletContext]="{ $implicit: item.label }">
+                </ng-container>
+              }
+              @else {
+                {{ item.value }}
+              }
+            </a>
+            </span>
+          }
+          @case('tel'){
+            <span class="info_text"><a [href]="`tel:${item.value}`">{{ item.value }}</a></span>
+          }
+          @case('email'){
+            <span class="info_text">
+            <a [href]="`mailto:${item.value}`" target="_blank">
+              @if(item.label){
+                <ng-container [ngTemplateOutlet]="labelTemplate" [ngTemplateOutletContext]="{ $implicit: item.label }">
+                </ng-container>
+              }
+              @else {
+                {{ item.value }}
+              }
+            </a>
+          </span>
+          }
+          @case('route'){
+            <span class="info_text">
+            <a [href]="item.value" target="_blank">
+              @if(item.label){
+                <ng-container [ngTemplateOutlet]="labelTemplate" [ngTemplateOutletContext]="{ $implicit: item.label }">
+                </ng-container>
+              }
+              @else {
+                {{ item.value }}
+              }
+            </a>
+          </span>
+          }
+          @case('occupancy'){
+            <!--<div><hr class="divider"><br></div>-->
+           <span class="occupancy_data">
+              @if(typeof item.value === 'object' && $any(item.value)['maximum'] && $any(item.value)['maximum'] !== '0'){
+                {{ translateCode('nde.custom.opening_hours.occupancy').replace('{curr}', $any(item.value)['current']).replace('{max}', $any(item.value)['maximum']) }}
+              }
+            </span>
+          }
+         }
+      </div>
+      }
+    </div>
+    }
+
+    <!-- *** Status indicator *** -->
+    <div class="status grid-item">
+      <div class="status_note" [attr.open_status] = "getStatus()">
+        @if (openings.curr_status.open_now){
+          <div>{{ translateCode('nde.custom.opening_hours.open_now') }}<span *ngIf="openings.curr_status.next_change"> {{ translateCode('nde.custom.opening_hours.next_closed').replace('{hour}', parse_status_change(openings.curr_status.next_change.closed))}}</span></div>
+        }
+        @else {
+          <div>{{ translateCode('nde.custom.opening_hours.closed') }}<span *ngIf="openings.curr_status.next_change"><br>{{ translateCode('nde.custom.opening_hours.next_open').replace('{day}', weekdays()[openings.curr_status.next_change.open.getDay()]).replace('{hour}', parse_status_change(openings.curr_status.next_change.open)) }}</span></div>
+        }
+      </div>
+    </div>
+
+    <!-- *** Opening hours overview *** -->
+    <div class="opening_hours grid-item">
+      <div class="OH_overview">
+      <div class="OH_title mat-title-medium">{{general_info()['OH_title'].value}}</div>
+      @if(general_info()['OH_subtitle'] && general_info()['OH_subtitle'].value !== 'not_defined' && general_info()['OH_subtitle'].value !== ''){
+      <div class="OH_subtitle mat-title-small">{{ general_info()['OH_subtitle'].value}}</div>
+      }
+      <table class="week_view">
+        @for(day of openings.this_week; track day){
+        <tr>
+          <td>
+            <div class="OH_day">{{ weekdays()[day.week_day] | titlecase }}</div>
+          </td>
+          <td>
+            @if(day.hours.length === 0){
+              <div class="OH_hour">{{ translateCode('nde.custom.opening_hours.closed_day')}}</div>
+            }
+            @else{
+              @for(timeslot of day.hours; track timeslot){
+                <div class="OH_hour">{{ timeslot.open }} - {{ timeslot.closed }}</div>
+                @if(day.description !== ""){
+                  <div>({{day.description}})</div>
+                }
+              }
+            }
+            </td>
+        </tr>
+        }
+      </table>
+    </div>
+    </div>
+
+
+  </div>
+}
+}</div>
+
+<ng-template #labelTemplate let-label>
+  <span class="field_label">
+    @if(label.type === 'NDE'){
+    {{ label.value }}
+    }
+    @else {
+    {{ label.value }}
+    }
+  </span>
+</ng-template>
+
+<ng-template #iconTemplate let-icon>
+    @if(icon.icon_type === 'mat-icon'){
+    <mat-icon class="mat-icon gap-05">{{ icon.icon_path }}</mat-icon>
+    }
+    @else if (icon.icon_type === 'svg') {
+    <mat-icon class="mat-icon gap-05" [svgIcon]="icon.icon_path"></mat-icon>
+    }
+</ng-template>
+
+<!--<div class="opening-hours-wrapper">
+  @if (opening_hours(); as openings){
+  <div class="opening-hours-container">
+    @if(contact_details(); as contact){
+    <div class="zone-1a grid-item">
+      <div class="library_photo">
+        @if(contact.lib_photo !== undefined){
+        <img [attr.src]="contact.lib_photo.value" alt="library photo">
+        }
+        @else{
+        <img [attr.src]="'https://assets.libis.be/limo/library_info/library_default.png'" alt="library standard icon">
+        }
+      </div>
+    </div>
+    <div class="zone-1b grid-item">
+      <div class="status_note">
+        @if (openings.curr_status.open_now){
+          <div>Open now <span *ngIf="openings.curr_status.next_change"><br>until {{ parse_status_change(openings.curr_status.next_change.closed) }}</span></div>
+        }
+        @else {
+          <div>Closed now<span *ngIf="openings.curr_status.next_change"> <br>Opens on {{ weekdays()[openings.curr_status.next_change.open.getDay()] | titlecase}} at {{ parse_status_change(openings.curr_status.next_change.open) }}</span></div>
+        }
+      </div>
+    </div>
+    <div class="zone-2a grid-item">
+      <div class="address_area">
+      @if(contact.lib_name !== undefined){
+      <div class="OH_title">{{ contact.lib_name.value}}</div>
+      }
+
+      @for(line of contact.address; track line){
+
+      @switch (line.type) {
+      @case('text'){
+      <div class="address_line">
+        {{ line.value }}
+      </div>
+      }
+      @case('url'){
+      <div class="address_line">
+        <mat-icon class="mat-icon gap-05">language</mat-icon>
+        <span><a [attr.href]="line.value" target="_blank">Library website</a></span>
+      </div>
+      }
+      @case('email'){
+      <div class="address_line">
+        <mat-icon class="mat-icon gap-05">mail</mat-icon>
+        <a [attr.href]="'mailto:' + line.value" target="_blank">{{ line.value }}</a>
+      </div>
+      }
+      @case('tel'){
+      <div class="address_line">
+        <mat-icon class="mat-icon gap-05">phone</mat-icon>
+        <a [attr.href]="'tel:' + line.value">{{ line.value }}</a>
+      </div>
+      }
+      @default(){
+      <div class="address_line">
+        {{ line.value }}
+      </div>
+      }
+      }
+      }
+
+      @for(link of contact.social_media; track link){
+
+      <div class="social_media">
+        @switch(link.platform){
+        @case('Facebook'){
+        <mat-icon svgSrc="/assets/icons/facebook.svg">facebook</mat-icon>
+        }
+        @case('Instagram'){
+        <mat-icon svgSrc="/assets/icons/instagram.svg">instagram</mat-icon>
+        }
+        @default{
+        <mat-icon>group</mat-icon>
+        }
+        }
+        <a [attr.href]="link.field.value"
+          target="_blank">Find us on {{ link.platform }}</a>
+
+      </div>
+      }
+    </div>
+    </div>
+    <div class="zone-2b grid-item">
+
+      @for(tool of contact.extra; track tool){
+
+      @switch(tool.tool_type){
+
+      @case('note'){
+      <div class="tool_field general_note">
+        <p>{{ tool.field.value }}</p>
+      </div>
+    }--><!--
+      @case('route'){
+      <div class="tool_field route_description">
+        <mat-icon>directions</mat-icon>
+        <a [attr.href]="tool.field.value"
+          target="_blank">Route to the library</a>
+      </div>
+      }
+      }
+      }
+    </div>
+    <div class="zone-3b grid-item">
+      @for(tool of contact.consultation; track tool){
+
+      @switch(tool.tool_type){
+
+      @case('note'){
+      <div class="general_note">
+        <p>{{ tool.field.value }}</p>
+      </div>
+      }
+      @case('reservation_tool'){
+
+      }
+      }
+      }
+    </div>
+  }
+    <div class="zone-3a grid-item">
+      <div class="OH_overview">
+      <div class="OH_title">Opening hours</div>
+      <table class="week_view">
+        @for(day of openings.this_week; track day){
+        <tr>
+          <td>
+            <div>{{ weekdays()[day.week_day] | titlecase }}</div>
+          </td>
+          <td>
+            @if(day.hours.length === 0){
+              <p>Closed</p>
+            }
+            @else{
+              @for(timeslot of day.hours; track timeslot){
+                <div>{{ timeslot.open }} - {{ timeslot.closed }}</div>
+                @if(day.description !== ""){
+                  <div>({{day.description}})</div>
+                }
+              }
+            }
+            </td>
+        </tr>
+        }
+      </table>
+    </div>
+    </div>
+
+  </div>
+}
+</div>-->

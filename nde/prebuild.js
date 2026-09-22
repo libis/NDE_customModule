@@ -1,87 +1,107 @@
 const fs = require('fs');
 const path = require('path');
 
-const projectRoot = path.resolve(__dirname, '..');
-const packageJsonPath = path.resolve(projectRoot, 'package.json');
-const bootstrapPath = path.resolve(projectRoot, 'src/bootstrap.ts');
-const mainPath = path.resolve(projectRoot, 'src/main.ts');
-const webpackConfigPath = path.resolve(projectRoot, 'webpack.config.js');
-const assetBaseOutPath = path.resolve(projectRoot, 'src/app/state/asset-base.generated.ts');
+const {
+  resolveEnv,
+  writeIfChanged,
+} = require('./env.cjs');
 
-if (!fs.existsSync(packageJsonPath)) {
-    console.error("Error: package.json file not found!");
-    process.exit(1);
-}
+const explicitEnv = process.argv[2];
+const {
+  projectRoot,
+  selectedEnv,
+  envConfig,
+  isCentral,
+  generatedTsconfigPath,
+  generatedMappingsPath,
+  generatedAssetBaseOutPath,
+} = resolveEnv(explicitEnv);
 
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-const ndeConfig = packageJson.nde;
+process.env.BUILD_TARGET = selectedEnv;
+process.env.npm_config_env = selectedEnv;
 
-if (!ndeConfig) {
-    console.error("Error: 'nde' section not found in package.json!");
-    process.exit(1);
-}
+console.log(`👉 Prebuild for env: ${selectedEnv}`);
 
-const addonName = ndeConfig.addonName;
+console.log(`✔ projectRoot: ${projectRoot}`);
+console.log(`✔ generatedTsconfigPath: ${generatedTsconfigPath}`);
+console.log(`✔ generatedMappingsPath: ${generatedMappingsPath}`);
 
-if (addonName) {
-    const newBootstrapPath = path.resolve(projectRoot, `src/bootstrap${addonName}.ts`);
 
-    // Restore bootstrap.ts from previous version if needed
-    if (!fs.existsSync(bootstrapPath) && fs.existsSync(newBootstrapPath)) {
-        fs.copyFileSync(newBootstrapPath, bootstrapPath);
-        console.log(`Restored bootstrap.ts from bootstrap${addonName}.ts`);
+const rootTsConfig = JSON.parse(
+  fs.readFileSync(
+    path.join(projectRoot, 'tsconfig.json'),
+    'utf8'
+  )
+);
+
+const existingPaths =
+  rootTsConfig.compilerOptions?.paths || {};
+
+const relativeAssetBaseOutPath =
+  path.relative(
+    path.dirname(generatedTsconfigPath),
+    generatedAssetBaseOutPath
+  ).replace(/\\/g, '/');
+
+const assetBaseUrl = envConfig.assetBaseUrl || envConfig.host || '';
+
+writeIfChanged(
+  generatedAssetBaseOutPath,
+  `export const assetBaseUrl = '${assetBaseUrl}';\n`
+);
+
+const relativeMappingsPath =
+  path.relative(
+    path.dirname(generatedTsconfigPath),
+    generatedMappingsPath
+  ).replace(/\\/g, '/');
+
+const relativeTsConfigAppPath =
+  path.relative(
+    path.dirname(generatedTsconfigPath),
+    path.join(projectRoot, "./tsconfig.app.json")
+  ).replace(/\\/g, '/');
+
+const relativeSrcPath =
+  path.relative(
+    path.dirname(generatedTsconfigPath),
+    path.join(projectRoot, 'src')
+  ).replace(/\\/g, '/');
+
+
+const tsconfig = {
+  extends: "./tsconfig.app.json",
+  compilerOptions: {
+    rootDir: "./",
+    paths: {
+      ...existingPaths,
+      "@nde/component-mappings": [
+        relativeMappingsPath
+      ],
+      "@nde/asset-base": [
+        relativeAssetBaseOutPath
+      ]
     }
+  },
+  include: [
+    "./src/*.ts",
+    relativeMappingsPath,
+    relativeAssetBaseOutPath
+  ],
+  exclude: [
+    "./src/**/*.spec.ts",
+    "./src/test.ts"
+  ]
+};
 
-    // Rename bootstrap.ts if not already renamed
-    if (fs.existsSync(bootstrapPath) && !fs.existsSync(newBootstrapPath)) {
-        fs.renameSync(bootstrapPath, newBootstrapPath);
-        console.log(`Renamed bootstrap.ts to bootstrap${addonName}.ts`);
-    }
+writeIfChanged(
+  generatedTsconfigPath,
+  JSON.stringify(tsconfig, null, 2) + '\n'
+);
 
-    // Update main.ts import
-    let mainContent = fs.readFileSync(mainPath, 'utf8');
-    mainContent = mainContent.replace(
-        /import\(['"]\.\/bootstrap.*?['"]\)/g,
-        `import('./bootstrap${addonName}')`
-    );
-    fs.writeFileSync(mainPath, mainContent);
-    console.log(`Updated main.ts to import('./bootstrap${addonName}')`);
+console.log(`✔ Generated generatedTsconfigPath: ${generatedTsconfigPath}`);
+console.log(`✔ relativeMappingsPath : ${relativeMappingsPath}`);
+console.log(`✔ relativeAssetBaseOutPath : ${relativeAssetBaseOutPath}`);
 
-    // Update webpack.config.js
-    let webpackConfig = fs.readFileSync(webpackConfigPath, 'utf8');
-    webpackConfig = webpackConfig.replace(/name:\s*["'][^"']+["']/, `name: "${addonName}"`);
-    webpackConfig = webpackConfig.replace(/uniqueName:\s*["'][^"']+["']/, `uniqueName: "${addonName}"`);
-    webpackConfig = webpackConfig.replace(/'\.\/[^']+':\s*'\.\/src\/bootstrap[^']*'/, `'./${addonName}': './src/bootstrap${addonName}.ts'`);
-    fs.writeFileSync(webpackConfigPath, webpackConfig);
-    console.log(`Updated webpack.config.js for addon: ${addonName}`);
-
-} else {
-    console.log("addonName not found in package.json nde section. Skipping renaming.");
-}
-
-// --- Handle ASSET_BASE_URL ---
-const assetBaseUrl = ndeConfig.assetBaseUrl || '';
-
-console.log('NDE config:', ndeConfig);
-console.log('Extracted assetBaseUrl:', assetBaseUrl);
-
-fs.writeFileSync(assetBaseOutPath, `export const assetBaseUrl = '${assetBaseUrl}';\n`);
-console.log(`✔ Written to ${assetBaseOutPath}:\nexport const assetBaseUrl = '${assetBaseUrl}';`);
-
-// --- Generate the workbench store manifest from @libis/primo-shared-state ---
-// Best-effort: a failure here must not break the build.
-try {
-    const { extractStoreManifest } = require('./extract-store-manifest');
-    extractStoreManifest(projectRoot);
-} catch (err) {
-    console.warn('⚠ Could not generate store manifest:', err.message);
-}
-
-console.log('Prebuild completed successfully!');
-/*
-
- The script reads the package.json file and extracts the ADDON_NAME and ASSET_BASE_URL values from the nde section.
- It then renames the bootstrap.ts file to bootstrap{ADDON_NAME}.ts and updates the main.ts file to import the renamed bootstrap file.
- It also updates the webpack.config.js file with the addon name and the new bootstrap file.
- Finally, it writes the assetBaseUrl value to a new file asset-base.generated.ts.
-*/
+console.log(`✔ Asset base: ${assetBaseUrl}`);
+console.log('✅ Prebuild completed successfully');

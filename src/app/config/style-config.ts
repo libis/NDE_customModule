@@ -13,6 +13,11 @@ export interface StyleConfig {
   HideLoginBannerInFullRecordView?: BooleanOrViews;
   HideHowToGetIt?: BooleanOrViews;
   HideWhereToFindIt?: BooleanOrViews;
+  DefaultListView?: BooleanOrViews;
+  LocationNumberInBold?: BooleanOrViews;
+  AutoLoginFirstOption?: BooleanOrViews;
+  CloseBannerIconWhite?: BooleanOrViews;
+  HideLandingPageOverlay?: BooleanOrViews;
 }
 
 export const TOPBAR_STYLE_MAP = {
@@ -24,11 +29,20 @@ export const TOPBAR_STYLE_MAP = {
 export const DEFAULT_STYLE_CONFIG: StyleConfig = {
   // topbarSize: 'thin',
   // topbarColor: 'red',
-  HideSignIn: false, // if a view is included -> value will be true
-  HideLinksInLiriasRecords: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
-  HideLoginBannerInFullRecordView: ['32KUL_KUL:Lirias_NDE'], // if a view is included -> value will be true
-  HideHowToGetIt: ['32KUL_KUL:Lirias_NDE'], // if a view is included -> value will be true
-  HideWhereToFindIt: ['32KUL_KUL:Lirias_NDE'], // if a view is included -> value will be true
+  HideSignIn: ['32KUL_KATHO:VIVES_NDE'], // if a view is included -> value will be true
+  HideLinksInLiriasRecords: ['32KUL_KUL:Lirias_NDE'], // if a view is included -> value will be true
+  HideLoginBannerInFullRecordView: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
+  HideHowToGetIt: ['32KUL_KATHO:VIVES_NDE'], // if a view is included -> value will be true
+  HideWhereToFindIt: ['32KUL_KATHO:VIVES_NDE'], // if a view is included -> value will be true
+  DefaultListView: ['32KUL_KUL:KULeuven_NDE'],
+  LocationNumberInBold: ['32KUL_KUL:KULeuven_NDE'],
+  AutoLoginFirstOption: [
+    '32KUL_LIBS:LIBS',
+    '32KUL_LIBS:RVAONEM',
+    '32KUL_LIBS:PLEC',
+  ],
+  CloseBannerIconWhite: ['32KUL_KUL:KULeuven_NDE'],
+  HideLandingPageOverlay: ['32KUL_KUL:KULeuven_NDE', '32KUL_HUB:ODISEE_NDE'],
 };
 
 export const STYLE_CONFIG = new InjectionToken<StyleConfig>('STYLE_CONFIG', {

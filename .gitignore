@@ -43,6 +43,10 @@ testem.log
 Thumbs.db
 
 # NDE Auto-generated files
-customComponentMappings.ts
-_registry.ts
-asset-base.generated.ts
+/src/app/custom1-module/customComponentMappings.*.ts
+/src/app/events/_registry.ts
+/src/app/interceptors/_registry.ts
+tsconfig.generated*.json
+building.lock
+.nde/*
+

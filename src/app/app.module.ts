@@ -8,7 +8,7 @@ import {
 import { BrowserModule } from '@angular/platform-browser';
 import { createCustomElement, NgElementConstructor } from '@angular/elements';
 import { Router } from '@angular/router';
-import { selectorComponentMap } from './custom1-module/customComponentMappings';
+import { selectorComponentMap } from '@nde/component-mappings';
 import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { AutoAssetSrcDirective } from './services/auto-asset-src.directive';
