@@ -40,7 +40,10 @@ export class LIBISOpeningHoursService {
 
   // [ready to go] Collect opening hours from the institution's opening hours endpoint
   getOpeningHours(inst_code: string, lib_code: string, week?: number) {
-     const OH_URL = `${OPENING_HOURS_MAP.base_URL}/${inst_code}/${lib_code}?accept=application/json`;
+     let OH_URL = `${OPENING_HOURS_MAP.base_URL}/${inst_code}/${lib_code}?accept=application/json`;
+     if(OPENING_HOURS_MAP.opening_hours_config['start_day'] === 'today'){
+      OH_URL += '&from_today=1';
+     }
 
     // Return an observable that fetches the opening hours data and processes it
     return this.http.get(OH_URL).pipe(

@@ -1,8 +1,8 @@
 // CSS grid area definitions
 .lib_photo {
   grid-area: lib_photo;
-  justify-self: center;
-  align-self: center;
+  justify-self: left;
+  align-self: start;
   justify-items: center;
   align-items: center;
 }
@@ -16,8 +16,8 @@
   text-align: center;
 }
 
-.address {
-  grid-area: address;
+.phys_address {
+  grid-area: phys_address;
   justify-self: left;
   align-self: start;
   justify-items: left;
@@ -25,8 +25,8 @@
   text-align: left;
 }
 
-.extra {
-  grid-area: extra;
+.other_address_info {
+  grid-area: other_address_info;
   justify-self: left;
   align-self: start;
   justify-items: left;
@@ -36,9 +36,10 @@
 
 .opening_hours {
   grid-area: opening_hours;
-  justify-self: center;
+  max-width: 300px;
+  justify-self: left;
   align-self: start;
-  justify-items: center;
+  justify-items: left;
   align-items: start;
   background-color: var(--sys-primary-container);
   color: var(--sys-on-primary-container);
@@ -47,16 +48,27 @@
 
 .consultation {
   grid-area: consultation;
-  justify-self: center;
+  justify-self: left;
   align-self: start;
   justify-items: left;
   align-items: start;
   text-align: left;
 }
 
+.room_info {
+  grid-area: room_info;
+  justify-self: left;
+  align-self: start;
+  justify-items: left;
+  align-items: start;
+  text-align: left;
+  border-top-style: ridge;
+  border-top-color: var(--sys-primary);
+  border-top-width: 3px;
+}
+
 .grid-item {
   min-width: 0;
-  //max-width: 300px;
   overflow-wrap: anywhere;
   width: 100%;
   height: 100%;
@@ -74,52 +86,58 @@
   //border-style: solid;
 }
 
-.opening-hours-container {
-  padding: 1rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  display: grid;
-  gap: 1rem;
-  grid-template-areas:
-    "lib_photo address opening_hours"
-    "lib_photo address opening_hours"
-    "lib_photo address opening_hours"
-    "status extra opening_hours"
-    ". extra consultation"
-    ". extra consultation";
-}
+// .opening-hours-container {
+//   //background-color: plum;
+//   padding: 1rem;
+//   grid-template-columns: repeat(3, minmax(0, 1fr));
+//   display: grid;
+//   gap: 1rem;
+//   grid-template-areas:
+//     "lib_photo address opening_hours"
+//     "lib_photo address opening_hours"
+//     "lib_photo address opening_hours"
+//     "status extra opening_hours"
+//     ". extra consultation"
+//     ". extra consultation";
+// }
 
-@container (max-width:799.99px) {
-  .opening-hours-container {
-    //background-color: aquamarine;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-areas:
-      "lib_photo opening_hours"
-      "lib_photo opening_hours"
-      "lib_photo opening_hours"
-      "status opening_hours"
-      "address consultation"
-      "address consultation"
-      "address extra"
-      "address extra"
-      "address extra";
-  }
-}
+// @container (max-width:749.99px) {
+//   .opening-hours-container {
+//     //background-color: aquamarine;
+//     grid-template-columns: repeat(2, minmax(0, 1fr));
+//     grid-template-areas:
+//       "lib_photo opening_hours"
+//       "lib_photo opening_hours"
+//       "lib_photo opening_hours"
+//       "status opening_hours"
+//       "address consultation"
+//       "address consultation"
+//       "address extra"
+//       "address extra"
+//       "address extra";
+//   }
+// }
 
-@container (max-width:549.99px) {
+// @container (max-width:499.99px) {
   .opening-hours-container {
+    padding: 1rem;
+    display: grid;
+    gap: 1rem;
+    max-width: 500px;
     //background-color:lightsalmon;
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      "address"
-      "extra"
+      "phys_address"
+      "other_address_info"
       "opening_hours"
-      "consultation";
+      "consultation"
+      "room_info";
   }
   .lib_photo,
   .status {
     display: none;
   }
-}
+//}
 
 // Settings for content
 .lib_photo img {
@@ -130,13 +148,12 @@
 // .info_text {
 //   //display: flex;
 //   align-items: center;
-//   font-size: var(--sys-body-medium-size);
+//   font-size: var(--sys-body-large-size);
 //   gap: 0.5rem;
 // }
 
 .section_heading {
-  font-weight: bold;
-  font-size: var(--sys-title-medium-size);
+  font-weight: 550;
   color: var(--sys-primary);
 }
 
@@ -146,9 +163,9 @@
   font-size: inherit;
   line-height: inherit;
   //flex-shrink: 0;
-  //font-size: var(--sys-body-medium-size);
-  //width: var(--sys-body-medium-size);
-  //height: var(--sys-body-medium-size);
+  //font-size: var(--sys-body-large-size);
+  //width: var(--sys-body-large-size);
+  //height: var(--sys-body-large-size);
   //line-height: inherit;
   //vertical-align: middle;
   //color: red;//var(--sys-primary);
@@ -163,53 +180,10 @@
 }
 
 // .status_note {
-//   background-color: var(--sys-primary);
-//   color: var(--sys-on-primary);
-//   border-radius: 1%;
+//   margin: 0 1rem;
 //   width: 100%;
 //   max-width: 250px;
 // }
-
-// .status_note[open_status='open'] {
-//   background-color: mediumseagreen;
-//   color: white;
-// }
-
-// .status_note[open_status='closed'] {
-//   background-color: tomato;
-//   color: white;
-// }
-
-.OH_overview {
-  width: 100%;
-  text-align: center;
-}
-
-.OH_overview table {
-  width: 100%;
-}
-
-.OH_overview th,
-.OH_overview td {
-  font-size: var(--sys-body-large-size);
-  text-align: center;
-  vertical-align: middle;
-  padding: 0.5rem 1rem;
-  overflow-wrap: anywhere;
-}
-
-// div.status_note {
-//     width: 100%;
-//     background-color: var(--sys-primary);
-//     color: var(--sys-on-primary);
-//     border-radius: 20%;
-// }
-
-.status_note {
-  margin: 0 1rem;
-  width: 100%;
-  max-width: 250px;
-}
 
 .contact-button, .status_note{
   font-size: var(--sys-body-large-size);
@@ -247,6 +221,74 @@
   background-color: white;
 }
 
+// .status_note {
+//   background-color: var(--sys-primary);
+//   color: var(--sys-on-primary);
+//   border-radius: 10px;
+//   width: 100%;
+//   max-width: 250px;
+// }
+
+.OH_overview {
+  width: 100%;
+  text-align: center;
+}
+
+.OH_overview table {
+  width: 100%;
+}
+
+.OH_overview th,
+.OH_overview td {
+  font-size: var(--sys-body-large-size);
+  text-align: center;
+  vertical-align: middle;
+  padding: 0.5rem 1rem;
+  overflow-wrap: anywhere;
+}
+
+.OH_hour {
+  font-weight: bold;
+}
+
+.occupancy {
+  font-weight: bold;
+}
+
+// div.status_note {
+//     width: 100%;
+//     background-color: var(--sys-primary);
+//     color: var(--sys-on-primary);
+//     border-radius: 20%;
+// }
+
+// div.status_note[open_status='open'] {
+//   background-color: mediumseagreen;
+//   color: white
+// }
+
+// div.status_note[open_status='closed'] {
+//     background-color: tomato;
+//   color: white;
+// }
+
+.contact-button:hover{
+    color: var(--sys-primary);
+    background-color: white;
+    border-color: var(--sys-primary);    
+    //border-style: solid;
+    //border-width: 3px;
+}
+
+.contact-button[open_status='open'], .status_note[open_status='open'] {
+  border-color: mediumseagreen;
+  color: white;
+}
+
+.contact-button[open_status='closed'], .status_note[open_status='closed'] {
+    border-color: tomato;
+  color: white;
+}
 
 // .contact-info {
 // display: flex;
@@ -258,9 +300,11 @@
 
 .contact_info {
   display: flex;
+  padding: 0.25rem 0;
+  //white-space:nowrap;
   //align-items: center;
   font-size: var(--sys-body-large-size);
-  line-height: var(--sys-body-large-line-height);
+  line-height: var(--sys-body-medium-line-height);
   //gap: .5rem;
   //remove lines below after testing
   //background-color: aqua;
@@ -269,11 +313,26 @@
   //border-color: yellowgreen;
   // end of test setup lines
 
+  .mat-icon {
+    flex: 0 0 auto;
+  }
+
   span, .field-label{
     font-size: inherit;
     line-height: inherit;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 }
+
+// .divider {
+//   display: block;
+//   width: 150px;
+//   max-width: 100px;
+//   border-top-width: 3px;
+//   border-top-style: ridge;
+//   border-top-color: var(--sys-primary);
+// }
 
 // .contact_info mat-icon {
 //   font-size: inherit;

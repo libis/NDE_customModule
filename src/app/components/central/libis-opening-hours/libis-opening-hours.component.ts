@@ -61,7 +61,7 @@ export class LibisOpeningHoursComponent {
   private location!: Location;
 
   // UI controls
-  show_info_card: boolean = true;
+  show_info_card: boolean = false;
   //lang_code: Signal<string> = this.store.selectSignal(selectCurrentLanguage);
   lang_code = signal<string|undefined>(undefined);
   default_lang: Signal<string|undefined> = this.store.selectSignal(selectViewDefaultLang);
@@ -137,7 +137,7 @@ export class LibisOpeningHoursComponent {
   getStatus(){
     const OH_overview = this.opening_hours();
     if(OH_overview){
-      if(OH_overview.general['appointment_only']){
+      if(OH_overview.general['appointment_only'] && OH_overview.general['appointment_only'].value === 'true'){
         return 'appointment';
       }
       else if (OH_overview.curr_status.open_now){
