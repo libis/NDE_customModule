@@ -25,6 +25,14 @@
 
       @for(item of section.value; track $index){
 
+                <!-- *** Display custom labels as headers above text fields-->
+        @if(['text', 'text-area','html_text'].includes(item.type) && item.label){
+          <div class="contact_info_title">
+        <ng-container [ngTemplateOutlet]="labelTemplate" [ngTemplateOutletContext]="{ $implicit: item.label }">
+        </ng-container>
+        </div>
+        }
+
       <div class="contact_info {{item.type}} {{item.field_name}}">
 
         <!-- *** Logic controlling icon display *** -->
@@ -49,12 +57,6 @@
               <mat-icon class="mat-icon gap-05">directions</mat-icon>
             }
           }
-        }
-
-        <!-- *** Display custom labels as headers above text fields-->
-        @if(['text', 'text-area','html_text'].includes(item.type) && item.label){
-        <ng-container [ngTemplateOutlet]="labelTemplate" [ngTemplateOutletContext]="{ $implicit: item.label }">
-        </ng-container>
         }
 
         <!-- *** Define logic for display of field value *** -->

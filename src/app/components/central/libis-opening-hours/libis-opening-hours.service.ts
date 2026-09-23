@@ -112,9 +112,12 @@ export class LIBISOpeningHoursService {
           if(OPENING_HOURS_MAP.general[field].field_name in OH_data.data){
           let field_value = this.preprocessDbField(OH_data.data[OPENING_HOURS_MAP.general[field].field_name]);
           if(field_value !== undefined){
-            general_section[field] = {'value': field_value, 'type': OH_data.data[OPENING_HOURS_MAP.general[field].field_name].type};
+            general_section[field] = {'value': field_value, 'type': 'OH_db'};
           }
           }
+        break;
+        case 'text':
+          general_section[field] = {'value':OPENING_HOURS_MAP.general[field].field_name, 'type': 'text'}
         break;
       }
       console.log(`Parsed general field ${field} to value ${general_section[field]}`);
@@ -179,15 +182,19 @@ export class LIBISOpeningHoursService {
         'value':string|{[key:string]:string},
         'type': 'text'|'NDE'|'OH_db'
     }}{
+      console.log(`Translating Opening Hours general info for lang ${curr_lang} from info set: `, OH_overview.general);
     let translInfo = structuredClone(OH_overview.general);
     for(const field in OH_overview.general){
       //let translField = {'type': OH_overview.general[field].type, 'value': OH_overview.general[field].value}
       if(translInfo[field].type === 'OH_db' && typeof translInfo[field].value === 'object'){
+        console.log('Translating OH database field', translInfo[field]);
             translInfo[field].value = translInfo[field].value[curr_lang] ?? translInfo[field].value[def_lang] ?? translInfo[field].value[Object.keys(translInfo[field])[0]];
       } else if (OH_overview.general[field].type === 'NDE' && typeof translInfo[field].value === 'string'){
+        console.log('Translating NDE code ', translInfo[field]);
         translInfo[field].value = this.transl.instant(translInfo[field].value);
       }
     }
+    console.log('Translated Opening Hours general info: ', translInfo);
     return translInfo;
   } 
 
