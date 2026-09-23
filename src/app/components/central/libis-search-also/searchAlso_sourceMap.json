@@ -47,7 +47,7 @@
 		},
 		"VLP main":{
 			"name": "Parlementair Informatiecentrum",
-			"baseURL": "https://libis-vlp.primo.exlibrisgroup.com/discovery/search?vid=32KUL_VLP:VLP&query=any,contains,",
+			"baseURL": "https://vlp.limo.libis.be/nde/search?vid=32KUL_VLP:VLP_NDE&query=",
 			"icon": {
 				"type": "file",
 				"value": "limo.ico"
