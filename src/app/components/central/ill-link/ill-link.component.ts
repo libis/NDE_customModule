@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 
 @NDEComponent({
-  selector: 'nde-user-area',
+  selector: 'nde-requests-page',
   position: 'before',
   viewPattern: /32KUL.*/,
 })
@@ -12,7 +12,7 @@ import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div #ill class="ill-link" style="display:none;">
+    <div #ill class="ill-link">
       <a (click)="goToIll()"> Blanco ILL formulier</a>
     </div>
   `,
@@ -25,46 +25,19 @@ export class IllLinkComponent implements AfterViewInit {
   }
 
   ngAfterViewInit() {
-    console.log(' ngAfterViewInit triggered');
-    console.log(' Current URL:', window.location.href);
-
-    setTimeout(() => this.moveToAccountArea(), 500);
-  }
-
-  private moveToAccountArea() {
-    console.log(' Trying to move ILL component...');
-
-    const container = document.querySelector(
-      'nde-account-overview .overview-cards',
+    const link = document.querySelector(
+      'nde-requests-page-before-from-remote-0 .ill-link',
     );
-    console.log(' Target container:', container);
 
-    if (!container) {
-      console.warn(' Container NOT found');
-      return;
-    }
+    const title = document.querySelector('.requests-section-title');
 
-    if (!this.ill) {
-      console.warn(' ViewChild ill NOT available');
-      return;
-    }
-
-    const el = this.ill.nativeElement;
-    console.log(' Element to move:', el);
-
-    if (!el._moved) {
-      container.prepend(el);
-      el.style.display = 'block';
-      el._moved = true;
-
-      console.log(' ILL successfully moved!');
-    } else {
-      console.log(' Already moved before');
+    if (link && title) {
+      title.insertAdjacentElement('afterend', link as HTMLElement);
     }
   }
 
   goToIll() {
-    console.log(' ILL CLICKED');
+    // console.log(' ILL CLICKED');
 
     const vid = new URLSearchParams(window.location.search).get('vid');
     console.log(' VID:', vid);
