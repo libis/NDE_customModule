@@ -16,7 +16,7 @@ import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
     <div
       id="footer"
       class="footer-container"
-      [style.background-color]="footerColor"
+      [style.background-color]="'var(--sys-primary)'"
     >
       <!-- LEFT -->
       <div class="footer-left">
@@ -100,7 +100,6 @@ export class StaticFooterComponent {
   libisLabel = 'Copyright © LIBIS';
   privacyLabel = 'Privacy Policy';
   cookieLabel = 'Cookie Policy';
-  footerColor: string = '';
 
   constructor(private translate: TranslateService) {
     // reactive translations
@@ -120,10 +119,10 @@ export class StaticFooterComponent {
       .stream('nui.footer.privacyUrl')
       .subscribe((v) => (this.privacyUrl = v));
 
-    this.footerColor = this.getFromCodeTable(
-      'nde.style_config.topbarColor',
-      '#000000',
-    );
+    // this.footerColor = this.getFromCodeTable(
+    //   'nde.style_config.topbarColor',
+    //   '#000000',
+    // );
   }
 
   openDisclaimer() {

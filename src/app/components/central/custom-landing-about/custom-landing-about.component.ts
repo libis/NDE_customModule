@@ -69,12 +69,12 @@ export class CustomlandingAboutComponent {
 
   get showAbout(): boolean {
     return (
-      this.isValidValue(this.title, 'nde.custom.landing.about.title') &&
+      this.isValidValue(this.title, 'mde.custom.landing.about.title') &&
       this.isValidValue(
         this.description,
-        'nde.custom.landing.about.description',
+        'mde.custom.landing.about.description',
       ) &&
-      this.isValidValue(this.aboutImgSrc, 'nde.custom.landing.about.imageUrl')
+      this.isValidValue(this.aboutImgSrc, 'mde.custom.landing.about.imageUrl')
     );
   }
 }

@@ -51,30 +51,30 @@ export class CustomLandingBlocksComponent {
 
   get showBlock1(): boolean {
     return (
-      this.isValidValue(this.block1Title, 'nde.custom.landing.block1.title') &&
+      this.isValidValue(this.block1Title, 'mde.custom.landing.block1.title') &&
       this.isValidValue(
         this.block1Description,
-        'nde.custom.landing.block1.description',
+        'mde.custom.landing.block1.description',
       )
     );
   }
 
   get showBlock2(): boolean {
     return (
-      this.isValidValue(this.block2Title, 'nde.custom.landing.block2.title') &&
+      this.isValidValue(this.block2Title, 'mde.custom.landing.block2.title') &&
       this.isValidValue(
         this.block2Description,
-        'nde.custom.landing.block2.description',
+        'mde.custom.landing.block2.description',
       )
     );
   }
 
   get showBlock3(): boolean {
     return (
-      this.isValidValue(this.block3Title, 'nde.custom.landing.block3.title') &&
+      this.isValidValue(this.block3Title, 'mde.custom.landing.block3.title') &&
       this.isValidValue(
         this.block3Description,
-        'nde.custom.landing.block3.description',
+        'mde.custom.landing.block3.description',
       )
     );
   }

@@ -7,7 +7,7 @@ export type BooleanOrViews = boolean | ViewList;
 
 export interface StyleConfig {
   topbarSize?: TopbarSize;
-  topbarColor?: string;
+  // topbarColor?: string;
   HideSignIn?: BooleanOrViews;
   HideLinksInLiriasRecords?: BooleanOrViews;
   HideLoginBannerInFullRecordView?: BooleanOrViews;

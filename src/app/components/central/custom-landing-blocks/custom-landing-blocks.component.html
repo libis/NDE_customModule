@@ -1,6 +1,9 @@
 <div *ngIf="numberOfBlocks > 0" class="landing-blocks" [ngClass]="columnClass">
   <div *ngIf="showBlock1" class="landing-block">
-    <h2 [innerHTML]="block1Title"></h2>
+    <h2
+      class="landing-block-title mat-headline-large"
+      [innerHTML]="block1Title"
+    ></h2>
 
     <img
       *ngIf="isImageUrl(block1Description)"
@@ -16,7 +19,10 @@
   </div>
 
   <div *ngIf="showBlock2" class="landing-block">
-    <h2 [innerHTML]="block2Title"></h2>
+    <h2
+      class="landing-block-title mat-headline-large"
+      [innerHTML]="block2Title"
+    ></h2>
 
     <img
       *ngIf="isImageUrl(block2Description)"
@@ -32,7 +38,10 @@
   </div>
 
   <div *ngIf="showBlock3" class="landing-block">
-    <h2 [innerHTML]="block3Title"></h2>
+    <h2
+      class="landing-block-title mat-headline-large"
+      [innerHTML]="block3Title"
+    ></h2>
 
     <img
       *ngIf="isImageUrl(block3Description)"

@@ -25,10 +25,10 @@ export class styleConfigEvent extends NDEEventBase {
     private translate: TranslateService,
   ) {
     super(globalHttp);
-    this.config.topbarColor = this.getStyleValueFromCodeTable(
-      this.config.topbarColor,
-      'nde.style_config.topbarColor',
-    );
+    // this.config.topbarColor = this.getStyleValueFromCodeTable(
+    //   this.config.topbarColor,
+    //   'nde.style_config.topbarColor',
+    // );
     this.config.topbarSize = this.getStyleValueFromCodeTable(
       this.config.topbarSize,
       'nde.style_config.topbarSize',
@@ -62,9 +62,9 @@ export class styleConfigEvent extends NDEEventBase {
   ): string {
     const isKulView = this.currentView?.startsWith('32KUL_KUL');
     const topbarBg = isKulView ? '#F8EEE8' : '#FFFFFF';
+    // background-color: ${topbarBg} !important;
     return `
       header.top-bar.flex-column.header {
-        background-color: ${topbarBg} !important;
         height: ${specs.height} !important;
         min-height: ${specs.minHeight} !important;
         width: 100% !important;
