@@ -1,24 +1,33 @@
 <div class="opening-hours-wrapper">
+<!-- Component should be displayed only if opening hours data is available-->
 @if(opening_hours(); as openings){
+  <!-- Starting point: closed info card - will appear as a clickable button -->
   <div class="opening_hours_button">
   <button mat-button class="mdc-button contact-button" [attr.open_status] = "getStatus()" (click)="toggle_info_card()">
+
     @if(show_info_card){
-      <div>{{ translateCode('nde.custom.opening_hours.close_card') }}</div>
+      <span>{{ translateCode('nde.custom.opening_hours.close_card') }}</span>
     }
     @else{
-    @if (openings.curr_status.open_now){
-          <div>{{ translateCode('nde.custom.opening_hours.open_now') }} <span *ngIf="openings.curr_status.next_change">{{ translateCode('nde.custom.opening_hours.next_closed').replace('{hour}', parse_status_change(openings.curr_status.next_change.closed))}}</span></div>
-        }
-    @else {
-          <div>{{ translateCode('nde.custom.opening_hours.closed') }}<!--<span *ngIf="openings.curr_status.next_change"> {{ translateCode('nde.custom.opening_hours.next_open').replace('{day}', weekdays()[openings.curr_status.next_change.open.getDay()] | titlecase).replace('{hour}', parse_status_change(openings.curr_status.next_change.open)) }}</span>--></div>
-        }
+      @if (openings.curr_status.open_now){
+            <span>{{ translateCode('nde.custom.opening_hours.open_now') }}
+              <span *ngIf="openings.curr_status.next_change"> {{ translateCode('nde.custom.opening_hours.next_closed').replace('{hour}', parse_status_change(openings.curr_status.next_change.closed))}}</span>
+            </span>
+          }
+      @else {
+            <span>{{ translateCode('nde.custom.opening_hours.closed') }}<!--<span *ngIf="openings.curr_status.next_change"> {{ translateCode('nde.custom.opening_hours.next_open').replace('{day}', weekdays()[openings.curr_status.next_change.open.getDay()] | titlecase).replace('{hour}', parse_status_change(openings.curr_status.next_change.open)) }}</span>--></span>
+          }
       }
+
+      <mat-icon class="mat-icon gap-05">info</mat-icon>
+
   </button>
   </div>
 
+  <!-- After click, the info card is opened-->
   @if(show_info_card){
   <div class="opening-hours-container">
-    <!-- *** Contact details sections *** -->
+    <!-- *** Contact details section - one block is generated for each section defined in the opening hours map *** -->
     @for(section of contact_info() | keyvalue; track section.key){
 
     <div class="grid-item {{section.key}}" [style.grid-area]="section.key">
@@ -136,10 +145,12 @@
     <div class="status grid-item">
       <div class="status_note" [attr.open_status] = "getStatus()">
         @if (openings.curr_status.open_now){
-          <div>{{ translateCode('nde.custom.opening_hours.open_now') }}<span *ngIf="openings.curr_status.next_change"> {{ translateCode('nde.custom.opening_hours.next_closed').replace('{hour}', parse_status_change(openings.curr_status.next_change.closed))}}</span></div>
+                      <span>{{ translateCode('nde.custom.opening_hours.open_now') }}
+              <span *ngIf="openings.curr_status.next_change"> {{ translateCode('nde.custom.opening_hours.next_closed').replace('{hour}', parse_status_change(openings.curr_status.next_change.closed))}}</span>
+            </span>
         }
         @else {
-          <div>{{ translateCode('nde.custom.opening_hours.closed') }}<span *ngIf="openings.curr_status.next_change"><br>{{ translateCode('nde.custom.opening_hours.next_open').replace('{day}', weekdays()[openings.curr_status.next_change.open.getDay()]).replace('{hour}', parse_status_change(openings.curr_status.next_change.open)) }}</span></div>
+          {{ translateCode('nde.custom.opening_hours.closed') }}<span *ngIf="openings.curr_status.next_change"><br>{{ translateCode('nde.custom.opening_hours.next_open').replace('{day}', weekdays()[openings.curr_status.next_change.open.getDay()]).replace('{hour}', parse_status_change(openings.curr_status.next_change.open)) }}</span>
         }
       </div>
     </div>

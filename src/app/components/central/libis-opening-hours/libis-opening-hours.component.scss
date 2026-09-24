@@ -1,4 +1,5 @@
-// CSS grid area definitions
+/*** Section 1: CSS grid setup ***/
+// Enter CSS grid area definitions here
 .lib_photo {
   grid-area: lib_photo;
   justify-self: center;
@@ -212,8 +213,12 @@
 }
 
 .contact-button, .status_note{
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-size: var(--sys-body-large-size);
   font-weight: 500;
+  line-height: var(--sys-body-large-line-height);
   background-color: var(--sys-primary);
   color: var(--sys-on-primary);
   padding: 0.5rem;
@@ -221,6 +226,15 @@
   border-color: var(--sys-primary);
   border-width: 3px;
   border-radius: 5px;
+
+    span, .field-label {
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  .mat-icon {
+    color: inherit;
+  }
 }
 
 .contact-button[open_status='open'], .status_note[open_status='open'] {
