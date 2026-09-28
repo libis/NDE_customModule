@@ -31,9 +31,12 @@ if (command === 'generate' && type === 'component') {
   // Add @NDEComponent decorator
   const componentPath = `src/app/${componentDir}/${name}/${name}.component.ts`;
 
-    let content = fs.readFileSync(componentPath, 'utf8');
+  let content = fs.readFileSync(componentPath, 'utf8');
   
+
   content = `import { NDEComponent } from 'src/app/decorators/nde-component.decorator';\n${content}`;
+
+
   content = content.replace(
     '@Component(',
     `@NDEComponent({ selector: 'nde-${target}', position: '${position}' })\n@Component(`
