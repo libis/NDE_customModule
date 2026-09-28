@@ -969,14 +969,14 @@ The `--build_target` parameter determines where the component is generated and i
 ### Options
 
 - `central` (default)
-- `<environment>` (e.g. `kuleuven`, `sandbox-view`, ...)
+- `<environment>` (e.g. `kuleuven`, `sandbox-view`, `lirias`, ...)
 
 ### Behaviour
 
 | build_target     | Component location                                      | Included in build |
 |------------------|--------------------------------------------------------|-------------------|
 | `central`        | `src/app/components/central/<component>`              | `npm run build:central` |
-| `<environment>`  | `src/app/components/views/<environment>/<component>`  | `npm run build <environment>` |
+| `<environment>`  | `src/app/components/views/<environment>/<component>`  | `npm run build -- --view=<environment>` |
 
 > **Note:** Components are strictly isolated per build target. A component will only be included in the build that matches its target.
 

@@ -54,7 +54,8 @@ async function main() {
 }
 
 function runBuildSteps() {
-  const explicitEnv = process.argv[2];
+  const explicitEnvArg = process.argv[2];
+  const explicitEnv = explicitEnvArg?.split('=')[1] || null;
   const { selectedEnv, generatedTsconfigPath } = resolveEnv(explicitEnv);
 
   process.env.BUILD_TARGET = selectedEnv;
@@ -84,6 +85,7 @@ function runBuildSteps() {
     env: process.env,
   });
 }
+
 
 main().catch((err) => {
   console.error(err);
