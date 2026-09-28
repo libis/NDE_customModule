@@ -54,8 +54,15 @@ async function main() {
 }
 
 function runBuildSteps() {
+
   const explicitEnvArg = process.argv[2];
-  const explicitEnv = explicitEnvArg?.split('=')[1] || null;
+
+  const explicitEnv = explicitEnvArg
+  ? (explicitEnvArg.includes('=')
+      ? explicitEnvArg.substring(explicitEnvArg.indexOf('=') + 1)
+      : explicitEnvArg)
+  : null;
+
   const { selectedEnv, generatedTsconfigPath } = resolveEnv(explicitEnv);
 
   process.env.BUILD_TARGET = selectedEnv;
