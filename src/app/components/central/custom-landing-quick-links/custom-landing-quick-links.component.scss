@@ -1,0 +1,27 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.landing-quick-links {
+  display: grid;
+  width: 100%;
+  gap: 2rem;
+}
+
+.three-columns {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.two-columns {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.one-column {
+  grid-template-columns: 1fr;
+}
+
+.landing-quick-links {
+  min-width: 0;
+  box-sizing: border-box;
+}
