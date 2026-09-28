@@ -1,0 +1,20 @@
+// .about-text-description {
+//   ul {
+//     list-style-type: disc !important;
+//     padding-left: 2rem !important;
+//   }
+
+//   li {
+//     display: list-item !important;
+//   }
+// }
+.about-text-description {
+  ::ng-deep ul {
+    list-style-type: disc;
+    padding-left: 2rem;
+  }
+
+  ::ng-deep li {
+    display: list-item;
+  }
+}

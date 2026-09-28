@@ -1,27 +1,40 @@
 import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 
 @NDEComponent({
   selector: 'nde-requests-page',
   position: 'before',
-  viewPattern: /32KUL.*/,
+  viewPattern: /32KUL_KUL:KULeuven.*/,
 })
 @Component({
   selector: 'custom-ill-link',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div #ill class="ill-link">
-      <a (click)="goToIll()"> Blanco ILL formulier</a>
+    <div #ill class="ill-link" *ngIf="showIllLink">
+      <a (click)="goToIll()">{{ illLinkLabel }}</a>
     </div>
   `,
 })
 export class IllLinkComponent implements AfterViewInit {
   @ViewChild('ill') ill?: ElementRef;
 
-  constructor() {
+  constructor(private translate: TranslateService) {
     console.log('IllLinkComponent CONSTRUCTED');
+  }
+
+  get illLinkLabel(): string {
+    return this.translate.instant('nde.custom.blank-ill-request');
+  }
+
+  get showIllLink(): boolean {
+    return this.isValidValue(this.illLinkLabel, 'nde.custom.blank-ill-request');
+  }
+
+  private isValidValue(value: string, key: string): boolean {
+    return !!value && value !== 'NOT_DEFINED' && value !== key;
   }
 
   ngAfterViewInit() {
@@ -37,10 +50,7 @@ export class IllLinkComponent implements AfterViewInit {
   }
 
   goToIll() {
-    // console.log(' ILL CLICKED');
-
     const vid = new URLSearchParams(window.location.search).get('vid');
-    console.log(' VID:', vid);
 
     window.location.href = `/discovery/blankIll?vid=${vid}`;
   }

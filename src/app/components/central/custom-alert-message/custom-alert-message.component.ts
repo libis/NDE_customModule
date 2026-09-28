@@ -38,7 +38,7 @@ export class CustomAlertMessageComponent implements AfterViewInit {
   }
 
   get alertMessage(): string {
-    return this.translate.instant('nde.AlertMessage');
+    return this.translate.instant('nde.custom.AlertMessage');
   }
 
   get showAlert(): boolean {
@@ -48,7 +48,7 @@ export class CustomAlertMessageComponent implements AfterViewInit {
 
     // Checks if the key is undefined, empty, equal to NOT_DEFINED,
     // or if ngx-translate returned the un-translated key back
-    if (!msg || msg === 'NOT_DEFINED' || msg === 'nde.AlertMessage') {
+    if (!msg || msg === 'NOT_DEFINED' || msg === 'nde.custom.AlertMessage') {
       return false;
     }
 
@@ -95,7 +95,7 @@ export class CustomAlertMessageComponent implements AfterViewInit {
     if (!el._moved) {
       ndeHeader.appendChild(el);
       el._moved = true;
-      console.log('[CustomAlert] banner moved to header ✅');
+      console.log('[CustomAlert] banner moved to header ');
     }
   }
 }

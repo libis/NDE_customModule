@@ -27,6 +27,16 @@ export class CustomlandingAboutComponent {
       this.translate.instant('nde.custom.landing.about.imageUrl'),
     );
   }
+  // for clickable image
+  isImageHtml(value: string): boolean {
+    if (!value) {
+      return false;
+    }
+
+    const lowerValue = value.toLowerCase();
+
+    return lowerValue.includes('<img') && lowerValue.includes('<a ');
+  }
   // check if is an actual imageurl or text block
   get isImageUrl(): boolean {
     const url = this.aboutImgSrc?.trim();
@@ -69,12 +79,12 @@ export class CustomlandingAboutComponent {
 
   get showAbout(): boolean {
     return (
-      this.isValidValue(this.title, 'mde.custom.landing.about.title') &&
+      this.isValidValue(this.title, 'nde.custom.landing.about.title') &&
       this.isValidValue(
         this.description,
-        'mde.custom.landing.about.description',
+        'nde.custom.landing.about.description',
       ) &&
-      this.isValidValue(this.aboutImgSrc, 'mde.custom.landing.about.imageUrl')
+      this.isValidValue(this.aboutImgSrc, 'nde.custom.landing.about.imageUrl')
     );
   }
 }
