@@ -90,6 +90,7 @@
     "prestart": "npm run prepare:serve",
 
     "start": "ng serve",
+    "prestart": "node prebuild.js",
     
     "prestart:no-prebundle": "npm run prepare:serve",
     "start:no-prebundle": "ng serve --prebundle=false",
@@ -156,5 +157,11 @@
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.15.1"
+  },
+  "allowScripts": {
+    "lmdb@3.0.13": true,
+    "msgpackr-extract@3.0.3": true,
+    "esbuild@0.21.5": true,
+    "esbuild@0.23.0": true
   }
 }
