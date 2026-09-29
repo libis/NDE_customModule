@@ -1,6 +1,6 @@
-import { OpeningHoursMap } from './libis-opening-hours-models.model';
+import { Opening_Hours_Map } from './libis-opening-hours-models.model';
 
-export const OPENING_HOURS_MAP: OpeningHoursMap = {
+export const OPENING_HOURS_MAP: Opening_Hours_Map = {
   base_URL: 'https://services.libis.be/opening_hours/32KUL',
   default_lang: 'en',
   general: {
@@ -11,16 +11,17 @@ export const OPENING_HOURS_MAP: OpeningHoursMap = {
     },
     OH_subtitle: {
       field_name: 'nde.custom.opening_hours.subtitle',
-      field_source: 'NDE',
+      field_source: 'None',
+      default: null
     },
     lib_name: {
       field_name: 'name',
-      field_source: 'OH_db',
+      field_source: 'database',
       default: 'My library',
     },
     appointment_only: {
       field_name: 'appointment_only',
-      field_source: 'OH_db',
+      field_source: 'database',
       default: false,
     },
     activate_OH: {
@@ -63,8 +64,8 @@ export const OPENING_HOURS_MAP: OpeningHoursMap = {
           label_name: 'nde.custom.opening_hours.facebook',
         },
         field_icon: {
-          icon_type: 'mat-icon',
-          icon_path: 'people',
+          icon_type: 'svg',
+          icon_name: 'facebook',
         },
       },
       {
@@ -74,8 +75,8 @@ export const OPENING_HOURS_MAP: OpeningHoursMap = {
           label_name: 'nde.custom.opening_hours.instagram',
         },
         field_icon: {
-          icon_type: 'mat-icon',
-          icon_path: 'people',
+          icon_type: 'svg',
+          icon_name: 'instagram',
         },
       },
     ],
@@ -108,93 +109,3 @@ export const OPENING_HOURS_MAP: OpeningHoursMap = {
     start_day: 1,
   },
 };
-
-// export const OPENING_HOURS_MAP = {
-//         base_URL: "https://services.libis.be/opening_hours/32KUL",
-//         default_lang: "en",
-//         "contact_details": {
-//             //"lib_name": "name",
-//             "lib_photo": [
-//                 {
-//                 field_name: "lib_photo",
-//                 tool_type: "image"
-//             }
-//         ],
-//             "address": [
-//                 {field_name: "address_building"},
-//                 {field_name: "address_line1"},
-//                 {field_name: "address_line2"},
-//                 {field_name: "address_line3"},
-//                 {field_name: "email"},
-//                {field_name:  "tel"},
-//                 {field_name: "lib_website"}
-//             ],
-//             "social_media": [
-//                 {
-//                     field_name:"facebook",
-//                     field_label: {
-//                         label_type:"NDE",
-//                         label_name:"nde.custom.facebook"
-//                     },
-//                     field_icon:{
-//                         type:"svg",
-//                         value: "facebook.svg"
-//                     }
-//                 },
-//                 {
-//                     field_name:"instagram",
-//                     label: {
-//                         type: 'NDE',
-//                         value: 'nde.custom.instagram'
-//                     },
-//                     custom_icon: {
-//                         type: "NDE",
-//                         value: "nde.custom.instagram"
-//                     }
-//                 }
-//             ],
-//             "extra": [
-//             {
-//                 "field": "route",
-//                 "tool_type": "route",
-//                 "label": {
-//                     "type": "NDE",
-//                     "value": "",
-//                     "default":""
-//                 }
-//             },
-//             {
-//                 "field": "general_note",
-//                 "tool_type": "note",
-//                 "label": {
-//                     "type": "text",
-//                     "value": "",
-//                     "default":""
-//                 }
-//             }
-//     ],
-//         "consultation": [
-//             {
-//                 "field":"opening_hours_note",
-//                 "tool_type":"note",
-//                 "label": {
-//                     "type": "text",
-//                     "value": "",
-//                     "default":""
-//                 }
-//             }
-//         ]
-//         },
-//         "appointment": "appointment_only",
-//         "opening_hours_config": {
-//             "title": {
-//                 "field":"",
-//                 "default":""
-//             },
-//             "subtitle": {
-//                 "field":"",
-//                 "default":""
-//             },
-//             "start_day": 1
-//         }
-//     } as OpeningHoursMap;

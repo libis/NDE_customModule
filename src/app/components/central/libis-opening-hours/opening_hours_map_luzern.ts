@@ -1,6 +1,6 @@
-import { OpeningHoursMap } from './libis-opening-hours-models.model';
+import { Opening_Hours_Map } from './libis-opening-hours-models.model';
 
-export const OPENING_HOURS_MAP: OpeningHoursMap = {
+export const OPENING_HOURS_MAP: Opening_Hours_Map = {
   base_URL: 'https://services.libis.be/opening_hours/32KUL',
   default_lang: 'en',
   general: {
@@ -15,7 +15,7 @@ export const OPENING_HOURS_MAP: OpeningHoursMap = {
     },
     lib_name: {
       field_name: 'name',
-      field_source: 'OH_db',
+      field_source: 'database',
       default: 'My library',
     },
     appointment_only: {
@@ -67,7 +67,7 @@ export const OPENING_HOURS_MAP: OpeningHoursMap = {
       {
         field_name: 'info_url',
         field_label: {
-          label_type: 'OH_db',
+          label_type: 'database',
           label_name: 'info_url_text',
         },
       },
@@ -80,7 +80,7 @@ export const OPENING_HOURS_MAP: OpeningHoursMap = {
       {
         field_name: 'reservation_link',
         field_label: {
-          label_type: 'OH_db',
+          label_type: 'database',
           label_name: 'reservation_text',
         },
       },

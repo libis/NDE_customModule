@@ -207,9 +207,11 @@
 // }
 
 .status_note {
+  flex-direction:column;
   margin: 0 1rem;
   width: 100%;
   max-width: 250px;
+  gap: 0;
 }
 
 .contact-button, .status_note{

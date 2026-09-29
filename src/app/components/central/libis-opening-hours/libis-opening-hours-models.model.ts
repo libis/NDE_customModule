@@ -1,4 +1,5 @@
 /* Block 0: general use definitions*/
+// Weekdays translation array
 export const WEEKDAYS: {[key:string]:string[]}= {
     "default": [
         "sun",
@@ -38,37 +39,12 @@ export const WEEKDAYS: {[key:string]:string[]}= {
     ]
 }
 
-/* Block 1: generic models shared between API and frontend */
-
-// Base format for opening hours timeslots
-// Empty values have an empty string for both properties
+/* Block 1: Opening hours API fields - raw or minimally parsed data */
+// Base format for opening hours timeslots - empty entries 
 export interface HoursRange {
     open: string,
     closed: string
 }
-
-// Base format for standard opening hours fields, date agnostic
-// export interface OHField {
-//     week_day: number,
-//     hours: HoursRange[]
-// }
-
-// Extended format for opening hours fields, for date-specific data
-// export interface OHDayField extends OHField {
-//     date: string,
-//     description: string
-// }
-
-// Base format for exception fields
-// export interface ExceptionField {
-//     date: {
-//         from: string,
-//         until: string
-//     },
-//     description: string,
-//     repeat: boolean,
-//     hours: HoursRange[]
-// }
 
 // Base format for current opening hours data, as returned by the API
 export interface current_OH_field {
@@ -79,109 +55,133 @@ export interface current_OH_field {
     hours: HoursRange[]
 }
 
-// export const EMPTY_OH_DISPLAY_FIELD: OH_Display_Field = {
-//     value: "",
-//     type: 'text'
-// }
+// [currently not in use] Base format for opening hours week info
+export interface OH_week_field {
+    number: number,
+    start: string,
+    end: string
+}
 
-// Base format for data fields, as returned by the API
-// Note: during mapping, custom processing may be applied, e.g. empty translation fields
-export interface DatabaseField {
-    value: {[key:string]: string}|string,
+// [currently not in use] Base format for default opening hours schedule
+export interface default_OH_field {
+    week_day: number,
+    hours: HoursRange[]
+}
+
+// [currently not in use] Base format for opening hours exceptions
+export interface exception_OH_field {
+    date: {
+        from: string,
+        to: string
+    },
+    description: string,
+    repeat: boolean,
+    hours: HoursRange[]
+}
+
+// Base format for data fields, as returned by the API (only properties relevant to Primo NDE are included)
+// Note: during mapping, custom processing may be applied, e.g. removal of empty translation fields
+export interface OH_DatabaseField {
+    value: {[key:string]: string}|string|boolean,
     type:string
 }
 
-export interface translatedDatabaseField extends DatabaseField {
+// Translated variant for easier use in html-templates
+export interface translatedDatabaseField extends OH_DatabaseField {
     value: string
 }
 
-// Toplevel structure of the response from the opening hours API
-export interface OHData {
+// Toplevel structure of the response from the opening hours API - only fields relevant to Primo NDE are included
+export interface OH_Data {
     code: string,
     name: string,
-    data: {[key:string]:DatabaseField},
+    data: {[key:string]:OH_DatabaseField},
     current: current_OH_field[]
 }
 
-/* Block 2: Mapping field models used to control frontend options */
+/* Block 2: Mapping field models used for configuration */
 
-// Mapping field for labels, allows to select label source
-export interface OH_Display_Field{
-    field_name: string,
-    type: string,// turn into enum
-    value: string|{[key:string]:string},
-    label?: LabelField,
-    //tool_type?: string,// turn into enum
-    custom_icon?: IconField
+// Custom labels
+export interface Label_Mapping_Field {
+    label_type: 'NDE'|'database'|'text',
+    label_name: string
 }
 
-// export const EMPTY_OH_Display_Field: OH_Display_Field = {
-//     type: 'text',
-//     value: ''
-// }
+// Contact details fields
+export interface Data_Mapping_Field {
+    field_name: string,
+    tool_type?: string,
+    field_label?: Label_Mapping_Field,
+    field_icon?: IconField,
+    default?: any
+}
 
-export interface LabelField {
-    type: 'OH_db'|'NDE'|'text',
-    value: string|{[key:string]:string},
+// Mapping fields for general section
+export interface General_Mapping_Field {
+    field_name:string,
+    field_source: 'NDE'|'database'|'text'|'None',
+    default?: string|boolean|null
+}
+
+// Overall structure of Opening Hours Map
+export interface Opening_Hours_Map {
+    base_URL: string,
+    default_lang: string,
+    general: {[key:string]: General_Mapping_Field}, 
+    contact_details: {[key:string]: Data_Mapping_Field[]},
+    opening_hours_config: {
+        start_day: number|'today'
+    },
 }
 
 export interface IconField {
-    icon_type: 'svg'|'mat-icon',
-    icon_path: string
+    icon_type: 'mat-icon'|'svg',
+    icon_name: string
 }
 
-// Mapping field for tools, geared towards custom processing and display per tool type
-// export interface ToolField {
-//     field: DatabaseField,
-//     tool_type: string,
-//     label: LabelField
-// }
-
-// Interface representing the structure of the overall opening hours mapping
-// export interface ContactDetails {
-//     lib_name: DatabaseField|undefined,
-//     lib_photo: DatabaseField|undefined,
-//     address: DatabaseField[],
-//     social_media: {
-//         field:DatabaseField,
-//         platform:string
-//     }[],
-//     extra: ToolField[],
-//     consultation: ToolField[],
-//     appointment_only: boolean
-// }
-
-export interface OpeningHoursMap {
-    base_URL: string,
-    default_lang: string,
-    general: {[key:string]: any}, 
-    contact_details: {[key:string]: OHMapField[]},
-    opening_hours_config: {[key:string]: any},
+/* Block 3: Display field models (including translated fields) */
+export interface Label_Display_Field {
+    type: 'database'|'NDE'|'text',
+    value: string|{[key:string]:string},
 }
 
-export interface OHGeneralField {
+export interface Transl_Label_Field extends Label_Display_Field {
+    value: string
+}
+
+export interface General_Display_Field {
+    value: string|{[key:string]:string}|boolean,
+    type: 'database'|'NDE'|'text'
+}
+
+export interface Transl_General_Display_Field {
+    value: string|boolean
+}
+
+export interface Data_Display_Field{
     field_name: string,
-    field_source: 'NDE'|'OH_db'|'None',
-    default?:string
+    type: string,// turn into enum
+    value: string|{[key:string]:string}|boolean,
+    label?: Label_Display_Field,
+    custom_icon?: IconField
 }
 
-export interface OHMapField {
-    field_name: string,
-    tool_type?: string,
-    field_label?: {
-        label_name: string,
-        label_type: 'text'|'OH_db'|'NDE',
-    },
-    field_icon?: IconField,
-    default?:string,
+export interface Transl_Data_Display_Field extends Data_Display_Field {
+    value: string|boolean,
+    label?: Transl_Label_Field
 }
 
-export interface OHStatusField {
+
+
+
+
+
+export interface OH_Status_Field {
     open_now: boolean,
-    next_change: ParsedTimeslot|undefined
+    next_change: Parsed_Timeslot|undefined
 }
 
-export interface ParsedTimeslot{
+export interface Parsed_Timeslot{
     open: Date,
     closed: Date
 }
@@ -189,14 +189,11 @@ export interface ParsedTimeslot{
 // Toplevel structure of the parsed opening hours data, language agnostic
 export interface OpeningHoursOverview {
     default_lang: string,
-    general: {[key:string]: {
-        'value':string|{[key:string]:string},
-        'type': 'text'|'NDE'|'OH_db'
-    }},
-    contact_details: {[key:string]: OH_Display_Field[]},
+    general: {[key:string]: General_Display_Field},
+    contact_details: {[key:string]: Data_Display_Field[]},
     this_week: current_OH_field[],
     next_week: current_OH_field[],
-    curr_status: OHStatusField,
+    curr_status: OH_Status_Field,
     occupancy?: OccupancyField
 }
 
@@ -216,19 +213,6 @@ export const DEFAULT_OCCUPANCY: OccupancyField = {
     type: 'occupancy'
 }
 
-// export const EMPTY_CONTACT_DETAILS: ContactDetails = {
-//     lib_name: {
-//       value: "My library",
-//       type: 'text',
-//     },
-//     lib_photo: undefined,
-//     address: [],
-//     social_media: [],
-//     extra: [],
-//     consultation: [],
-//     appointment_only: false
-// }
-
 export const EMPTY_OH_OVERVIEW: OpeningHoursOverview = {
     default_lang: 'en',
     general: {},
@@ -238,20 +222,5 @@ export const EMPTY_OH_OVERVIEW: OpeningHoursOverview = {
     curr_status: {
         open_now: false,
         next_change: undefined
-    } as OHStatusField
+    } as OH_Status_Field
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -145,12 +145,12 @@
     <div class="status grid-item">
       <div class="status_note" [attr.open_status] = "getStatus()">
         @if (openings.curr_status.open_now){
-                      <span>{{ translateCode('nde.custom.opening_hours.open_now') }}
+              <span>{{ translateCode('nde.custom.opening_hours.open_now') }}
               <span *ngIf="openings.curr_status.next_change"> {{ translateCode('nde.custom.opening_hours.next_closed').replace('{hour}', parse_status_change(openings.curr_status.next_change.closed))}}</span>
             </span>
         }
         @else {
-          {{ translateCode('nde.custom.opening_hours.closed') }}<span *ngIf="openings.curr_status.next_change"><br>{{ translateCode('nde.custom.opening_hours.next_open').replace('{day}', weekdays()[openings.curr_status.next_change.open.getDay()]).replace('{hour}', parse_status_change(openings.curr_status.next_change.open)) }}</span>
+          <span>{{ translateCode('nde.custom.opening_hours.closed') }}</span><span *ngIf="openings.curr_status.next_change">{{ translateCode('nde.custom.opening_hours.next_open').replace('{day}', weekdays()[openings.curr_status.next_change.open.getDay()]).replace('{hour}', parse_status_change(openings.curr_status.next_change.open)) }}</span>
         }
       </div>
     </div>

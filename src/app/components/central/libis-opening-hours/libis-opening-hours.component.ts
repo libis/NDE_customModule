@@ -17,13 +17,16 @@ import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { selectCurrentLanguage } from '../libis-permalink/permalink_utils.selector';
 import { AssetsPublicPathDirective } from 'src/app/services/assets-public-path.directive';
 import {
-  OH_Display_Field,
+  Data_Display_Field,
+  IconField,
   OpeningHoursOverview,
+  Transl_General_Display_Field,
   WEEKDAYS,
 } from './libis-opening-hours-models.model';
 import { HttpClient } from '@angular/common/http';
 import { MatMenuModule } from '@angular/material/menu';
 import { DomSanitizer } from '@angular/platform-browser';
+import { OPENING_HOURS_MAP } from './opening_hours_map';
 
 // Selector definitions
 export const selectViewConfig =
@@ -55,6 +58,7 @@ export const selectViewDefaultLang = createSelector(
   styleUrl: './libis-opening-hours.component.scss',
 })
 export class LibisOpeningHoursComponent {
+  /* Start property definitions */
   // Connect to Primo NDE standard data
   @Input() private hostComponent!: any;
   private store = inject(Store);
@@ -85,9 +89,9 @@ export class LibisOpeningHoursComponent {
   // Opening hours data fields
   // Complete parsed opening hours set - contains opening hours + contact details for all languages
   opening_hours = signal<OpeningHoursOverview|undefined>(undefined);
-  contact_info: Signal<{[key:string]:OH_Display_Field[]}> = computed(
+  contact_info: Signal<{[key:string]:Data_Display_Field[]}> = computed(
     () => {
-      console.log('Change detection on Opening Hours data or language. Recalculating contactdetails');
+      //console.log('Change detection on Opening Hours data or language. Recalculating contactdetails');
       const curr_lang = this.lang_code();
       const def_lang = this.default_lang();
       const OH_data = this.opening_hours();
@@ -102,12 +106,9 @@ export class LibisOpeningHoursComponent {
     }
   )
 
-  general_info: Signal<{[key:string]:{
-        'value':string|{[key:string]:string},
-        'type': 'text'|'NDE'|'OH_db'
-    }}> = computed(
+  general_info: Signal<{[key:string]:Transl_General_Display_Field}> = computed(
     () => {
-      console.log('Change detection on Opening Hours data or language. Recalculating contactdetails');
+      //console.log('Change detection on Opening Hours data or language. Recalculating general info');
       const curr_lang = this.lang_code();
       const def_lang = this.default_lang();
       const OH_data = this.opening_hours();
@@ -121,19 +122,17 @@ export class LibisOpeningHoursComponent {
       return {}
     }
   )
+  /* End property definitions */
 
-  //contact_info = signal<{[key:string]:OH_Display_Field[]}>({});
-
-  // toNum(weekday: string){
-  //   return Number(weekday);
-  // }
-
+  /* General use methods */
+  // Show/hide info card
   toggle_info_card(){
-    console.log('Toggling info card parameter');
+    //console.log('Toggling info card parameter');
     this.show_info_card = !this.show_info_card;
-    console.log('New value for show_info_card:  ', this.show_info_card);
+    //console.log('New value for show_info_card:  ', this.show_info_card);
   }
 
+  // Calculate opening status
   getStatus(){
     const OH_overview = this.opening_hours();
     if(OH_overview){
@@ -150,9 +149,23 @@ export class LibisOpeningHoursComponent {
     return 'unknown';
   }
 
+  // Format time to standardized string for display
   parse_status_change(timing: Date){
     return `${timing.getHours().toString().padStart(2,'0')}:${timing.getMinutes().toString().padStart(2,'0')}`;
   }
+
+//   private registerIcons(){
+//     for (const field in OPENING_HOURS_MAP.contact_details){
+//       if('field_icon' in OPENING_HOURS_MAP.contact_details[field]){
+//         const icon_field = OPENING_HOURS_MAP.contact_details[field].field_icon as IconField;
+//         if (icon_field.icon_type === 'svg'){
+//         this.iconRegistry.addSvgIcon(icon_field.icon_name,
+// this.sanitizer.bypassSecurityTrustResourceUrl(
+// `/nde/custom/32KUL_LIBIS_NETWORK-CENTRAL_PACKAGE/assets/icons/${icon_field.icon_name}.svg`));
+//         }
+//       }
+//     }
+//   }
 
   constructor(private openingHoursService: LIBISOpeningHoursService,
     private httpClient: HttpClient,
@@ -160,22 +173,18 @@ export class LibisOpeningHoursComponent {
     private iconRegistry: MatIconRegistry,
     private sanitizer: DomSanitizer) {
 
+    // Register icons
+    //this.registerIcons();
       this.iconRegistry.addSvgIcon('facebook',
 this.sanitizer.bypassSecurityTrustResourceUrl(
-'assets/icons/opening_hours/facebook.svg'));
+'/nde/custom/32KUL_LIBIS_NETWORK-CENTRAL_PACKAGE/assets/icons/facebook.svg'));
       this.iconRegistry.addSvgIcon('instagram',
 this.sanitizer.bypassSecurityTrustResourceUrl(
-'assets/icons/instagram.svg'));
+'/nde/custom/32KUL_LIBIS_NETWORK-CENTRAL_PACKAGE/assets/icons/instagram.svg'));
 
-
+    // Initialize language change monitoring
     this.transl.onLangChange.subscribe((event) => {
-      console.log('Language changed');
-      //const OH_overview = this.opening_hours();
-      //const def_lang = this.default_lang();
-      //const curr_lang = this.lang_code();
-      //if(OH_overview && def_lang && curr_lang){
-      //this.contact_info.set(this.openingHoursService.translateContactDetails(OH_overview, curr_lang, def_lang));
-      //}
+      //console.log('Language changed');
       this.lang_code.set(event.lang);
     });
 
@@ -183,22 +192,22 @@ this.sanitizer.bypassSecurityTrustResourceUrl(
 
   ngOnInit() {
     this.location = this.hostComponent.location;
-    console.log('Starting LIBIS Opening Hours component');
-    console.log('Host data:', this.hostComponent);
-    console.log('Library codes from host component:', this.location);
-    console.log('Current language: ', this.lang_code());
-    console.log('Default language: ', this.default_lang());
-    console.log('Translated title: ', this.transl.instant('nde.custom.opening_hours.title'));
+    //console.log('Starting LIBIS Opening Hours component');
+    //console.log('Host data:', this.hostComponent);
+    //console.log('Library codes from host component:', this.location);
+    //console.log('Current language: ', this.lang_code());
+    //console.log('Default language: ', this.default_lang());
+    //console.log('Translated title: ', this.transl.instant('nde.custom.opening_hours.title'));
 
     this.openingHoursService
       .getOpeningHours(this.location.organization, this.location.libraryCode)
       .subscribe({
         next: (response) => {
-          console.log('Opening hours response:', response);
+          //console.log('Opening hours response:', response);
           this.opening_hours.set(response);
         },
         error: (error) => {
-          console.error('Error fetching opening hours:', error);
+          //console.error('Error fetching opening hours:', error);
         },
       });
   }
