@@ -64,8 +64,8 @@ export const OPENING_HOURS_MAP: Opening_Hours_Map = {
           label_name: 'nde.custom.opening_hours.facebook',
         },
         field_icon: {
-          icon_type: 'svg',
-          icon_name: 'facebook',
+          icon_type: 'mat-icon',
+          icon_name: 'people',
         },
       },
       {
@@ -75,8 +75,8 @@ export const OPENING_HOURS_MAP: Opening_Hours_Map = {
           label_name: 'nde.custom.opening_hours.instagram',
         },
         field_icon: {
-          icon_type: 'svg',
-          icon_name: 'instagram',
+          icon_type: 'mat-icon',
+          icon_name: 'people',
         },
       },
     ],

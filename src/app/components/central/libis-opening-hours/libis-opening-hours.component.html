@@ -205,10 +205,10 @@
 
 <ng-template #iconTemplate let-icon>
     @if(icon.icon_type === 'mat-icon'){
-    <mat-icon class="mat-icon gap-05">{{ icon.icon_path }}</mat-icon>
+    <mat-icon class="mat-icon gap-05">{{ icon.icon_name }}</mat-icon>
     }
     @else if (icon.icon_type === 'svg') {
-    <mat-icon class="mat-icon gap-05" [svgIcon]="icon.icon_path"></mat-icon>
+    <mat-icon class="mat-icon gap-05" [svgIcon]="icon.icon_name"></mat-icon>
     }
 </ng-template>
 
