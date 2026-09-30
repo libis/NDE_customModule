@@ -1,5 +1,5 @@
 <!---<p>libis-search-also works!</p>-->
-@if (searchAlsoLinks().length > 0) {
+@if ( (! collectionsDiscovery()) && (searchAlsoLinks().length > 0)){
     <div class="search-also-container">
 
     <button mat-button type="button" [matMenuTriggerFor]="searchAlsoList" id="search_also_button" class="btn btn-text btn-rounded outside-button margin-right-medium white-space-nowrap mdc-button mat-mdc-button mat-primary mat-mdc-button-base search-also">

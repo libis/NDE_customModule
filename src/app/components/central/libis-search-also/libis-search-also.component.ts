@@ -9,6 +9,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { filter } from 'rxjs';
+import { NavigationEnd, Router } from '@angular/router';
 
 // Selectors that are not directly available from shared state
 export const selectSearchState = createFeatureSelector<any>('Search');
@@ -37,6 +39,7 @@ tooltipTest: string = "nde.permalink.copiedTooltip";
 
 private viewCode: Signal<string|undefined> = this.viewConfigState.vidSignal(); // de facto nooit undefined, want de view is ingeladen voordat je search kan uitvoeren
 private searchParams: Signal<SearchParams|null> = this.searchState.searchParamsSignal();
+private curr_url = signal<string>('');
 
 // Calculated property to track active search mode
 private advancedSearch: Signal<boolean> = computed(
@@ -45,6 +48,16 @@ private advancedSearch: Signal<boolean> = computed(
     return currentParams?.mode === 'advanced'
   }
 );
+
+collectionsDiscovery: Signal<boolean> = computed(
+  () => {
+    const route = this.curr_url();
+    if(route.includes('collectionDiscovery')){
+      return true;
+    }
+    return false;
+  }
+)
 
 searchAlsoLinks: Signal<SearchAlsoLink[]> = computed(
   () => {
@@ -57,19 +70,23 @@ constructor(private searchState: SearchStateService,
   private viewConfigState: ViewConfigStateService,
   private searchAlsoService: LIBISSearchAlsoService,
   private translate: TranslateService,
-  private renderer: Renderer2) {
+  private renderer: Renderer2,
+  private router: Router) {
+    this.curr_url.set(this.router.url);
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {this.curr_url.set(this.router.url);
+});
 }
 
+// syncMenuWidth(): void {
+//   console.log('Syncing search also menu width with button width');
+//     const source = document.querySelector('.search-also-button') as HTMLElement;
+//     const target = document.querySelector('.search-also-menu') as HTMLElement;
 
-syncMenuWidth(): void {
-  console.log('Syncing search also menu width with button width');
-    const source = document.querySelector('.search-also-button') as HTMLElement;
-    const target = document.querySelector('.search-also-menu') as HTMLElement;
-
-    if (source && target) {
-      const width = source.offsetWidth;
-      this.renderer.setStyle(target, 'width', `${width}px`);
-    }
-  }
-
+//     if (source && target) {
+//       const width = source.offsetWidth;
+//       this.renderer.setStyle(target, 'width', `${width}px`);
+//     }
+//   }
 }
