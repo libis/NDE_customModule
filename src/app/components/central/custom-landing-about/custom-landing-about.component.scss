@@ -12,9 +12,34 @@
   ::ng-deep ul {
     list-style-type: disc;
     padding-left: 2rem;
+    font-size: 0.85rem;
   }
 
   ::ng-deep li {
     display: list-item;
   }
+}
+.about-text-title {
+  font-size: 1rem;
+  line-height: 1.2;
+}
+.about-img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.fullscreen-spinner {
+  position: fixed;
+  inset: 0;
+
+  width: 100vw;
+  height: 100vh;
+
+  z-index: 99999999;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: white;
 }

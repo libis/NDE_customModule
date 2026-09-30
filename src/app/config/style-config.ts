@@ -34,7 +34,7 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
   HideLoginBannerInFullRecordView: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
   HideHowToGetIt: ['32KUL_KATHO:VIVES_NDE'], // if a view is included -> value will be true
   HideWhereToFindIt: ['32KUL_KATHO:VIVES_NDE'], // if a view is included -> value will be true
-  DefaultListView: ['32KUL_KUL:KULeuven_NDE'],
+  // DefaultListView: ['32KUL_KUL:KULeuven_NDE'], // kuleuven want galley view so turned of...
   LocationNumberInBold: ['32KUL_KUL:KULeuven_NDE'],
   AutoLoginFirstOption: [
     '32KUL_LIBS:LIBS',

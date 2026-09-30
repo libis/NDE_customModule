@@ -12,6 +12,32 @@
 //   align-items: center;
 //   gap: 1em;
 // }
+// div#general-alerting-banner {
+//   width: 100%;
+//   padding: 1em;
+//   background-color: var(--sys-primary);
+//   font-weight: bold;
+//   color: whitesmoke;
+
+//   display: flex;
+//   justify-content: center; /* Horizontaal centreren */
+//   align-items: center; /* Verticaal centreren */
+//   gap: 1.5rem;
+
+//   .banner-actions {
+//     display: flex;
+//     align-items: center;
+
+//     .banner-btn {
+//       background-color: var(--sys-secondary) !important;
+//       color: #ffffff !important;
+
+//       &:hover {
+//         opacity: 0.9;
+//       }
+//     }
+//   }
+// }
 div#general-alerting-banner {
   width: 100%;
   padding: 1em;
@@ -20,9 +46,21 @@ div#general-alerting-banner {
   color: whitesmoke;
 
   display: flex;
-  justify-content: center; /* Horizontaal centreren */
-  align-items: center; /* Verticaal centreren */
+  justify-content: center;
+  align-items: center;
   gap: 1.5rem;
+
+  .banner-message {
+    ::ng-deep a {
+      color: inherit; // follows the whitesmoke of the span
+      text-decoration: underline;
+
+      &:hover,
+      &:focus {
+        text-decoration: none;
+      }
+    }
+  }
 
   .banner-actions {
     display: flex;
