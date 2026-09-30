@@ -1,1 +1,5 @@
 /* Style */
+.custom-nde-theme {
+  --mat-sys-primary: var(--sys-primary);
+  --mat-sys-surface-tint: var(--sys-surface-tint);
+}

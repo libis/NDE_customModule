@@ -1,7 +1,34 @@
 :host {
   display: block;
   width: 85%;
-  margin: 0 auto; /* center horizontally */
+  margin: 0 auto;
   padding: 2rem;
   font-family: "Noto Sans Display", sans-serif;
+}
+
+.fullscreen-spinner {
+  position: fixed;
+  inset: 0; // top/right/bottom/left: 0
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh; // better on mobile browsers
+  z-index: 10000; // above the Primo header/footer
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff; // or rgba(255,255,255,.9) if you want it see-through
+
+  // libis-progress-spinner renders a div.mat-dialog-container inside,
+  // which brings its own dialog styling (padding, shadow, background, max-size)
+  ::ng-deep .mat-dialog-container {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
