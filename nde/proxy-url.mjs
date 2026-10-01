@@ -1,65 +1,161 @@
-import {readFileSync} from 'fs';
-import {fileURLToPath} from 'url';
-import {dirname, join} from 'path';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
 const packageJsonPath = join(__dirname, '..', 'package.json');
 const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+
 const ndeConfig = packageJson.nde;
 
 if (!ndeConfig) {
-    console.error("Error: 'nde' section not found in package.json!");
-    process.exit(1);
+  console.error("Error: 'nde' section not found in package.json.");
+  process.exit(1);
 }
 
-const defaultEnv = ndeConfig.defaultEnvironment;
-const envConfig = ndeConfig.environments[defaultEnv];
+if (!ndeConfig.environments) {
+  console.error("Error: 'nde.environments' section not found in package.json.");
+  process.exit(1);
+}
+
+/*
+ * npm converts:
+ *
+ *   npm run start:proxy -- --env=sqa
+ *
+ * into:
+ *
+ *   process.env.npm_config_env === 'sqa'
+ *
+ * BUILD_TARGET can also be supplied directly as an environment variable.
+ */
+const selectedEnv =
+  process.env.npm_config_env ||
+  process.env.BUILD_TARGET ||
+  ndeConfig.defaultEnvironment;
+
+if (!selectedEnv) {
+  console.error(
+    "Error: No environment selected and 'nde.defaultEnvironment' is not configured."
+  );
+  process.exit(1);
+}
+
+const envConfig = ndeConfig.environments[selectedEnv];
 
 if (!envConfig) {
-    console.error(`Error: Environment '${defaultEnv}' not found in package.json nde.environments!`);
-    process.exit(1);
+  const availableEnvironments = Object.keys(ndeConfig.environments);
+
+  console.error(
+    `Error: Environment '${selectedEnv}' not found in package.json nde.environments.`
+  );
+
+  console.error(
+    `Available environments: ${availableEnvironments.join(', ')}`
+  );
+
+  process.exit(1);
 }
 
-// Resolve configurable proxy URL template
-const defaultTemplate = '/nde/home?vid={institution}:{view}&lang=en';
-const proxyUrlTemplate = ndeConfig.proxyUrlTemplate || defaultTemplate;
-const resolvedPath = proxyUrlTemplate
+if (!envConfig.institution || !envConfig.view || !envConfig.host) {
+  console.error(
+    `Error: Environment '${selectedEnv}' must define institution, view and host.`
+  );
+  process.exit(1);
+}
+
+process.env.BUILD_TARGET = selectedEnv;
+
+/*
+ * This must correspond to the port used by "ng serve".
+ */
+const devServerPort = Number(
+  process.env.npm_config_port ||
+  process.env.PORT ||
+  ndeConfig.devServerPort ||
+  4201
+);
+
+const defaultProxyUrlTemplate =
+  '/nde/home?vid={institution}:{view}&lang=en';
+
+const proxyUrlTemplate =
+  ndeConfig.proxyUrlTemplate || defaultProxyUrlTemplate;
+
+function resolveTemplate(template) {
+  return template
     .replace(/{institution}/g, envConfig.institution)
     .replace(/{view}/g, envConfig.view);
-
-const proxyUrl = `http://localhost:4201${resolvedPath}`;
-const PROXY_TARGET = envConfig.host;
-
-// Resolve configurable assets URL template — used to prefix every relative
-// path in the active environment's `assets` block so it ends up as a fully
-// qualified custom-package URL (e.g. custom/<institution>-<view>/assets/...).
-const defaultAssetsTemplate = 'custom/{institution}-{view}/assets';
-const assetsUrlTemplate = ndeConfig.assetsUrlTemplate || defaultAssetsTemplate;
-const resolvedAssetsPrefix = assetsUrlTemplate
-    .replace(/{institution}/g, envConfig.institution)
-    .replace(/{view}/g, envConfig.view)
-    .replace(/\/+$/, '');
-
-function resolveAssetPaths(node) {
-    if (typeof node === 'string') {
-        // Leave absolute URLs and root-relative paths untouched.
-        if (/^(https?:)?\/\//.test(node) || node.startsWith('/')) return node;
-        return `${resolvedAssetsPrefix}/${node.replace(/^\/+/, '')}`;
-    }
-    if (Array.isArray(node)) return node.map(resolveAssetPaths);
-    if (node && typeof node === 'object') {
-        const out = {};
-        for (const [k, v] of Object.entries(node)) out[k] = resolveAssetPaths(v);
-        return out;
-    }
-    return node;
 }
 
-// Prefer the per-environment `assets` block; fall back to the legacy
-// top-level `customization` block for backward compatibility.
-const customizationConfigOverride = envConfig.assets
-    ? resolveAssetPaths(envConfig.assets)
-    : (ndeConfig.customization || {});
+const resolvedPath = resolveTemplate(proxyUrlTemplate);
 
-export {resolvedPath, proxyUrl, PROXY_TARGET, customizationConfigOverride, ndeConfig};
+/*
+ * Plain JavaScript string, not an HTML <a> element.
+ */
+const proxyUrl = `http://localhost:${devServerPort}${resolvedPath}`;
+const PROXY_TARGET = envConfig.host;
+
+/*
+ * Prefix relative asset paths with:
+ *
+ * custom/<institution>-<view>/assets
+ */
+const defaultAssetsTemplate =
+  'custom/{institution}-{view}/assets';
+
+const assetsUrlTemplate =
+  ndeConfig.assetsUrlTemplate || defaultAssetsTemplate;
+
+const resolvedAssetsPrefix = resolveTemplate(assetsUrlTemplate)
+  .replace(/^\/+/, '')
+  .replace(/\/+$/, '');
+
+function resolveAssetPaths(node) {
+  if (typeof node === 'string') {
+    // Preserve absolute URLs and root-relative paths.
+    if (/^(https?:)?\/\//.test(node) || node.startsWith('/')) {
+      return node;
+    }
+
+    return `${resolvedAssetsPrefix}/${node.replace(/^\/+/, '')}`;
+  }
+
+  if (Array.isArray(node)) {
+    return node.map(resolveAssetPaths);
+  }
+
+  if (node && typeof node === 'object') {
+    return Object.fromEntries(
+      Object.entries(node).map(([key, value]) => [
+        key,
+        resolveAssetPaths(value),
+      ])
+    );
+  }
+
+  return node;
+}
+
+/*
+
+
+
+ * Prefer environment-specific assets. Retain the legacy top-level
+ * customization block as fallback.
+ */
+const customizationConfigOverride = envConfig.assets
+  ? resolveAssetPaths(envConfig.assets)
+  : ndeConfig.customization || {};
+
+export {
+  selectedEnv,
+  resolvedPath,
+  proxyUrl,
+  PROXY_TARGET,
+  customizationConfigOverride,
+  ndeConfig,
+  envConfig,
+};

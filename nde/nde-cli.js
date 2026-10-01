@@ -33,10 +33,7 @@ if (command === 'generate' && type === 'component') {
 
   let content = fs.readFileSync(componentPath, 'utf8');
   
-
   content = `import { NDEComponent } from 'src/app/decorators/nde-component.decorator';\n${content}`;
-
-
   content = content.replace(
     '@Component(',
     `@NDEComponent({ selector: 'nde-${target}', position: '${position}' })\n@Component(`
