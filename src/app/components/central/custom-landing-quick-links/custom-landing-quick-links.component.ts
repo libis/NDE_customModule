@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MATERIAL_IMPORTS } from 'src/app/shared/material.imports';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-// import { PrimoStateService } from '@libis/primo-shared-state';
+import { PrimoStateService } from '@libis/primo-shared-state';
 import { DomSanitizer } from '@angular/platform-browser';
 
 export interface LandingQuickLink {
@@ -29,6 +29,7 @@ const LANDING_ICON_NAMESPACE = 'landing';
 export class CustomLandingQuickLinksComponent implements OnInit {
   // @Input({ required: true }) hostComponent!: any;
 
+  quickLinksAriaLabel = '';
   links: LandingQuickLink[] = [];
   iconSvgNameById: Record<string, string> = {};
 
@@ -37,12 +38,12 @@ export class CustomLandingQuickLinksComponent implements OnInit {
     private translate: TranslateService,
     private iconRegistry: MatIconRegistry,
     private sanitizer: DomSanitizer,
-    // private primoStateService: PrimoStateService
+    private primoStateService: PrimoStateService
   ) {}
 
-  async ngOnInit() {
+  ngOnInit(): void {
     // console.log('[CustomLandingQuickLinksComponent] this', this);
-    // console.log('[CustomLandingQuickLinksComponent] ngOnInit primoStateService', this.primoStateService)
+    console.log('[CustomLandingQuickLinksComponent] ngOnInit primoStateService', this.primoStateService)
     // console.log('[CustomLandingQuickLinksComponent] ngOnInit primoStateService', this.primoStateService.config)
     // console.log('[CustomLandingQuickLinksComponent] ngOnInit primoStateService selectConfig', this.primoStateService.config.selectConfig$)
     // console.log('[CustomLandingQuickLinksComponent] ngOnInit primoStateService getConfig', this.primoStateService.config.getConfig)
@@ -50,7 +51,9 @@ export class CustomLandingQuickLinksComponent implements OnInit {
 
     // https://libis-kul-psb.primo.exlibrisgroup.com/nde/custom/32KUL_KUL-KULeuven_NDE/assets/landingpage/landingpage.json?lang=en&vid=32KUL_KUL:KULeuven_NDE
 
-    for (let i = 1; i <= 4; i++) {
+    this.quickLinksAriaLabel = this.translate.instant('nde.aria.landing.quickLinks',);
+
+    for (let i = 1; i <= 20; i++) {
       this.links.push({
         id: `link${i}`,
         label: this.translate.instant(
@@ -65,9 +68,13 @@ export class CustomLandingQuickLinksComponent implements OnInit {
       });
     }
 
+    console.log ("[CustomLandingQuickLinksComponent] links unfiltered: ", this.links )
+
     this.links = (this.links ?? []).filter(
       (l) => l.enabled !== false && !l.label.match(/nde.custom.landing.links/),
     );
+
+    console.log ("[CustomLandingQuickLinksComponent] links filtered: ", this.links )
 
     // Register each landing page icon SVG individually with MatIconRegistry
     // so it renders inline in the DOM and can be styled by the color theme.
@@ -78,7 +85,7 @@ export class CustomLandingQuickLinksComponent implements OnInit {
       const rel = `assets/landingpage/${link.icon}`;
       // const url = await this.paths.  (rel);
 
-      const url = `/nde/custom/32KUL_LIBIS_NETWORK-CENTRAL_PACKAGE/assets/icons/${link.icon}?lang=en&vid=32KUL_KUL:KULeuven_NDE2`;
+      const url = `/nde/custom/32KUL_LIBIS_NETWORK-CENTRAL_PACKAGE/assets/icons/${link.icon}`;
       if (url) {
         const iconName = link.icon.replace(/\.svg$/i, '');
         this.iconRegistry.addSvgIconInNamespace(
@@ -89,8 +96,8 @@ export class CustomLandingQuickLinksComponent implements OnInit {
         entries.push([link.id, `${LANDING_ICON_NAMESPACE}:${iconName}`]);
       }
     }
-    console.debug('[CustomLandingQuickLinksComponent] links', this.links);
-    console.debug('[CustomLandingQuickLinksComponent] entries', entries);
+    console.log('[CustomLandingQuickLinksComponent] links', this.links);
+    console.log('[CustomLandingQuickLinksComponent] entries', entries);
 
     this.iconSvgNameById = Object.fromEntries(entries);
   }

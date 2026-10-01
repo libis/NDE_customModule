@@ -1,20 +1,17 @@
-<nav class="menu-container width-100 quick-links-landing-page" *ngIf="links?.length"
-     [attr.aria-label]="'nde.aria.landing.quickLinks' | translate">
+<nav class="menu-container width-100 quick-links-landing-page" *ngIf="links.length"
+     [attr.aria-label]="quickLinksAriaLabel">
     <h2 class="visually-hidden">
-        {{ 'nde.aria.landing.quickLinks' | translate }}
+        {{ quickLinksAriaLabel }}
     </h2>
     <ul class="menu">
         <li  *ngFor="let link of links" class="ng-star-inserted">
-            
          <a
                     [id]="link.id"
-                    [attr.aria-label]="link.label + (link.openInNewTab ? ' - ' + ('nde.aria.opensInaNewTab' | translate) : '')"
+                    [attr.aria-label]="link.label + (link.openInNewTab ? ' - ' + link.openInNewTab : '')"
                     [attr.href]="link.url || null"
                     [attr.target]="link.openInNewTab ? '_blank' : null"
                     [attr.rel]="link.openInNewTab ? 'noopener noreferrer' : null"
                     (click)="onClick($event, link)"
-
-                    id="landingpage-link"
             >
                 <div class="icon display-flex icon-color quick-link-icon">
                     <mat-icon
