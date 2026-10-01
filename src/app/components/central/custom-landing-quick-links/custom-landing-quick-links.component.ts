@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MATERIAL_IMPORTS } from 'src/app/shared/material.imports';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { PrimoStateService } from '@libis/primo-shared-state';
 import { DomSanitizer } from '@angular/platform-browser';
 
 export interface LandingQuickLink {
@@ -37,17 +36,11 @@ export class CustomLandingQuickLinksComponent implements OnInit {
     // private paths: AssetPathService,
     private translate: TranslateService,
     private iconRegistry: MatIconRegistry,
-    private sanitizer: DomSanitizer,
-    private primoStateService: PrimoStateService
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
     // console.log('[CustomLandingQuickLinksComponent] this', this);
-    console.log('[CustomLandingQuickLinksComponent] ngOnInit primoStateService', this.primoStateService)
-    // console.log('[CustomLandingQuickLinksComponent] ngOnInit primoStateService', this.primoStateService.config)
-    // console.log('[CustomLandingQuickLinksComponent] ngOnInit primoStateService selectConfig', this.primoStateService.config.selectConfig$)
-    // console.log('[CustomLandingQuickLinksComponent] ngOnInit primoStateService getConfig', this.primoStateService.config.getConfig)
-    // console.log('[CustomLandingQuickLinksComponent] ngOnInit primoStateService getSystemConfiguration', this.primoStateService.config.getSystemConfiguration)
 
     // https://libis-kul-psb.primo.exlibrisgroup.com/nde/custom/32KUL_KUL-KULeuven_NDE/assets/landingpage/landingpage.json?lang=en&vid=32KUL_KUL:KULeuven_NDE
 
