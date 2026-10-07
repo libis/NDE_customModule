@@ -43,7 +43,7 @@ export const selectViewDefaultLang = createSelector(
 @NDEComponent({
   selector: 'nde-location',
   position: 'bottom',
-  viewPattern: /32KUL_KUL.*/,
+  viewPattern: /32KUL.*/,
 })
 @Component({
   selector: 'custom-libis-opening-hours',
