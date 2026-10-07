@@ -1,12 +1,11 @@
 import { Component, inject, Input, Signal, ViewEncapsulation } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Doc, SearchStateService, ViewConfigStateService } from '@libis/primo-shared-state';
+import { Doc, PrimoStateService } from '@libis/primo-shared-state';
 import {selectSearchScope } from '../libis-permalink/permalink_utils.selector';
 import { LIBISPermalinkService } from './libis_permalinks_service.service';
 import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 import { CommonModule } from '@angular/common';
 import { LibisCopytoclipboardComponent } from 'src/app/shared/components/libis-copytoclipboard/libis-copytoclipboard.component';
-//import { HostStylesService } from 'src/app/services/libis-host-styles.service';
 
 @NDEComponent({selector:'nde-permalink-dialog', position:'replace', viewPattern: /32KUL.*/})
 @Component({
@@ -26,15 +25,12 @@ public isLoading: boolean = true;
 
 private record!: Doc;
 
-private viewCode: Signal<string|undefined> = this.viewConfigState.vidSignal();
+private viewCode: Signal<string|undefined> = this.primo.config.vidSignal();
 private searchScope = this.store.selectSignal(selectSearchScope);
 
 constructor(
-  private viewConfigState: ViewConfigStateService,
-  private searchState: SearchStateService,
-  //private hostStyles: HostStylesService
-){
-}
+  private primo: PrimoStateService,
+){}
 
 // An instance of this component is initialized each time you click on the permalink button
 ngOnInit() {

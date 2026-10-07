@@ -28,7 +28,7 @@ import {
 } from '@angular/core';
 
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { UserStateService } from '@libis/primo-shared-state';
+import { PrimoStateService } from '@libis/primo-shared-state';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { MATERIAL_IMPORTS } from 'src/app/shared/material.imports';
 
@@ -60,12 +60,12 @@ export class PayFinesComponent implements OnDestroy {
   public finesString = '';
   public isDismissed = false; // Track dismiss state
 
-  public isLoggedIn = this.userState.isLoggedInSignal();
+  public isLoggedIn = this.primo.user.isLoggedInSignal();
 
   @Input({ required: true }) hostComponent!: any;
 
   constructor(
-    private userState: UserStateService,
+    private primo: PrimoStateService,
     private translate: TranslateService,
     private decimalPipe: DecimalPipe,
   ) {
@@ -120,7 +120,7 @@ export class PayFinesComponent implements OnDestroy {
     const webhookUrl =
       'https://eu-workflows.hosted.exlibrisgroup.com/19868343-9f49-454d-b9b5-84e5dba9923f/webhook-test/a027a91c-6603-49b1-b35b-87d70efc4bfb';
 
-    const token = await this.userState.getJwt();
+    const token = await this.primo.user.getJwt();
 
     console.log('JWT:', token);
 

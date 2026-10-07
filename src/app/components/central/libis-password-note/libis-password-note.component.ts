@@ -1,6 +1,6 @@
 import { Component, computed, inject, Input, Signal } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Doc, ElectronicService, SearchStateService, stringBoolean, UserStateService, ViewConfigStateService } from '@libis/primo-shared-state';
+import { ElectronicService, PrimoStateService } from '@libis/primo-shared-state';
 import { selectFullDisplayRecordId, selectRecordById } from '../libis-permalink/permalink_utils.selector';
 import { CommonModule } from '@angular/common';
 import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
@@ -26,9 +26,9 @@ export class LibisPasswordNoteComponent {
   private recID: Signal<string|undefined> = this.store.selectSignal(selectFullDisplayRecordId);
   credentials: string = '';
   isLoading: boolean = false;
-  private loggedIn = this.userState.isLoggedInSignal();
-  private userJWT = this.userState.jwtSignal();
-  private inst = this.viewConfigState.institutionCodeSignal();
+  private loggedIn = this.primo.user.isLoggedInSignal();
+  private userJWT = this.primo.user.jwtSignal();
+  private inst = this.primo.config.institutionCodeSignal();
   hasCredentials: Signal<boolean> = computed(() => {
     console.log('Verifying if credentials are needed');
     if(this.loggedIn() && /login required/i.test(this.electronicService.authNote)){
@@ -42,10 +42,8 @@ export class LibisPasswordNoteComponent {
   //accessInfo: string|undefined = undefined;
 
   constructor(
-    private searchState: SearchStateService,
-    private viewConfigState: ViewConfigStateService,
-    private userState: UserStateService,
-  private http: HttpClient) {}
+    private primo: PrimoStateService,
+    private http: HttpClient) {}
 
   ngOnInit() {
     console.log('Starting LIBIS Password Note component');

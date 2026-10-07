@@ -9,7 +9,6 @@ import {
 } from '@angular/core';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
-import { UserStateService } from '@libis/primo-shared-state';
 import { MATERIAL_IMPORTS } from 'src/app/shared/material.imports'; // Added Material Imports
 import { CustomlandingAboutComponent } from '../custom-landing-about/custom-landing-about.component';
 import { CustomLandingBlocksComponent } from '../custom-landing-blocks/custom-landing-blocks.component';
@@ -33,7 +32,7 @@ import { LIBISProgressSpinnerComponent } from 'src/app/shared/components/libis-p
     CustomLandingBlocksComponent,
     CustomLandingQuickLinksComponent,
     CustomLandingBackgroundImageComponent,
-    LIBISProgressSpinnerComponent,
+    //LIBISProgressSpinnerComponent,
   ], // other custom landing components also
   templateUrl: './custom-landing-container.component.html',
   styleUrl: './custom-landing-container.component.scss',

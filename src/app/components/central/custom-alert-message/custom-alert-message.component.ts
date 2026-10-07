@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
-import { UserStateService } from '@libis/primo-shared-state';
+import { PrimoStateService } from '@libis/primo-shared-state';
 import { MATERIAL_IMPORTS } from 'src/app/shared/material.imports'; // Added Material Imports
 
 @NDEComponent({
@@ -28,10 +28,10 @@ export class CustomAlertMessageComponent implements AfterViewInit {
   @Input({ required: true }) hostComponent!: any;
 
   public isDismissed = false; // Added tracking to handle dismiss state
-  public isLoggedIn = this.userState.isLoggedInSignal();
+  public isLoggedIn = this.primo.user.isLoggedInSignal();
 
   constructor(
-    private userState: UserStateService,
+    private primo: PrimoStateService,
     private translate: TranslateService,
   ) {
     console.log('[CustomAlert] component constructed');
