@@ -1,18 +1,11 @@
 <custom-landing-background-image
   (backgroundApplied)="onBackgroundApplied()"
 ></custom-landing-background-image>
-
-<div *ngIf="isLoading" class="fullscreen-spinner">
-  <libis-progress-spinner></libis-progress-spinner>
-  <!-- we moeten miss na hun dingen die body nog op nonactief, inbreken in hun spinner
-   kunt ge met css eerst forceren, toon niets, css inlezen gaat sneller -->
-</div>
-
+ 
 <main
-  *ngIf="!isLoading"
   class="main-landing-page display-flex flex-column flex-layout-center-center"
 >
-  <custom-landing-quick-links></custom-landing-quick-links>
-  <custom-landing-blocks></custom-landing-blocks>
-  <custom-landing-about></custom-landing-about>
+<custom-landing-blocks></custom-landing-blocks>
+<custom-landing-about></custom-landing-about>
+<custom-landing-quick-links></custom-landing-quick-links>
 </main>

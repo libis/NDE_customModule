@@ -6,7 +6,7 @@
     "assetBaseUrl": "https://libis-kul.primo.exlibrisgroup.com",
     "environments": {
       "kuleuven": {
-        "host": "https://libis-kul-psb.primo.exlibrisgroup.com",
+        "host": "https://libis-kul.primo.exlibrisgroup.com",
         "institution": "32KUL_KUL",
         "view": "KULeuven_NDE",
         "assets": {
@@ -167,7 +167,7 @@
     "karma-jasmine-html-reporter": "~2.1.0",
     "ngx-build-plus": "^19.0.0",
     "typescript": "^5.5.4",
-    "webpack": "^5.88.2",
+    "webpack": "5.105.0",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.15.1"
   },
