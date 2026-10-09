@@ -35,6 +35,11 @@
       [innerHTML]="block2Title"
     ></h2>
 
+    <div
+      *ngIf="block2Description && isImageHtml(block2Description)"
+      [innerHTML]="block2Description"
+    ></div>
+
     <img
       *ngIf="block2Description && isImageUrl(block2Description)"
       class="landing-block-image"
@@ -43,7 +48,11 @@
     />
 
     <p
-      *ngIf="block2Description && !isImageUrl(block2Description)"
+      *ngIf="
+        block2Description &&
+        !isImageUrl(block2Description) &&
+        !isImageHtml(block2Description)
+      "
       [innerHTML]="block2Description"
     ></p>
   </div>
@@ -55,6 +64,11 @@
       [innerHTML]="block3Title"
     ></h2>
 
+    <div
+      *ngIf="block3Description && isImageHtml(block3Description)"
+      [innerHTML]="block3Description"
+    ></div>
+
     <img
       *ngIf="block3Description && isImageUrl(block3Description)"
       class="landing-block-image"
@@ -63,7 +77,11 @@
     />
 
     <p
-      *ngIf="block3Description && !isImageUrl(block3Description)"
+      *ngIf="
+        block3Description &&
+        !isImageUrl(block3Description) &&
+        !isImageHtml(block3Description)
+      "
       [innerHTML]="block3Description"
     ></p>
   </div>

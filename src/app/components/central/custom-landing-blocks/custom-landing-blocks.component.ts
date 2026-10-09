@@ -105,7 +105,7 @@ export class CustomLandingBlocksComponent {
   get hasBlock1Description(): boolean {
     return this.isValidValue(
       this.block1Description,
-      'mde.custom.landing.block1.description',
+      'nde.custom.landing.block1.description',
     );
   }
 
