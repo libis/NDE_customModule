@@ -9,7 +9,6 @@
 //   }
 // }
 
-
 #custom-about .about-text-description {
   ::ng-deep ul {
     list-style-type: disc;
@@ -22,7 +21,7 @@
   }
 }
 #custom-about .about-text-title {
-  font-size: 1rem;
+  font-size: 1.2rem;
   line-height: 1.2;
 }
 #custom-about .about-img {
@@ -47,7 +46,7 @@
 }
 
 // more cohesion on about section
-.about-text-description {
+#custom-about .about-text-description {
   font-size: 16px;
 
   ::ng-deep {
