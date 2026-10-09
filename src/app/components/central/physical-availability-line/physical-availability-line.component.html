@@ -43,15 +43,17 @@
       <span
         class="availability-code">
         <span class="light-text">
-          {{  (viewModel.availabilityCode | translate).replace('{{idx_1}}','') }}
+          {{  (viewModel.availabilityCode | translate).replace('{{idx_0}}','').replace('{{idx_1}}','') }}
         </span> 
       </span>
     }
 
-    @if ((viewModel.availabilityCode | translate).includes('idx_1')) {
+    @if (
+      (viewModel.availabilityCode | translate).includes('idx_0') ||
+      (viewModel.availabilityCode | translate).includes('idx_1') 
+    ) {
 
       <ng-container *ngFor="let inst of almaInstitutionsList; let i = index; let last = last let l = count";>
-
 
         <!--
         <span
@@ -68,8 +70,6 @@
         {{ inst.instName }}
         </span>
 
-       
-
         <ng-container *ngIf="!last">
           <span
             [style.color]="'grey'"
@@ -83,8 +83,6 @@
             </ng-container>
           </span>
         </ng-container>
-
-
 
       </ng-container>
     }
