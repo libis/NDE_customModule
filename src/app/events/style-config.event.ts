@@ -86,7 +86,6 @@ export class styleConfigEvent extends NDEEventBase {
   }
 
   private getHideLandingPageOverlayStyles(): string {
-    alert('overlay gone');
     if (!this.isActive(this.config.HideLandingPageOverlay)) return '';
     return `
     .background-overlay {
@@ -214,6 +213,11 @@ export class styleConfigEvent extends NDEEventBase {
     if (!this.isActive(this.config.HideSearchInside)) return '';
     return `nde-search-within-journal { display: none !important; }`;
   }
+
+  private getHideReportAProblemStyles(): string {
+    if (!this.isActive(this.config.HideReportAProblem)) return '';
+    return `nde-report-a-problem { display: none !important; }`;
+  }
   private injectStyles() {
     const styleId = 'nde-custom-topbar-styles';
     if (document.getElementById(styleId)) return;
@@ -233,6 +237,7 @@ export class styleConfigEvent extends NDEEventBase {
       this.getHideVirtualBrowseStyles(),
       this.getHideSearchInsideStyles(),
       this.getHideLoginBannerStyles(),
+      this.getHideReportAProblemStyles(),
       // `nde-landing-page > *:not(custom-landing-about) { display: none !important; }`,
     ].join('\n');
 
