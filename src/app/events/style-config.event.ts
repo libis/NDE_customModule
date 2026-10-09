@@ -204,7 +204,16 @@ export class styleConfigEvent extends NDEEventBase {
     }
   `;
   }
+  private getHideVirtualBrowseStyles(): string {
+    if (!this.isActive(this.config.HideVirtualBrowse)) return '';
+    return `div[id="brief.results.tabs.browseshelf"] { display: none !important; }`;
+  }
 
+  // Search inside journal is not ready yet -> hidden for ALL institutions
+  private getHideSearchInsideStyles(): string {
+    if (!this.isActive(this.config.HideSearchInside)) return '';
+    return `nde-search-within-journal { display: none !important; }`;
+  }
   private injectStyles() {
     const styleId = 'nde-custom-topbar-styles';
     if (document.getElementById(styleId)) return;
@@ -221,6 +230,9 @@ export class styleConfigEvent extends NDEEventBase {
       // this.getHideLoginBannerStyles(),
       this.getLocationNumberInBoldStyles(),
       this.getCloseBannerIconStyles(),
+      this.getHideVirtualBrowseStyles(),
+      this.getHideSearchInsideStyles(),
+      this.getHideLoginBannerStyles(),
       // `nde-landing-page > *:not(custom-landing-about) { display: none !important; }`,
     ].join('\n');
 

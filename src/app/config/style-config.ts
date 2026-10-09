@@ -18,6 +18,8 @@ export interface StyleConfig {
   AutoLoginFirstOption?: BooleanOrViews;
   CloseBannerIconWhite?: BooleanOrViews;
   HideLandingPageOverlay?: BooleanOrViews;
+  HideVirtualBrowse?: BooleanOrViews;
+  HideSearchInside?: BooleanOrViews;
 }
 
 export const TOPBAR_STYLE_MAP = {
@@ -29,9 +31,9 @@ export const TOPBAR_STYLE_MAP = {
 export const DEFAULT_STYLE_CONFIG: StyleConfig = {
   // topbarSize: 'thin',
   // topbarColor: 'red',
-  HideSignIn: ['32KUL_KATHO:VIVES_NDE'], // if a view is included -> value will be true
+  HideSignIn: ['32KUL_KATHO:VIVES_NDE'], // if a view is included -> value will be true needs for : GSG, KMKG, Sportimonium, GRM.
   HideLinksInLiriasRecords: ['32KUL_KUL:Lirias_NDE'], // if a view is included -> value will be true
-  HideLoginBannerInFullRecordView: ['32KUL_KUL:KULeuven_NDE'], // if a view is included -> value will be true
+  HideLoginBannerInFullRecordView: ['32KUL_KATHO:VIVES_NDE'], // if a view is included -> value will be true needs for : GSG, KMKG, Sportimonium, GRM.
   HideHowToGetIt: ['32KUL_KATHO:VIVES_NDE'], // if a view is included -> value will be true
   HideWhereToFindIt: ['32KUL_KATHO:VIVES_NDE'], // if a view is included -> value will be true
   // DefaultListView: ['32KUL_KUL:KULeuven_NDE'], // kuleuven want galley view so turned of...
@@ -43,6 +45,55 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
   ],
   CloseBannerIconWhite: ['32KUL_KUL:KULeuven_NDE'],
   HideLandingPageOverlay: ['32KUL_KUL:KULeuven_NDE', '32KUL_HUB:ODISEE_NDE'],
+  // HideVirtualBrowse: ['32KUL_KATHO:VIVES_NDE'], // moet voor iedereen verborgen behalve : ODISEE, VIVES, VLERICK EN GRM
+  // Hidden for everyone EXCEPT: ODISEE, VIVES, VLERICK and GRM (they are simply not in this list)
+  HideVirtualBrowse: [
+    // LIBIS network
+    '32KUL_LIBIS_NETWORK:LIBISNET2_UNION_NDE',
+    '32KUL_LIBIS_NETWORK:DOKS_UNION_NDE',
+    '32KUL_LIBIS_NETWORK:JESUITS_UNION_NDE',
+    // KU Leuven
+    '32KUL_KUL:KULeuven_NDE',
+    '32KUL_KUL:music_NDE',
+    '32KUL_KUL:Lirias_NDE',
+    '32KUL_KUL:sportimonium_NDE',
+    // other institutions
+    '32KUL_ACV:ACV_NDE',
+    '32KUL_ACV:tijdschriften_NDE',
+    '32KUL_BPB:BPB_NDE',
+    '32KUL_VES:VDIC_NDE',
+    '32KUL_KADOC:KADOC_NDE',
+    '32KUL_KBC:KBC_NDE',
+    '32KUL_KMMR:KMKG_NDE',
+    '32KUL_NBB:NBB_NDE',
+    '32KUL_NBB:NBBMED_NDE',
+    '32KUL_RBINS:RBINS_NDE',
+    '32KUL_TIFA:BOSA_NDE',
+    '32KUL_VCV:FARO_NDE',
+    '32KUL_VLP:VLP_NDE',
+    '32KUL_VLP:VLP_Archief_NDE',
+    '32KUL_VLP:Archief_NDE',
+    '32KUL_LUCAWENK:LUCA_NDE',
+    '32KUL_LUCAWENK:music_NDE',
+    '32KUL_FIN:FODFIN_NDE',
+    '32KUL_KHM:TMOREMA_NDE',
+    '32KUL_KHK:TMOREK_NDE',
+    '32KUL_KHL:UCLL_NDE',
+    '32KUL_GSB:GSB_NDE',
+    '32KUL_GSG:GSG_NDE',
+    '32KUL_DOCVB:docvlaamsbrabant_NDE',
+    '32KUL_LIBS:LIBS_NDE',
+    '32KUL_LIBS:RVAONEM_NDE',
+    '32KUL_LIBS:PLEC_NDE',
+    '49ECB_INST:ECB_NDE',
+    '32SCKCEN_INST:SCKCEN_INST_NDE',
+    // NOT in the list on purpose (browse shelf stays visible):
+    // '32KUL_HUB:ODISEE_NDE'
+    // '32KUL_KATHO:VIVES_NDE'
+    // '32KUL_VLER:VBS_NDE'
+    // GRM
+  ],
+  HideSearchInside: true, // hidden for ALL institutions: not ready to be shown yet
 };
 
 export const STYLE_CONFIG = new InjectionToken<StyleConfig>('STYLE_CONFIG', {

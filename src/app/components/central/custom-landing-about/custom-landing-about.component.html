@@ -1,4 +1,4 @@
-<div class="about display-flex width-100" *ngIf="showAbout">
+<!-- <div class="about display-flex width-100" *ngIf="showAbout">
   <div class="about-content flex-row">
     <div class="about-text flex-column">
       <h2 class="about-text-title mat-headline-large" [innerHTML]="title"></h2>
@@ -12,6 +12,38 @@
       <div *ngIf="!isImageUrl" class="about-image-fallback">
         {{ aboutImgSrc }}
       </div>
+    </div>
+  </div>
+</div> -->
+
+<div class="about display-flex width-100" *ngIf="showAbout">
+  <div
+    class="about-content flex-row"
+    [class.text-only]="hasText && !hasImage"
+    [class.image-only]="!hasText && hasImage"
+  >
+    <div class="about-text flex-column" *ngIf="hasText">
+      <h2
+        *ngIf="hasTitle"
+        class="about-text-title mat-headline-large"
+        [innerHTML]="title"
+      ></h2>
+
+      <div
+        *ngIf="hasDescription"
+        class="about-text-description"
+        [innerHTML]="description"
+      ></div>
+    </div>
+
+    <div class="about-image flex-layout-center-center" *ngIf="hasImage">
+      <img *ngIf="isImageUrl" class="about-img" alt="" [src]="aboutImgSrc" />
+
+      <div
+        *ngIf="!isImageUrl"
+        class="about-image-fallback"
+        [innerHTML]="aboutImgSrc"
+      ></div>
     </div>
   </div>
 </div>
