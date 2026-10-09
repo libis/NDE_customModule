@@ -8,7 +8,9 @@
 //     display: list-item !important;
 //   }
 // }
-.about-text-description {
+
+
+#custom-about .about-text-description {
   ::ng-deep ul {
     list-style-type: disc;
     padding-left: 2rem;
@@ -19,16 +21,16 @@
     display: list-item;
   }
 }
-.about-text-title {
+#custom-about .about-text-title {
   font-size: 1rem;
   line-height: 1.2;
 }
-.about-img {
+#custom-about .about-img {
   max-width: 100%;
   height: auto;
   object-fit: contain;
 }
-.fullscreen-spinner {
+#custom-about .fullscreen-spinner {
   position: fixed;
   inset: 0;
 
