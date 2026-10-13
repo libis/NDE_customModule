@@ -668,5 +668,24 @@ export const PERMALINK_MAP: { [key: string]: libViewMap } =
           }
         }
       }
+    },
+    "32KUL_GRM": {
+    "inst": "28",
+    "views": {
+      "default": {
+        "code": "1",
+        "scopes": {
+          "default": "1"
+        }
+      },
+      "GRM": {
+        "code": "1",
+        "scopes": {
+          "default": "1",
+          "ALL_CONTENT_PROFILE": "1",
+          "LIB_GRM": "2"
+        }
+      }
     }
+  }
   }
