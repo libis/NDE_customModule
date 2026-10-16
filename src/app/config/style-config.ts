@@ -21,6 +21,7 @@ export interface StyleConfig {
   HideVirtualBrowse?: BooleanOrViews;
   HideSearchInside?: BooleanOrViews;
   HideReportAProblemWhenLoggedOut?: BooleanOrViews;
+  HideBannerButtonWithoutUrl?: BooleanOrViews;
 }
 
 export const TOPBAR_STYLE_MAP = {
@@ -104,6 +105,7 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
     '32KUL_KATHO:VIVES_NDE', // VIVES
     '32KUL_KHL:UCLL_NDE', // UCLL
   ],
+  HideBannerButtonWithoutUrl: true, // all views: hide the banner button when it has no text
 };
 
 export const STYLE_CONFIG = new InjectionToken<StyleConfig>('STYLE_CONFIG', {

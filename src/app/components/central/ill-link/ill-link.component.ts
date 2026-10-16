@@ -1,7 +1,17 @@
-import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  ViewChild,
+  computed,
+  inject,
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslateService } from '@ngx-translate/core';
 import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
+
+const ILL_LABEL_KEY = 'nde.custom.blank-ill-request';
 
 @NDEComponent({
   selector: 'nde-requests-page',
@@ -11,47 +21,61 @@ import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 @Component({
   selector: 'custom-ill-link',
   standalone: true,
-  imports: [CommonModule],
   template: `
-    <div #ill class="ill-link" *ngIf="showIllLink">
-      <a (click)="goToIll()">{{ illLinkLabel }}</a>
+    <div #ill class="ill-link" [style.display]="show() ? '' : 'none'">
+      <a href="#" (click)="goToIll($event)">{{ label() }}</a>
     </div>
   `,
 })
-export class IllLinkComponent implements AfterViewInit {
-  @ViewChild('ill') ill?: ElementRef;
+export class IllLinkComponent implements AfterViewInit, OnDestroy {
+  @ViewChild('ill', { static: true }) ill!: ElementRef<HTMLElement>;
 
-  constructor(private translate: TranslateService) {
-    console.log('IllLinkComponent CONSTRUCTED');
+  private translate = inject(TranslateService);
+
+  /** Updates by itself when the translations arrive later. */
+  label = toSignal(this.translate.stream(ILL_LABEL_KEY), { initialValue: '' });
+
+  show = computed(() => {
+    const v = (this.label() ?? '').trim();
+    const ok = !!v && v !== 'NOT_DEFINED' && v !== ILL_LABEL_KEY;
+    console.log('[IllLink] label =', JSON.stringify(v), '-> show =', ok);
+    return ok;
+  });
+
+  private destroyed = false;
+
+  ngAfterViewInit(): void {
+    // The requests page renders AFTER this "before" slot, so wait for its title.
+    const start = performance.now();
+    const tryMove = () => {
+      if (this.destroyed) return;
+      const title = document.querySelector(
+        'nde-requests-page .requests-section-title',
+      );
+      if (title) {
+        title.insertAdjacentElement('afterend', this.ill.nativeElement);
+        console.log('[IllLink] moved under the Requests title');
+        return;
+      }
+      if (performance.now() - start < 5000) {
+        requestAnimationFrame(tryMove);
+      } else {
+        console.warn(
+          '[IllLink] .requests-section-title not found, link stays on top',
+        );
+      }
+    };
+    tryMove();
   }
 
-  get illLinkLabel(): string {
-    return this.translate.instant('nde.custom.blank-ill-request');
+  ngOnDestroy(): void {
+    this.destroyed = true;
+    this.ill?.nativeElement.remove(); // it lives outside our host after the move
   }
 
-  get showIllLink(): boolean {
-    return this.isValidValue(this.illLinkLabel, 'nde.custom.blank-ill-request');
-  }
-
-  private isValidValue(value: string, key: string): boolean {
-    return !!value && value !== 'NOT_DEFINED' && value !== key;
-  }
-
-  ngAfterViewInit() {
-    const link = document.querySelector(
-      'nde-requests-page-before-from-remote-0 .ill-link',
-    );
-
-    const title = document.querySelector('.requests-section-title');
-
-    if (link && title) {
-      title.insertAdjacentElement('afterend', link as HTMLElement);
-    }
-  }
-
-  goToIll() {
-    const vid = new URLSearchParams(window.location.search).get('vid');
-
-    window.location.href = `/discovery/blankIll?vid=${vid}`;
+  goToIll(event: Event): void {
+    event.preventDefault();
+    const vid = new URLSearchParams(window.location.search).get('vid') ?? '';
+    window.location.href = `/discovery/blankIll?vid=${encodeURIComponent(vid)}`;
   }
 }

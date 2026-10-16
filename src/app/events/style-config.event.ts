@@ -40,6 +40,7 @@ export class styleConfigEvent extends NDEEventBase {
     this.injectStyles();
     // this.injectLandingPageFonts();
     this.applyDefaultListView();
+    this.hideEmptyBannerButton();
   }
 
   private getStyleValueFromCodeTable(param: any, code: string): any {
@@ -244,6 +245,29 @@ export class styleConfigEvent extends NDEEventBase {
     } else if (!enabled && existing) {
       existing.remove();
     }
+  }
+
+  /** Banner above results: hide the button when its text is empty / not filled in. */
+  private hideEmptyBannerButton(): void {
+    if (!this.isActive(this.config.HideBannerButtonWithoutUrl)) return;
+
+    const check = () => {
+      document.querySelectorAll<HTMLElement>('#bannerButton').forEach((btn) => {
+        const text =
+          btn.querySelector('.mdc-button__label')?.textContent?.trim() ?? '';
+        const isEmpty =
+          !text || text === 'NOT_DEFINED' || /^(nui|nde)\.[\w.]+$/.test(text); // raw label key = not filled in
+        btn.style.display = isEmpty ? 'none' : '';
+      });
+    };
+
+    // the banner can appear later (search results), so keep watching
+    new MutationObserver(check).observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    check();
   }
   private injectStyles() {
     const styleId = 'nde-custom-topbar-styles';
