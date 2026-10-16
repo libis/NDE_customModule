@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@angular/core';
+import { Injectable, Inject, effect } from '@angular/core';
 import { NDEEvent, NDEEventBase } from '../decorators/nde-event.decorator';
 import { GlobalHttpEventService } from '../services/global-http-event.service';
 
@@ -9,6 +9,7 @@ import {
   BooleanOrViews,
 } from '../config/style-config';
 import { TranslateService } from '@ngx-translate/core';
+import { PrimoStateService } from '@libis/primo-shared-state';
 
 @NDEEvent({
   stream: 'all',
@@ -23,6 +24,7 @@ export class styleConfigEvent extends NDEEventBase {
     globalHttp: GlobalHttpEventService,
     @Inject(STYLE_CONFIG) private config: StyleConfig,
     private translate: TranslateService,
+    private primo: PrimoStateService,
   ) {
     super(globalHttp);
     // this.config.topbarColor = this.getStyleValueFromCodeTable(
@@ -214,9 +216,34 @@ export class styleConfigEvent extends NDEEventBase {
     return `nde-search-within-journal { display: none !important; }`;
   }
 
-  private getHideReportAProblemStyles(): string {
-    if (!this.isActive(this.config.HideReportAProblem)) return '';
-    return `nde-report-a-problem { display: none !important; }`;
+  /**
+   * Associatie-views: "Report a problem" enkel tonen als de gebruiker aangemeld is.
+   * Andere views: niets doen -> altijd zichtbaar.
+   */
+  private getHideReportAProblemStyles(): void {
+    if (!this.isActive(this.config.HideReportAProblemWhenLoggedOut)) return;
+
+    const isLoggedIn = this.primo.user.isLoggedInSignal();
+
+    effect(() => {
+      this.toggleStyle(
+        'style_hide_report_a_problem',
+        !isLoggedIn(),
+        'nde-report-a-problem { display: none !important; }',
+      );
+    });
+  }
+
+  private toggleStyle(id: string, enabled: boolean, css: string): void {
+    const existing = document.getElementById(id);
+    if (enabled && !existing) {
+      const s = document.createElement('style');
+      s.id = id;
+      s.textContent = css;
+      document.head.appendChild(s);
+    } else if (!enabled && existing) {
+      existing.remove();
+    }
   }
   private injectStyles() {
     const styleId = 'nde-custom-topbar-styles';

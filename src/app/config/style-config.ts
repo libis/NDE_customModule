@@ -20,7 +20,7 @@ export interface StyleConfig {
   HideLandingPageOverlay?: BooleanOrViews;
   HideVirtualBrowse?: BooleanOrViews;
   HideSearchInside?: BooleanOrViews;
-  HideReportAProblem?: BooleanOrViews;
+  HideReportAProblemWhenLoggedOut?: BooleanOrViews;
 }
 
 export const TOPBAR_STYLE_MAP = {
@@ -95,7 +95,7 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
     // GRM
   ],
   HideSearchInside: true, // hidden for ALL institutions: not ready to be shown yet
-  HideReportAProblem: [
+  HideReportAProblemWhenLoggedOut: [
     '32KUL_KUL:KULeuven_NDE', // KU Leuven
     '32KUL_KHM:TMOREMA_NDE', // Thomas More (Mechelen/Antwerpen)
     '32KUL_KHK:TMOREK_NDE', // Thomas More (Kempen)
