@@ -3,3 +3,77 @@
   --mat-sys-primary: var(--sys-primary);
   --mat-sys-surface-tint: var(--sys-surface-tint);
 }
+/* ===== Libis loading cover =====
+   Loaded by the host itself, so it is there before our remote starts.
+   Removed by LibisLoadingOverlayService (body.libis-ready).
+   Failsafe: hides itself after 10s even if our code never runs. */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2147482999; /* just under the Angular overlay */
+  background: #fff;
+  pointer-events: none;
+  animation: libis-cover-off 0s linear 10s forwards;
+}
+
+/* simple 4-dot lookalike so there is always a spinner visible */
+body::after {
+  content: "";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -53px;
+  border-radius: 50%;
+  z-index: 2147482999;
+  pointer-events: none;
+  animation:
+    libis-dots 1.2s linear infinite,
+    libis-cover-off 0s linear 10s forwards;
+}
+
+body.libis-ready::before,
+body.libis-ready::after {
+  display: none;
+}
+
+@keyframes libis-cover-off {
+  to {
+    visibility: hidden;
+  }
+}
+
+@keyframes libis-dots {
+  0%,
+  100% {
+    background: #582c9f;
+    box-shadow:
+      30px 0 #ae97d6,
+      60px 0 #a481d8,
+      90px 0 #6a3dbf;
+  }
+  25% {
+    background: #6a3dbf;
+    box-shadow:
+      30px 0 #582c9f,
+      60px 0 #ae97d6,
+      90px 0 #a481d8;
+  }
+  50% {
+    background: #a481d8;
+    box-shadow:
+      30px 0 #6a3dbf,
+      60px 0 #582c9f,
+      90px 0 #ae97d6;
+  }
+  75% {
+    background: #ae97d6;
+    box-shadow:
+      30px 0 #a481d8,
+      60px 0 #6a3dbf,
+      90px 0 #582c9f;
+  }
+}

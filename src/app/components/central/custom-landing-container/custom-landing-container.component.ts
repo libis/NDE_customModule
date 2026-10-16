@@ -6,6 +6,7 @@ import {
   ElementRef,
   ViewChild,
   AfterViewInit,
+  inject,
 } from '@angular/core';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
@@ -15,6 +16,7 @@ import { CustomLandingBlocksComponent } from '../custom-landing-blocks/custom-la
 import { CustomLandingQuickLinksComponent } from '../custom-landing-quick-links/custom-landing-quick-links.component';
 import { CustomLandingBackgroundImageComponent } from '../custom-landing-background-image/custom-landing-background-image.component';
 import { LIBISProgressSpinnerComponent } from 'src/app/shared/components/libis-progress-spinner/libis-progress-spinner.component';
+import { LibisLoadingOverlayService } from 'src/app/services/libis-loading-overlay.service';
 
 @NDEComponent({
   selector: 'nde-landing-page',
@@ -42,15 +44,20 @@ export class CustomLandingContainerComponent implements OnInit {
 
   public isLoading = true;
 
+  private overlay = inject(LibisLoadingOverlayService);
+  ngOnInit(): void {}
+
+  constructor() {
+    this.overlay.hold('landing-background');
+  }
+
   onBackgroundApplied(): void {
     console.log('[LandingContainer] Background applied');
     this.isLoading = false;
+    this.overlay.release('landing-background');
   }
 
-  ngOnInit(): void {
-    console.log(
-      '[CustomLandingContainerComponent] this.hostComponent',
-      this.hostComponent,
-    );
+  ngOnDestroy(): void {
+    this.overlay.release('landing-background');
   }
 }

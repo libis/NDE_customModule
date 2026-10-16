@@ -2,6 +2,7 @@ import {
   ApplicationRef,
   DoBootstrap,
   Injector,
+  inject,
   NgModule,
   provideAppInitializer,
 } from '@angular/core';
@@ -22,6 +23,7 @@ import { getEventProviders } from './decorators/nde-event.decorator';
 import { GlobalHttpEventService } from './services/global-http-event.service';
 import { AnalyticsService } from './services/analytics.service';
 import { loadExternalScripts } from './services/script-loader.service';
+import { LibisLoadingOverlayService } from './services/libis-loading-overlay.service';
 import { provideLottieOptions } from 'ngx-lottie';
 import player from 'lottie-web';
 import './interceptors/_registry';
@@ -49,6 +51,7 @@ export const AppModule = ({
       }),
       ...getEventProviders(),
       provideAppInitializer(loadExternalScripts),
+      provideAppInitializer(() => inject(LibisLoadingOverlayService).show()),
     ],
     bootstrap: [],
   })

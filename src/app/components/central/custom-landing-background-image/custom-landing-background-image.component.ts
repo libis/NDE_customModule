@@ -12,31 +12,54 @@ export class CustomLandingBackgroundImageComponent implements AfterViewInit {
   @Output() backgroundApplied = new EventEmitter<void>();
 
   constructor(private translate: TranslateService) {}
-
   ngAfterViewInit(): void {
-    setTimeout(() => {
-      const hero = document.querySelector(
-        '.top-bar-background-image',
-      ) as HTMLElement;
+    if (!this.showImage) {
+      this.backgroundApplied.emit();
+      return;
+    }
 
-      console.log('[BackgroundImage] hero:', hero);
-      console.log('[BackgroundImage] imageUrl:', this.imageUrl);
+    const url = this.imageUrl;
 
-      if (hero && this.showImage) {
-        hero.style.setProperty(
-          'background-image',
-          `url("${this.imageUrl}")`,
-          'important',
-        );
+    const imageLoaded = new Promise<void>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+      img.src = url;
+    });
 
-        hero.style.backgroundSize = 'cover';
-        hero.style.backgroundPosition = 'center';
-
-        console.log('[BackgroundImage] applied:', hero.style.backgroundImage);
-
+    this.waitForElement('.top-bar-background-image', 5000).then(
+      async (hero) => {
+        await imageLoaded;
+        if (hero) {
+          hero.style.setProperty(
+            'background-image',
+            `url("${url}")`,
+            'important',
+          );
+          hero.style.backgroundSize = 'cover';
+          hero.style.backgroundPosition = 'center';
+        }
         this.backgroundApplied.emit();
-      }
-    }, 2000);
+      },
+    );
+  }
+
+  private waitForElement(
+    selector: string,
+    maxMs: number,
+  ): Promise<HTMLElement | null> {
+    return new Promise((resolve) => {
+      const start = performance.now();
+      const check = () => {
+        const el = document.querySelector<HTMLElement>(selector);
+        if (el || performance.now() - start > maxMs) {
+          resolve(el);
+          return;
+        }
+        requestAnimationFrame(check);
+      };
+      check();
+    });
   }
 
   get imageUrl(): string {
