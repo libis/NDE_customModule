@@ -1,88 +1,22 @@
-<div *ngIf="numberOfBlocks > 0" class="landing-blocks" [ngClass]="columnClass">
-  <div *ngIf="showBlock1" class="landing-block">
+<div *ngIf="blocks.length > 0" class="landing-blocks" [ngClass]="columnClass">
+  <div *ngFor="let block of blocks; trackBy: trackById" class="landing-block">
     <h2
-      *ngIf="block1Title"
+      *ngIf="block.title"
       class="landing-block-title mat-headline-large"
-      [innerHTML]="block1Title"
+      [innerHTML]="block.title"
     ></h2>
 
-    <div
-      *ngIf="block1Description && isImageHtml(block1Description)"
-      [innerHTML]="block1Description"
-    ></div>
+    <ng-container [ngSwitch]="block.descriptionType">
+      <div *ngSwitchCase="'image-html'" [innerHTML]="block.description"></div>
 
-    <img
-      *ngIf="block1Description && isImageUrl(block1Description)"
-      class="landing-block-image"
-      [src]="block1Description"
-      alt=""
-    />
+      <img
+        *ngSwitchCase="'image-url'"
+        class="landing-block-image"
+        [src]="block.description"
+        alt=""
+      />
 
-    <p
-      *ngIf="
-        block1Description &&
-        !isImageUrl(block1Description) &&
-        !isImageHtml(block1Description)
-      "
-      [innerHTML]="block1Description"
-    ></p>
-  </div>
-
-  <div *ngIf="showBlock2" class="landing-block">
-    <h2
-      *ngIf="block2Title"
-      class="landing-block-title mat-headline-large"
-      [innerHTML]="block2Title"
-    ></h2>
-
-    <div
-      *ngIf="block2Description && isImageHtml(block2Description)"
-      [innerHTML]="block2Description"
-    ></div>
-
-    <img
-      *ngIf="block2Description && isImageUrl(block2Description)"
-      class="landing-block-image"
-      [src]="block2Description"
-      alt=""
-    />
-
-    <p
-      *ngIf="
-        block2Description &&
-        !isImageUrl(block2Description) &&
-        !isImageHtml(block2Description)
-      "
-      [innerHTML]="block2Description"
-    ></p>
-  </div>
-
-  <div *ngIf="showBlock3" class="landing-block">
-    <h2
-      *ngIf="block3Title"
-      class="landing-block-title mat-headline-large"
-      [innerHTML]="block3Title"
-    ></h2>
-
-    <div
-      *ngIf="block3Description && isImageHtml(block3Description)"
-      [innerHTML]="block3Description"
-    ></div>
-
-    <img
-      *ngIf="block3Description && isImageUrl(block3Description)"
-      class="landing-block-image"
-      [src]="block3Description"
-      alt=""
-    />
-
-    <p
-      *ngIf="
-        block3Description &&
-        !isImageUrl(block3Description) &&
-        !isImageHtml(block3Description)
-      "
-      [innerHTML]="block3Description"
-    ></p>
+      <p *ngSwitchCase="'text'" [innerHTML]="block.description"></p>
+    </ng-container>
   </div>
 </div>

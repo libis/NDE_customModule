@@ -25,3 +25,53 @@
   min-width: 0;
   box-sizing: border-box;
 }
+// check specs css grids, flexibel zonder classes (ifv exlibris)
+
+// Block title: same size as the about title
+.landing-block .landing-block-title {
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+// Block text: headings 20px, everything else 16px, bullets enabled
+.landing-block-description {
+  font-size: 16px;
+
+  ::ng-deep {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-size: 20px;
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+
+    p,
+    li,
+    div,
+    span {
+      font-size: 16px;
+    }
+
+    ul {
+      list-style-type: disc;
+      padding-left: 2rem;
+      margin: 0.5rem 0;
+      font-size: 16px;
+    }
+
+    ol {
+      list-style-type: decimal;
+      padding-left: 2rem;
+      margin: 0.5rem 0;
+      font-size: 16px;
+    }
+
+    li {
+      display: list-item;
+    }
+  }
+}

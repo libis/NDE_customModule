@@ -1,7 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, Input, OnChanges, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Subscription, merge } from 'rxjs';
 import { MATERIAL_IMPORTS } from 'src/app/shared/material.imports';
+
+export interface LandingBlock {
+  id: string;
+  title: string;
+  description: string;
+  descriptionType: 'image-html' | 'image-url' | 'text' | 'none';
+}
+
+const MAX_BLOCKS_PER_ROW = 3;
 
 @Component({
   selector: 'custom-landing-blocks',
@@ -10,152 +20,116 @@ import { MATERIAL_IMPORTS } from 'src/app/shared/material.imports';
   templateUrl: './custom-landing-blocks.component.html',
   styleUrl: './custom-landing-blocks.component.scss',
 })
-export class CustomLandingBlocksComponent {
-  constructor(private translate: TranslateService) {
-    console.log('[LandingBlocks] Component constructed');
+export class CustomLandingBlocksComponent
+  implements OnInit, OnChanges, OnDestroy
+{
+  @Input() blockrowNumber: string = '1';
 
-    setTimeout(() => {
-      this.dumpState();
-    }, 1000);
+  blocks: LandingBlock[] = [];
+
+  private sub = new Subscription();
+
+  constructor(private translate: TranslateService) {}
+
+  ngOnInit(): void {
+    this.buildBlocks();
+
+    // translations may arrive/change after the component is created
+    this.sub.add(
+      merge(
+        this.translate.onLangChange,
+        this.translate.onTranslationChange,
+        this.translate.onDefaultLangChange,
+      ).subscribe(() => this.buildBlocks()),
+    );
   }
 
-  private dumpState(): void {
-    console.log('================ LANDING BLOCKS ================');
-
-    console.log('block1Title:', this.block1Title);
-    console.log('block1Description:', this.block1Description);
-
-    console.log('block2Title:', this.block2Title);
-    console.log('block2Description:', this.block2Description);
-
-    console.log('block3Title:', this.block3Title);
-    console.log('block3Description:', this.block3Description);
-
-    console.log('hasBlock1Title:', this.hasBlock1Title);
-    console.log('hasBlock1Description:', this.hasBlock1Description);
-
-    console.log('hasBlock2Title:', this.hasBlock2Title);
-    console.log('hasBlock2Description:', this.hasBlock2Description);
-
-    console.log('hasBlock3Title:', this.hasBlock3Title);
-    console.log('hasBlock3Description:', this.hasBlock3Description);
-
-    console.log('showBlock1:', this.showBlock1);
-    console.log('showBlock2:', this.showBlock2);
-    console.log('showBlock3:', this.showBlock3);
-
-    console.log('numberOfBlocks:', this.numberOfBlocks);
-    console.log('columnClass:', this.columnClass);
-
-    console.log('===============================================');
+  ngOnChanges(): void {
+    this.buildBlocks();
   }
+
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
+  }
+
+  // private buildBlocks(): void {
+  //   const result: LandingBlock[] = [];
+
+  //   for (let i = 1; i <= MAX_BLOCKS_PER_ROW; i++) {
+  //     const base = `nde.custom.landing.blockrow${this.blockrowNumber}.block${i}`;
+  //     const title = this.getValue(`${base}.title`);
+  //     const description = this.getValue(`${base}.description`);
+  //     console.log(`title of block${i}:`, title);
+  //     console.log(`description of block${i}:`, description);
+
+  //     if (!title && !description) {
+  //       continue; // block not defined -> skip
+  //     }
+
+  //     result.push({
+  //       id: `row${this.blockrowNumber}-block${i}`,
+  //       title,
+  //       description,
+  //       descriptionType: this.getDescriptionType(description),
+  //     });
+  //   }
+
+  //   this.blocks = result;
+  // }
+  private buildBlocks(): void {
+    const result: LandingBlock[] = [];
+
+    for (let i = 1; i <= MAX_BLOCKS_PER_ROW; i++) {
+      const base = `nde.custom.landing.blockrow${this.blockrowNumber}.block${i}`;
+
+      const title = this.getValue(`${base}.title`);
+      const description = this.getValue(`${base}.description`);
+
+      console.log(base, title, description);
+
+      if (!title && !description) {
+        continue;
+      }
+
+      result.push({
+        id: `row${this.blockrowNumber}-block${i}`,
+        title,
+        description,
+        descriptionType: this.getDescriptionType(description),
+      });
+    }
+
+    console.log('BLOCKS', result);
+
+    this.blocks = result;
+  }
+
+  /** Returns the translation, or '' when it is missing / NOT_DEFINED */
+
+  private getValue(key: string): string {
+    const v = this.translate.instant(key)?.trim();
+    return v && v !== 'NOT_DEFINED' && v !== key ? v : '';
+  }
+
+  private getDescriptionType(value: string): LandingBlock['descriptionType'] {
+    if (!value) return 'none';
+    if (this.isImageHtml(value)) return 'image-html';
+    if (this.isImageUrl(value)) return 'image-url';
+    return 'text';
+  }
+
   // for clickable image
-  isImageHtml(value: string): boolean {
-    if (!value) {
-      return false;
-    }
-
-    const lowerValue = value.toLowerCase();
-
-    return lowerValue.includes('<img') && lowerValue.includes('<a ');
-  }
-  get block1Title(): string {
-    return this.translate.instant('nde.custom.landing.block1.title');
+  private isImageHtml(value: string): boolean {
+    const v = value.toLowerCase();
+    return v.includes('<img') && v.includes('<a ');
   }
 
-  get block1Description(): string {
-    return this.translate.instant('nde.custom.landing.block1.description');
-  }
-
-  get block2Title(): string {
-    return this.translate.instant('nde.custom.landing.block2.title');
-  }
-
-  get block2Description(): string {
-    return this.translate.instant('nde.custom.landing.block2.description');
-  }
-
-  get block3Title(): string {
-    return this.translate.instant('nde.custom.landing.block3.title');
-  }
-
-  get block3Description(): string {
-    return this.translate.instant('nde.custom.landing.block3.description');
-  }
-
-  isImageUrl(value: string): boolean {
-    if (!value) {
-      return false;
-    }
-
+  private isImageUrl(value: string): boolean {
     return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(value.trim());
   }
 
-  private isValidValue(value: string, key: string): boolean {
-    return !!value && value !== 'NOT_DEFINED' && value !== key;
-  }
-
-  get hasBlock1Title(): boolean {
-    return this.isValidValue(
-      this.block1Title,
-      'nde.custom.landing.block1.title',
-    );
-  }
-
-  get hasBlock1Description(): boolean {
-    return this.isValidValue(
-      this.block1Description,
-      'nde.custom.landing.block1.description',
-    );
-  }
-
-  get hasBlock2Title(): boolean {
-    return this.isValidValue(
-      this.block2Title,
-      'nde.custom.landing.block2.title',
-    );
-  }
-
-  get hasBlock2Description(): boolean {
-    return this.isValidValue(
-      this.block2Description,
-      'nde.custom.landing.block2.description',
-    );
-  }
-
-  get hasBlock3Title(): boolean {
-    return this.isValidValue(
-      this.block3Title,
-      'nde.custom.landing.block3.title',
-    );
-  }
-
-  get hasBlock3Description(): boolean {
-    return this.isValidValue(
-      this.block3Description,
-      'nde.custom.landing.block3.description',
-    );
-  }
-
-  get showBlock1(): boolean {
-    return this.hasBlock1Title || this.hasBlock1Description;
-  }
-
-  get showBlock2(): boolean {
-    return this.hasBlock2Title || this.hasBlock2Description;
-  }
-
-  get showBlock3(): boolean {
-    return this.hasBlock3Title || this.hasBlock3Description;
-  }
-
-  get numberOfBlocks(): number {
-    return [this.showBlock1, this.showBlock2, this.showBlock3].filter(Boolean)
-      .length;
-  }
-
   get columnClass(): string {
-    switch (this.numberOfBlocks) {
+    switch (this.blocks.length) {
       case 1:
         return 'one-column';
       case 2:
@@ -165,5 +139,9 @@ export class CustomLandingBlocksComponent {
       default:
         return '';
     }
+  }
+
+  trackById(_: number, block: LandingBlock): string {
+    return block.id;
   }
 }
