@@ -7,7 +7,9 @@ const {
   writeIfChanged,
 } = require('./env.cjs');
 
-const explicitEnv = process.argv[2];
+
+// const explicitEnv = process.argv[2];
+const explicitEnv = process.env.BUILD_TARGET;
 
 const {
   projectRoot,

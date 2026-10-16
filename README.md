@@ -849,11 +849,25 @@ Edit the `nde` section in `package.json` (see [Configuration](#configuration-pac
 
 There are two ways to develop:
 
-**Option A: Proxy mode (recommended)** — runs a local server that proxies requests to your real Primo instance, so you see your components in the actual NDE interface:
+**Option A: Proxy mode (recommended)** — runs a local server that proxies requests to your real Primo instance, 
+so you see your components in the actual NDE interface, the defaultEnvironment will be used:
 
 ```bash
 npm run start:proxy
 ```
+
+To start the proxy for a specific environment, set the BUILD_TARGET environment variable.
+
+Linux / macOS:
+```bash
+BUILD_TARGET=<environment> npm run start:proxy 
+```
+
+Windows PowerShell:
+```bash
+$env:BUILD_TARGET="<environment>"; npm run start:proxy
+```
+
 
 The browser opens automatically at `http://localhost:4201/nde/home?vid=YOUR_INST:YOUR_VIEW&lang=en`.
 
