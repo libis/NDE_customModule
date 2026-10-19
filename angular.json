@@ -17,6 +17,7 @@
 		"build": {
 		  "builder": "ngx-build-plus:browser",
 		  "options": {
+			"sourceMap": true,
 			"outputPath": "dist/custom-module",
 			"index": "src/index.html",
 			"main": "src/main.ts",
