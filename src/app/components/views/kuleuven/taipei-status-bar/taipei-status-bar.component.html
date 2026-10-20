@@ -1,0 +1,10 @@
+<div class="taipei-status-bar">
+  <section>
+    <strong>你好 Taipei!</strong>
+    <span>View: {{ vid() }}</span>
+    <span>{{ isLoggedIn() ? 'Signed in' : 'Guest' }}</span>
+    @if (query()) {
+      <span>{{ total() }} results for "{{ query() }}"</span>
+    }
+  </section>
+</div>

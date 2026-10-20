@@ -1,0 +1,21 @@
+.taipei-status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  padding: 6px 16px;
+  color: var(--mat-sys-on-primary-container);
+  background: var(--mat-sys-primary-container);
+  font: var(--sys-body-medium);
+
+  section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  section + section {
+    padding-left: 24px;
+    border-left: 1px solid currentColor;
+  }
+}
