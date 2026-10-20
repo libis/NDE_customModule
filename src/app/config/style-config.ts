@@ -96,15 +96,16 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
     // GRM
   ],
   HideSearchInside: true, // hidden for ALL institutions: not ready to be shown yet
-  HideReportAProblemWhenLoggedOut: [
-    '32KUL_KUL:KULeuven_NDE', // KU Leuven
-    '32KUL_KHM:TMOREMA_NDE', // Thomas More (Mechelen/Antwerpen)
-    '32KUL_KHK:TMOREK_NDE', // Thomas More (Kempen)
-    '32KUL_HUB:ODISEE_NDE', // Odisee
-    '32KUL_LUCAWENK:LUCA_NDE', // LUCA
-    '32KUL_KATHO:VIVES_NDE', // VIVES
-    '32KUL_KHL:UCLL_NDE', // UCLL
-  ],
+  HideReportAProblemWhenLoggedOut: false,
+  // [
+  //   '32KUL_KUL:KULeuven_NDE', // KU Leuven
+  //   '32KUL_KHM:TMOREMA_NDE', // Thomas More (Mechelen/Antwerpen)
+  //   '32KUL_KHK:TMOREK_NDE', // Thomas More (Kempen)
+  //   '32KUL_HUB:ODISEE_NDE', // Odisee
+  //   '32KUL_LUCAWENK:LUCA_NDE', // LUCA
+  //   '32KUL_KATHO:VIVES_NDE', // VIVES
+  //   '32KUL_KHL:UCLL_NDE', // UCLL
+  // ],
   HideBannerButtonWithoutUrl: true, // all views: hide the banner button when it has no text
 };
 

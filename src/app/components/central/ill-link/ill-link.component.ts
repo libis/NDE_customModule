@@ -43,7 +43,7 @@ export class IllLinkComponent implements AfterViewInit, OnDestroy {
   });
 
   private destroyed = false;
-
+ 
   ngAfterViewInit(): void {
     // The requests page renders AFTER this "before" slot, so wait for its title.
     const start = performance.now();
