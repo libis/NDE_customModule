@@ -7,4 +7,11 @@
       <span>{{ total() }} results for "{{ query() }}"</span>
     }
   </section>
+  <section>
+    @if (lastSearch(); as search) {
+      <span>Last search took <strong>{{ search.ms }} ms</strong></span>
+    } @else {
+      <span>No search timed yet</span>
+    }
+  </section>
 </div>
