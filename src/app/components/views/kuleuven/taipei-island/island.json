@@ -1,0 +1,7 @@
+{
+  "$schema": "../../../../../../node_modules/@libis/primo-alpine/island.schema.json",
+  "selector": "nde-header",
+  "position": "after",
+  "cspSafe": true,
+  "viewPattern": "^embedded-in-the-status-bar$"
+}

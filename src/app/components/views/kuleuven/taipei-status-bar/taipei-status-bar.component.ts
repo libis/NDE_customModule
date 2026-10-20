@@ -2,6 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { PrimoStateService } from '@libis/primo-shared-state';
 import { NDEComponent, NDE_SLOTS, NDE_POSITION } from 'src/app/decorators/nde-component.decorator';
 import { lastSearch } from 'src/app/events/search-timer.event';
+import { TaipeiIslandIsland } from '../taipei-island/taipei-island.island.component';
 
 /**
  * Taipei demo: a status bar under the Primo header.
@@ -17,6 +18,7 @@ import { lastSearch } from 'src/app/events/search-timer.event';
 @Component({
   selector: 'custom-taipei-status-bar',
   standalone: true,
+  imports: [TaipeiIslandIsland],
   templateUrl: './taipei-status-bar.component.html',
   styleUrls: ['./taipei-status-bar.component.scss'],
 })

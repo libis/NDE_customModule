@@ -110,15 +110,18 @@
     "prestart": "node prebuild.js",
     "prestart:no-prebundle": "npm run prepare:serve",
     "start:no-prebundle": "ng serve --prebundle=false",
-    "prestart:proxy": "npm run prepare:serve",
+    "prestart:proxy": "primo-alpine codegen && npm run prepare:serve",
     "start:proxy": "ng serve --proxy-config ./nde/proxy.conf.mjs",
     "build": "node nde/build.js",
     "build:central": "cross-env BUILD_TARGET=central node nde/build.js",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "postbuild": "",
-    "prebuild": "",
-    "run:all": "node node_modules/@angular-architects/module-federation/src/server/mf-dev-server.js"
+    "prebuild": "primo-alpine codegen",
+    "run:all": "node node_modules/@angular-architects/module-federation/src/server/mf-dev-server.js",
+    "prebuild:central": "primo-alpine codegen",
+    "start:islands": "primo-alpine dev -- npm run start:proxy",
+    "lint:islands": "primo-alpine lint"
   },
   "private": true,
   "dependencies": {
@@ -134,6 +137,7 @@
     "@angular/platform-browser": "^19.2.20",
     "@angular/platform-browser-dynamic": "^19.2.20",
     "@angular/router": "^19.2.20",
+    "@libis/primo-alpine": "file:nde/libis-primo-alpine-19.0.0.tgz",
     "@libis/primo-shared-state": "file:nde/libis-primo-shared-state-2026.11.1.tgz",
     "@ngrx/entity": "^19.2.1",
     "@ngrx/store": "^19.2.1",
@@ -141,6 +145,7 @@
     "@ngx-translate/core": "^15.0.0",
     "@ngx-translate/http-loader": "^8.0.0",
     "@webcomponents/custom-elements": "^1.6.0",
+    "alpinejs": "3.17.3",
     "dotenv": "^16.4.5",
     "fs-extra": "^11.3.5",
     "lottie-web": "^5.13.0",
@@ -177,5 +182,12 @@
     "msgpackr-extract@3.0.3": true,
     "esbuild@0.21.5": true,
     "esbuild@0.23.0": true
+  },
+  "primoAlpine": {
+    "islandsDir": "src/app/components",
+    "registration": "nde-decorator",
+    "cspSafeDirs": [
+      "central"
+    ]
   }
 }

@@ -1,3 +1,5 @@
+import { providePrimoAlpine } from '@libis/primo-alpine';
+import { assetBaseUrl } from './state/asset-base.generated';
 import {
   ApplicationRef,
   DoBootstrap,
@@ -42,6 +44,11 @@ export const AppModule = ({
     imports: [BrowserModule, CommonModule, TranslateModule.forRoot({})],
     providers: [
       ...providers,
+      // Alpine islands: dev mode (and the ?ndeTokens=1 inspector) only on the local dev server.
+      ...providePrimoAlpine({
+        dev: ['localhost', '127.0.0.1'].includes(location.hostname),
+        assetBase: () => assetBaseUrl,
+      }),
       { provide: SHELL_ROUTER, useValue: shellRouter },
       provideHttpClient(withInterceptorsFromDi()),
       ...getInterceptorProviders(),
