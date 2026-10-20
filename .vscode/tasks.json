@@ -3,6 +3,30 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Taipei: go to step",
+      "detail": "Check out tag taipei-N (installs packages when needed)",
+      "type": "shell",
+      "command": "./demo-taipei.sh goto ${input:taipeiStep}",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Taipei: start proxy with islands",
+      "detail": "npm run start:islands",
+      "type": "shell",
+      "command": "./demo-taipei.sh start",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Taipei: list steps",
+      "type": "shell",
+      "command": "./demo-taipei.sh list",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
       "type": "npm",
       "script": "start",
       "isBackground": true,
@@ -11,12 +35,8 @@
         "pattern": "$tsc",
         "background": {
           "activeOnStart": true,
-          "beginsPattern": {
-            "regexp": "(.*?)"
-          },
-          "endsPattern": {
-            "regexp": "bundle generation complete"
-          }
+          "beginsPattern": { "regexp": "(.*?)" },
+          "endsPattern": { "regexp": "bundle generation complete" }
         }
       }
     },
@@ -29,14 +49,25 @@
         "pattern": "$tsc",
         "background": {
           "activeOnStart": true,
-          "beginsPattern": {
-            "regexp": "(.*?)"
-          },
-          "endsPattern": {
-            "regexp": "bundle generation complete"
-          }
+          "beginsPattern": { "regexp": "(.*?)" },
+          "endsPattern": { "regexp": "bundle generation complete" }
         }
       }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "taipeiStep",
+      "type": "pickString",
+      "description": "Which step?",
+      "options": [
+        { "label": "1 · clean slate", "value": "1" },
+        { "label": "2 · @NDEComponent", "value": "2" },
+        { "label": "3 · @NDEEvent", "value": "3" },
+        { "label": "4 · primo-alpine island", "value": "4" },
+        { "label": "5 · view built", "value": "5" }
+      ],
+      "default": "1"
     }
   ]
 }

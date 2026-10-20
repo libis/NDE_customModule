@@ -99,7 +99,8 @@
     },
     "localResourceDirs": [
       "./dist"
-    ]
+    ],
+    "centralPackage": false
   },
   "scripts": {
     "ng": "ng",
