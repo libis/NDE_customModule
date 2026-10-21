@@ -12,6 +12,7 @@ const {
 const explicitEnv = process.argv[2];
 const {
   projectRoot,
+  ndeConfig,
   selectedEnv,
   envConfig,
   isCentral,
@@ -147,11 +148,13 @@ async function run() {
     distAssetsPath
   );
 
-  // 2. Copy CENTRAL_CODE.txt
-  copyAssets(
-    path.resolve(projectRoot, 'src/assets/CENTRAL_CODE.txt'),
-    path.join(distPath, 'CENTRAL_CODE.txt')
-  );
+  // 2. Copy CENTRAL_CODE.txt (not with nde.centralPackage: false, the view then contains the central components)
+  if (ndeConfig.centralPackage !== false) {
+    copyAssets(
+      path.resolve(projectRoot, 'src/assets/CENTRAL_CODE.txt'),
+      path.join(distPath, 'CENTRAL_CODE.txt')
+    );
+  }
 
   // 3. Copy environment-specific override assets
   let sourcePath;

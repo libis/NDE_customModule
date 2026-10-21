@@ -41,21 +41,6 @@ export class styleConfigEvent extends NDEEventBase {
     // this.injectLandingPageFonts();
     this.applyDefaultListView();
     this.hideEmptyBannerButton();
-
-    this.debugTranslations();
-  }
-  // ← this as a separate method in the class, e.g. right under the constructor
-  private debugTranslations(): void {
-    window.setTimeout(() => {
-      const t: any = this.translate;
-      console.log('[i18n check]', {
-        currentLang: t.currentLang,
-        defaultLang: t.defaultLang,
-        keysLoaded: Object.keys(t.translations?.[t.currentLang] ?? {}).length,
-        shellLabel: t.instant('nui.getit.service_getit'),
-        customLabel: t.instant('nde.custom.footer.copyright'),
-      });
-    }, 4000);
   }
 
   private getStyleValueFromCodeTable(param: any, code: string): any {

@@ -7,7 +7,7 @@
  * @example
  * ```typescript
  * @NDEComponent({
- *   selector: 'nde-search-bar',
+ *   selector: 'nde-search-bar-container',
  *   position: 'before'
  * })
  * @Component({
@@ -27,7 +27,7 @@ import 'reflect-metadata';
 export interface NDEComponentConfig {
   /**
    * The NDE component selector to hook into
-   * @example 'nde-search-bar', 'nde-recommendations', 'nde-brief-result'
+   * @example 'nde-search-bar-container', 'nde-recommendations', 'nde-brief-result'
    */
   selector: string;
   
@@ -240,7 +240,7 @@ export const NDE_SLOTS = {
   FOOTER: 'nde-footer',
   
   // Search related
-  SEARCH_BAR: 'nde-search-bar',
+  SEARCH_BAR: 'nde-search-bar-container',
   SEARCH_RESULTS: 'nde-search-results',
   TOP_BAR: 'nde-top-bar',
   

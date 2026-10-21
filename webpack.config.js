@@ -50,6 +50,10 @@ function discoveryOptions(key, defaultDir) {
 
 const customComponentMappings = generatedMappingsPath;
 
+// nde.watch: false in package.json stops ng serve / --watch from recompiling on file changes
+const watchEnabled = ndeConfig.watch !== false;
+console.log(`👉 auto recompile: ${watchEnabled ? "on" : "off"}`);
+
 /**
  * Webpack plugin that auto-generates component imports in customComponentMappings.ts.
  * Scans the components directory before each compilation so `ng build` and `ng serve`
@@ -63,6 +67,9 @@ class NdeComponentDiscoveryPlugin {
     // bv. kuleuven, vives
     this.view = options.view || null;
 
+    // nde.centralPackage: false -> a view build also picks up the central components
+    this.includeCentral = options.includeCentral || false;
+
     this.baseComponentsDir =
       options.baseComponentsDir || path.resolve(__dirname, "src/app/components");
     this.mappingsFile = options.mappingsFile
@@ -71,31 +78,37 @@ class NdeComponentDiscoveryPlugin {
   }
 
   apply(compiler) {
-    compiler.hooks.beforeRun.tapAsync(
-      "NdeComponentDiscoveryPlugin",
-      (params, callback) => {
-        try {
-         
-          const content = this.generateMappingsContent();
+    // beforeRun only fires for one-shot builds; watchRun covers ng serve / --watch
+    const discover = (params, callback) => {
+      try {
+       
+        const content = this.generateMappingsContent();
 
-          // Only write when content actually changed to avoid unnecessary recompilation
-          const existing = fs.existsSync(this.mappingsFile)
-            ? fs.readFileSync(this.mappingsFile, "utf8")
-            : "";
-          if (existing !== content) {
+        // Only write when content actually changed to avoid unnecessary recompilation
+        const existing = fs.existsSync(this.mappingsFile)
+          ? fs.readFileSync(this.mappingsFile, "utf8")
+          : "";
+        // ignore the "generated at" timestamp, otherwise every watch rebuild rewrites the file and triggers another rebuild
+        const stripTimestamp = (s) => s.replace(/generated at: [^']*/g, "");
+        if (stripTimestamp(existing) !== stripTimestamp(content)) {
 
-            fs.writeFileSync(this.mappingsFile, content);
-            console.log(
-              `[NdeComponentDiscovery] Write mappings with component(s) to ${this.mappingsFile}`,
-            );
+          fs.writeFileSync(this.mappingsFile, content);
+          console.log(
+            `[NdeComponentDiscovery] Write mappings with component(s) to ${this.mappingsFile}`,
+          );
 
-          }
-        } catch (err) {
-          console.error("[NdeComponentDiscovery] Error:", err);
         }
-        callback();
-      },
-    );
+      } catch (err) {
+        console.error("[NdeComponentDiscovery] Error:", err);
+      }
+      callback();
+    };
+    compiler.hooks.beforeRun.tapAsync("NdeComponentDiscoveryPlugin", discover);
+    compiler.hooks.watchRun.tapAsync("NdeComponentDiscoveryPlugin", discover);
+    // watch the components dir so adding/removing a component triggers a rebuild
+    compiler.hooks.afterCompile.tap("NdeComponentDiscoveryPlugin", (compilation) => {
+      compilation.contextDependencies.add(this.baseComponentsDir);
+    });
   }
 
   findComponentFiles(dir, files = []) {
@@ -140,7 +153,7 @@ class NdeComponentDiscoveryPlugin {
         );
       }
     }
-    if (this.buildTarget === "central" ) {
+    if (this.buildTarget === "central" || this.includeCentral) {
       console.info(
           `\n[NdeComponentDiscovery] Add Central directory: ${centralDir}`
         );
@@ -348,6 +361,8 @@ const exposes = isCentral
 
 
 module.exports = {
+  devtool: "source-map",
+  ...(watchEnabled ? {} : { watchOptions: { ignored: "**/*" } }),
   context: path.resolve(__dirname), // Sets the context to the directory where webpack.config.js is
   output: {
     uniqueName:  isCentral ? 'CustomModuleCentral' : 'CustomModule',
@@ -381,6 +396,7 @@ module.exports = {
           baseComponentsDir: componentsCfg.directory,
           buildTarget: buildTarget,
           view: view,
+          includeCentral: ndeConfig.centralPackage === false,
           mappingsFile: customComponentMappings
       })]
       : []),

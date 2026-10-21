@@ -24,44 +24,6 @@
           }
         }
       },
-      "vives": {
-        "host": "https://libis-kul.primo.exlibrisgroup.com",
-        "institution": "32KUL_KATHO",
-        "view": "VIVES_NDE",
-        "assets": {
-          "favIcon": "images/favicon.ico",
-          "libraryLogo": "images/library-logo.png",
-          "viewSvg": "icons/custom_icons.svg",
-          "homepage": {
-            "homepageBGImage": "homepage/homepage_background.svg",
-            "html": {
-              "en": "homepage/homepage_en.html",
-              "nl": "homepage/homepage_nl.html",
-              "fr": "homepage/homepage_fr.html",
-              "de": "homepage/homepage_de.html"
-            }
-          }
-        }
-      },
-      "lirias": {
-        "host": "https://libis-kul.primo.exlibrisgroup.com",
-        "institution": "32KUL_KUL",
-        "view": "Lirias_NDE",
-        "assets": {
-          "favIcon": "images/favicon.ico",
-          "libraryLogo": "images/library-logo.png",
-          "viewSvg": "icons/custom_icons.svg",
-          "homepage": {
-            "homepageBGImage": "homepage/homepage_background.svg",
-            "html": {
-              "en": "homepage/homepage_en.html",
-              "nl": "homepage/homepage_nl.html",
-              "fr": "homepage/homepage_fr.html",
-              "de": "homepage/homepage_de.html"
-            }
-          }
-        }
-      },
       "central": {
         "host": "https://libis-kul.primo.exlibrisgroup.com",
         "institution": "32KUL_LIBIS_NETWORK",
@@ -100,6 +62,7 @@
     "localResourceDirs": [
       "./dist"
     ],
+    "watch": true,
     "centralPackage": false
   },
   "scripts": {
@@ -107,7 +70,7 @@
     "nde": "node nde/nde-cli.js",
     "prepare:serve": "node nde/prepare-serve.js",
     "start": "ng serve",
-    "prestart": "node prebuild.js",
+    "prestart": "npm run prepare:serve",
     "prestart:no-prebundle": "npm run prepare:serve",
     "start:no-prebundle": "ng serve --prebundle=false",
     "prestart:proxy": "primo-alpine codegen && npm run prepare:serve",
@@ -176,12 +139,6 @@
     "webpack": "5.105.0",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.15.1"
-  },
-  "allowScripts": {
-    "lmdb@3.0.13": true,
-    "msgpackr-extract@3.0.3": true,
-    "esbuild@0.21.5": true,
-    "esbuild@0.23.0": true
   },
   "primoAlpine": {
     "islandsDir": "src/app/components",

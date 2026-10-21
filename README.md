@@ -1026,7 +1026,7 @@ The generated file looks like:
 import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 import { Component } from '@angular/core';
 
-@NDEComponent({ selector: 'nde-search-bar', position: 'after' })
+@NDEComponent({ selector: 'nde-search-bar-container', position: 'after' })
 @Component({
   selector: 'custom-hello-world',
   standalone: true,

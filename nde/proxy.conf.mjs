@@ -37,6 +37,11 @@ process.env.VIEW = ndeConfig.environments[env].view;
 process.env.INST = ndeConfig.environments[env].institution;
 process.env.CENTRAL_CODE = ndeConfig.environments["central"].institution;
 
+// nde.centralPackage: false -> answer CENTRAL_CODE.txt with 404 so Primo loads no central package;
+// the view build then includes src/app/components/central itself (see webpack.config.js)
+const centralPackageEnabled = ndeConfig.centralPackage !== false;
+console.log(`  Central package: ${centralPackageEnabled ? 'on' : 'off (central components are built into the view)'}`);
+
 
 // Auto-open browser after a short delay to let the dev server start
 // setTimeout(() => {
@@ -141,9 +146,15 @@ const proxyRules = [
           console.log(`[asset-trace] ${req.url} -> REMOTE ${PROXY_TARGET}${req.url}`);
         }
       }
-      req._localFile = localFile    
+      req._localFile = localFile
     },
     onProxyRes(proxyRes, req, res) {
+      if (!centralPackageEnabled) {
+        proxyRes.resume();
+        res.writeHead(404, { 'content-type': 'text/plain' });
+        res.end('central package disabled (nde.centralPackage: false)');
+        return;
+      }
       if (req._localFile) {
         serveLocalFile(req._localFile, res);
         return;
