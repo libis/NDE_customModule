@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subscription, merge } from 'rxjs';
 import { MATERIAL_IMPORTS } from 'src/app/shared/material.imports';
+import { HostBinding } from '@angular/core';
 
 export interface LandingBlock {
   id: string;
@@ -139,6 +140,11 @@ export class CustomLandingBlocksComponent
       default:
         return '';
     }
+  }
+  // dont create whitespace when no blocks on blockrow should be vivible
+  @HostBinding('style.display')
+  get hostDisplay(): string | null {
+    return this.blocks.length ? null : 'none';
   }
 
   trackById(_: number, block: LandingBlock): string {
