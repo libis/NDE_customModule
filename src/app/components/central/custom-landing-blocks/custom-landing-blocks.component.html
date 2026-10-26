@@ -1,5 +1,14 @@
-<div *ngIf="blocks.length > 0" class="landing-blocks" [ngClass]="columnClass">
-  <div *ngFor="let block of blocks; trackBy: trackById" class="landing-block">
+<div
+  *ngIf="blocks.length > 0"
+  id="custom-landing-blocks"
+  class="landing-blocks"
+  [ngClass]="columnClass"
+>
+  <div
+    *ngFor="let block of blocks; trackBy: trackById"
+    class="landing-block"
+    [class.full-row]="block.descriptionType === 'image-url'"
+  >
     <h2
       *ngIf="block.title"
       class="landing-block-title mat-headline-large"
@@ -7,7 +16,11 @@
     ></h2>
 
     <ng-container [ngSwitch]="block.descriptionType">
-      <div *ngSwitchCase="'image-html'" [innerHTML]="block.description"></div>
+      <div
+        *ngSwitchCase="'image-html'"
+        class="landing-block-html"
+        [innerHTML]="block.description"
+      ></div>
 
       <img
         *ngSwitchCase="'image-url'"
@@ -16,7 +29,11 @@
         alt=""
       />
 
-      <p *ngSwitchCase="'text'" [innerHTML]="block.description"></p>
+      <p
+        *ngSwitchCase="'text'"
+        class="landing-block-description"
+        [innerHTML]="block.description"
+      ></p>
     </ng-container>
   </div>
 </div>
