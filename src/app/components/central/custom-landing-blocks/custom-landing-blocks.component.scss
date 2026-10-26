@@ -1,12 +1,40 @@
 :host {
   display: block;
   width: 100%;
+  max-width: 100%;
+  overflow-x: clip; // safety net: never let a block cause horizontal scroll
 }
 
 .landing-blocks {
   display: grid;
   width: 100%;
   gap: 2rem;
+}
+
+// image-url case
+.landing-block-image {
+  display: block;
+  max-width: 100%;
+  height: auto; // keep aspect ratio when it scales down
+}
+
+// image-html case (clickable image injected via innerHTML)
+// innerHTML content isn't touched by Angular's view encapsulation, so ::ng-deep is needed
+.landing-block-html {
+  max-width: 100%;
+
+  ::ng-deep {
+    a {
+      display: block;
+      max-width: 100%;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+  }
 }
 
 .three-columns {
@@ -70,6 +98,23 @@
       font-size: 16px;
     }
 
+    li {
+      display: list-item;
+    }
+  }
+}
+
+// for ul bullets : #custom-landing-blocks .landing-block-description {
+#custom-landing-blocks .landing-block-description {
+  ::ng-deep {
+    ul {
+      list-style-type: disc;
+      padding-left: 2rem;
+    }
+    ol {
+      list-style-type: decimal;
+      padding-left: 2rem;
+    }
     li {
       display: list-item;
     }
