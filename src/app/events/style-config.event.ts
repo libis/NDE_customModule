@@ -40,6 +40,7 @@ export class styleConfigEvent extends NDEEventBase {
     this.injectStyles();
     // this.injectLandingPageFonts();
     this.applyDefaultListView();
+    this.injectPrimaryColor();
     this.hideEmptyBannerButton();
   }
 
@@ -59,7 +60,45 @@ export class styleConfigEvent extends NDEEventBase {
     if (value === true) return true;
     return value.includes(this.currentView);
   }
+  private injectPrimaryColor(): void {
+    const key = 'nde.custom.primaryColor';
 
+    this.translate.get(key).subscribe((value: string) => {
+      const color = value?.trim();
+      const isSet = !!color && color !== key && color !== 'NOT_DEFINED';
+      const isValidHex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color ?? '');
+
+      const light = (pct: number) =>
+        `color-mix(in oklab, ${color} ${pct}%, white)`;
+      const dark = (pct: number) =>
+        `color-mix(in oklab, ${color} ${pct}%, black)`;
+
+      const tokens: Record<string, string> = {
+        primary: color,
+        'on-primary': '#ffffff',
+        'primary-container': light(20),
+        'on-primary-container': dark(35),
+        'primary-fixed': light(20),
+        'primary-fixed-dim': light(40),
+        'on-primary-fixed': dark(35),
+        'on-primary-fixed-variant': dark(70),
+        'inverse-primary': light(40),
+      };
+
+      const declarations = Object.entries(tokens)
+        .flatMap(([name, val]) => [
+          `--sys-${name}: ${val} !important;`,
+          `--mat-sys-${name}: ${val} !important;`,
+        ])
+        .join('\n');
+
+      this.toggleStyle(
+        'style_primary_color',
+        isSet && isValidHex,
+        `html, body {\n${declarations}\n}`,
+      );
+    });
+  }
   private getTopbarStyles(
     specs: (typeof TOPBAR_STYLE_MAP)[keyof typeof TOPBAR_STYLE_MAP],
   ): string {
