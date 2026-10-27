@@ -1,0 +1,14 @@
+@if(curr_access_info()){
+<div class="external-info-box">
+    @if(curr_access_info()?.source_icon){
+    <div class="display-inline">
+    <span>Access via </span>
+      <img class="source-icon" src="https://assets.libis.be/limo/icons/sourceIcon/lirias.png" alt="Lirias icon" />
+    </div>
+    }@else{
+    <span>Access via {{ curr_access_info()?.source_name }}</span>
+    }
+    @if(curr_access_info()?.display_label){}
+    <span> - {{ curr_access_info()?.display_label}}</span>
+    </div>
+}

@@ -11,7 +11,6 @@ export interface credentialResponse {
   credentials: string;
 }
 
-@NDEComponent({selector:'nde-view-it-card', position:'bottom', viewPattern: /32KUL.*/})
 @Component({
   selector: 'custom-libis-password-note',
   standalone: true,
@@ -20,7 +19,7 @@ export interface credentialResponse {
   styleUrl: './libis-password-note.component.scss'
 })
 export class LibisPasswordNoteComponent {
-  @Input() private hostComponent!: any;
+  @Input() hostComponent!: any;
   private store = inject(Store);
   private electronicService!: ElectronicService;
   private recID: Signal<string|undefined> = this.store.selectSignal(selectFullDisplayRecordId);
