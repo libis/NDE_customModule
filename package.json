@@ -3,10 +3,10 @@
   "version": "2.0.0",
   "nde": {
     "addonName": "",
-    "assetBaseUrl": "https://libis-kul.primo.exlibrisgroup.com",
+    "assetBaseUrl": "https://libis-kul-psb.primo.exlibrisgroup.com",
     "environments": {
       "kuleuven": {
-        "host": "https://libis-kul.primo.exlibrisgroup.com",
+        "host": "https://libis-kul-psb.primo.exlibrisgroup.com",
         "institution": "32KUL_KUL",
         "view": "KULeuven_NDE",
         "assets": {
