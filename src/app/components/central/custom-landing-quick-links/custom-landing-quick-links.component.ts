@@ -1,4 +1,12 @@
-import { Component, Input, OnInit, OnChanges } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnInit,
+  OnChanges,
+  DestroyRef,
+  inject,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MATERIAL_IMPORTS } from 'src/app/shared/material.imports';
@@ -32,24 +40,21 @@ export class CustomLandingQuickLinksComponent implements OnInit {
   quickLinksAriaLabel = '';
   links: LandingQuickLink[] = [];
   iconSvgNameById: Record<string, string> = {};
+  private destroyRef = inject(DestroyRef);
 
   constructor(
     // private paths: AssetPathService,
     private translate: TranslateService,
     private iconRegistry: MatIconRegistry,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
   ) {}
 
-
   ngOnInit(): void {
-       this.loadLinks();
+    this.loadLinks();
   }
 
   private loadLinks(): void {
-
-    const keys: string[] = [
-      'nde.aria.landing.quickLinks',
-    ];
+    const keys: string[] = ['nde.aria.landing.quickLinks'];
 
     for (let i = 1; i <= MAX_LINKS; i++) {
       keys.push(
@@ -60,59 +65,55 @@ export class CustomLandingQuickLinksComponent implements OnInit {
       );
     }
 
-    this.translate.get(keys).subscribe(translations => {
+    this.translate
+      .stream(keys)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((translations) => {
+        this.quickLinksAriaLabel = translations['nde.aria.landing.quickLinks'];
 
-      this.quickLinksAriaLabel =
-        translations['nde.aria.landing.quickLinks'];
+        const links: LandingQuickLink[] = [];
 
-      const links: LandingQuickLink[] = [];
+        for (let i = 1; i <= MAX_LINKS; i++) {
+          const base = `nde.custom.landing.links.link${i}`;
 
-      for (let i = 1; i <= MAX_LINKS; i++) {
+          links.push({
+            id: `link${i}`,
+            label: translations[`${base}.label`],
+            icon: translations[`${base}.icon`],
+            url: translations[`${base}.url`],
+            openInNewTab: translations[`${base}.openInNewTab`] === 'true',
+          });
+        }
 
-        const base = `nde.custom.landing.links.link${i}`;
+        console.log(
+          '[CustomLandingQuickLinksComponent] links unfiltered',
+          links,
+        );
 
-        links.push({
-          id: `link${i}`,
-          label: translations[`${base}.label`],
-          icon: translations[`${base}.icon`],
-          url: translations[`${base}.url`],
-          openInNewTab:
-            translations[`${base}.openInNewTab`] === 'true',
-        });
-      }
+        this.links = links.filter(
+          (link) =>
+            link.enabled !== false &&
+            !link.label?.startsWith('nde.custom.landing.links.'),
+        );
 
-      console.log(
-        '[CustomLandingQuickLinksComponent] links unfiltered',
-        links
-      );
+        console.log(
+          '[CustomLandingQuickLinksComponent] links filtered',
+          this.links,
+        );
 
-      this.links = links.filter(
-        link =>
-          link.enabled !== false &&
-          !link.label?.startsWith('nde.custom.landing.links.')
-      );
-
-      console.log(
-        '[CustomLandingQuickLinksComponent] links filtered',
-        this.links
-      );
-
-      this.registerIcons();
-    });
+        this.registerIcons();
+      });
   }
 
   private registerIcons(): void {
-
     const entries: [string, string][] = [];
 
     for (const link of this.links) {
-
       if (!link.icon) {
         continue;
       }
 
-      const url =
-        `/nde/custom/32KUL_LIBIS_NETWORK-CENTRAL_PACKAGE/assets/icons/${link.icon}`;
+      const url = `/nde/custom/32KUL_LIBIS_NETWORK-CENTRAL_PACKAGE/assets/icons/${link.icon}`;
 
       const iconName = link.icon.replace(/\.svg$/i, '');
 
@@ -122,26 +123,16 @@ export class CustomLandingQuickLinksComponent implements OnInit {
         this.sanitizer.bypassSecurityTrustResourceUrl(url),
       );
 
-      entries.push([
-        link.id,
-        `${LANDING_ICON_NAMESPACE}:${iconName}`,
-      ]);
+      entries.push([link.id, `${LANDING_ICON_NAMESPACE}:${iconName}`]);
     }
 
     this.iconSvgNameById = Object.fromEntries(entries);
 
-    console.log(
-      '[CustomLandingQuickLinksComponent] icon entries',
-      entries
-    );
+    console.log('[CustomLandingQuickLinksComponent] icon entries', entries);
   }
 
   onClick(ev: MouseEvent, link: LandingQuickLink): void {
-
-    console.log(
-      '[CustomLandingQuickLinksComponent] onclick link',
-      link
-    );
+    console.log('[CustomLandingQuickLinksComponent] onclick link', link);
 
     if (!link.url) {
       ev.preventDefault();
@@ -149,36 +140,10 @@ export class CustomLandingQuickLinksComponent implements OnInit {
     }
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   // ngOnInit(): void {
   //   console.log('[CustomLandingQuickLinksComponent] this', this);
 
   //   https://libis-kul-psb.primo.exlibrisgroup.com/nde/custom/32KUL_KUL-KULeuven_NDE/assets/landingpage/landingpage.json?lang=en&vid=32KUL_KUL:KULeuven_NDE
-
 
   //   Use get() instead of instant() for the initial loading of your quick links.
   //   get() returns an Observable and waits for ngx-translate to have the translation available.

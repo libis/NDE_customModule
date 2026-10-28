@@ -75,44 +75,66 @@ export class styleConfigEvent extends NDEEventBase {
     if (value === true) return true;
     return value.includes(this.currentView);
   }
+
+  // Primo bug: after a language switch, Primo renders its native landing page again
+  // next to our replacement (nde-landing-page-from-remote-0). Hide the native one
+  // whenever ours is present.
+  private getHideNativeLandingPageStyles(): string {
+    return `
+    nde-landing-page-config:has(nde-landing-page-from-remote-0) > nde-landing-page {
+      display: none !important;
+    }
+  `;
+  }
   private injectPrimaryColor(): void {
-    const key = 'nde.custom.primaryColor';
+    const baseKey = 'nde.custom.primaryColor';
+    const vid = new URLSearchParams(window.location.search).get('vid') ?? '';
+    const viewKey = `${vid}.${baseKey}`;
 
-    this.translate.get(key).subscribe((value: string) => {
-      const color = value?.trim();
-      const isSet = !!color && color !== key && color !== 'NOT_DEFINED';
-      const isValidHex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color ?? '');
+    const clean = (v: string | undefined, k: string) => {
+      const c = v?.trim();
+      return c && c !== k && c !== 'NOT_DEFINED' ? c : '';
+    };
 
-      const light = (pct: number) =>
-        `color-mix(in oklab, ${color} ${pct}%, white)`;
-      const dark = (pct: number) =>
-        `color-mix(in oklab, ${color} ${pct}%, black)`;
+    this.translate
+      .get([viewKey, baseKey])
+      .subscribe((values: Record<string, string>) => {
+        const color =
+          (vid && clean(values[viewKey], viewKey)) ||
+          clean(values[baseKey], baseKey);
+        const isSet = !!color;
+        const isValidHex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color);
 
-      const tokens: Record<string, string> = {
-        primary: color,
-        'on-primary': '#ffffff',
-        'primary-container': light(20),
-        'on-primary-container': dark(35),
-        'primary-fixed': light(20),
-        'primary-fixed-dim': light(40),
-        'on-primary-fixed': dark(35),
-        'on-primary-fixed-variant': dark(70),
-        'inverse-primary': light(40),
-      };
+        const light = (pct: number) =>
+          `color-mix(in oklab, ${color} ${pct}%, white)`;
+        const dark = (pct: number) =>
+          `color-mix(in oklab, ${color} ${pct}%, black)`;
 
-      const declarations = Object.entries(tokens)
-        .flatMap(([name, val]) => [
-          `--sys-${name}: ${val} !important;`,
-          `--mat-sys-${name}: ${val} !important;`,
-        ])
-        .join('\n');
+        const tokens: Record<string, string> = {
+          primary: color,
+          'on-primary': '#ffffff',
+          'primary-container': light(20),
+          'on-primary-container': dark(35),
+          'primary-fixed': light(20),
+          'primary-fixed-dim': light(40),
+          'on-primary-fixed': dark(35),
+          'on-primary-fixed-variant': dark(70),
+          'inverse-primary': light(40),
+        };
 
-      this.toggleStyle(
-        'style_primary_color',
-        isSet && isValidHex,
-        `html, body {\n${declarations}\n}`,
-      );
-    });
+        const declarations = Object.entries(tokens)
+          .flatMap(([name, val]) => [
+            `--sys-${name}: ${val} !important;`,
+            `--mat-sys-${name}: ${val} !important;`,
+          ])
+          .join('\n');
+
+        this.toggleStyle(
+          'style_primary_color',
+          isSet && isValidHex,
+          `html, body {\n${declarations}\n}`,
+        );
+      });
   }
   private getTopbarStyles(
     specs: (typeof TOPBAR_STYLE_MAP)[keyof typeof TOPBAR_STYLE_MAP],
@@ -336,13 +358,14 @@ export class styleConfigEvent extends NDEEventBase {
       // this.getTopbarStyles(specs),
       this.getHideSignInStyles(),
       this.getHideLiriasLinksStyles(), // niet zeker? lirias in kuleuven relevant?
-      // this.getHideLoginBannerStyles(),
+      this.getHideLandingPageOverlayStyles(),
       this.getLocationNumberInBoldStyles(),
       this.getCloseBannerIconStyles(),
       this.getHideVirtualBrowseStyles(),
       this.getHideSearchInsideStyles(),
       this.getHideLoginBannerStyles(),
       this.getHideReportAProblemStyles(),
+      this.getHideNativeLandingPageStyles(),
       // `nde-landing-page > *:not(custom-landing-about) { display: none !important; }`,
     ].join('\n');
 
