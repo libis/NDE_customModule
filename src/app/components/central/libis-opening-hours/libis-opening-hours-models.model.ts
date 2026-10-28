@@ -171,11 +171,6 @@ export interface Transl_Data_Display_Field extends Data_Display_Field {
     label?: Transl_Label_Field
 }
 
-
-
-
-
-
 export interface OH_Status_Field {
     open_now: boolean,
     next_change: Parsed_Timeslot|undefined

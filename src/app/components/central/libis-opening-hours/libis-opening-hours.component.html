@@ -1,3 +1,4 @@
+@if(!(general_info() && general_info()['activate_OH'] && (general_info()['activate_OH'].value === 'false'))){
 <div class="opening-hours-wrapper">
 <!-- Component should be displayed only if opening hours data is available-->
 @if(opening_hours(); as openings){
@@ -9,13 +10,19 @@
       <span>{{ translateCode('nde.custom.opening_hours.close_card') }}</span>
     }
     @else{
-      @if (openings.curr_status.open_now){
+      @if (getStatus() === 'appointment'){
+        <span>{{ translateCode('nde.custom.opening_hours.appointment_only') }}</span>
+      }
+      @else if (getStatus() === 'open' && openings.curr_status.open_now){
             <span>{{ translateCode('nde.custom.opening_hours.open_now') }}
               <span *ngIf="openings.curr_status.next_change"> {{ translateCode('nde.custom.opening_hours.next_closed').replace('{hour}', parse_status_change(openings.curr_status.next_change.closed))}}</span>
             </span>
           }
+      @else if (getStatus() === 'closed') {
+        <span>{{ translateCode('nde.custom.opening_hours.closed') }}<!--<span *ngIf="openings.curr_status.next_change"> {{ translateCode('nde.custom.opening_hours.next_open').replace('{day}', weekdays()[openings.curr_status.next_change.open.getDay()] | titlecase).replace('{hour}', parse_status_change(openings.curr_status.next_change.open)) }}</span>--></span>
+      }
       @else {
-            <span>{{ translateCode('nde.custom.opening_hours.closed') }}<!--<span *ngIf="openings.curr_status.next_change"> {{ translateCode('nde.custom.opening_hours.next_open').replace('{day}', weekdays()[openings.curr_status.next_change.open.getDay()] | titlecase).replace('{hour}', parse_status_change(openings.curr_status.next_change.open)) }}</span>--></span>
+            <span>{{ translateCode('nde.custom.opening_hours.status_unknown') }}</span>
           }
       }
 
@@ -144,13 +151,19 @@
     <!-- *** Status indicator *** -->
     <div class="status grid-item">
       <div class="status_note" [attr.open_status] = "getStatus()">
-        @if (openings.curr_status.open_now){
+        @if (getStatus() === 'appointment'){
+          <span>{{ translateCode('nde.custom.opening_hours.appointment_only') }}</span>
+        }        
+        @else if (getStatus() === 'open' && openings.curr_status.open_now){
               <span>{{ translateCode('nde.custom.opening_hours.open_now') }}
               <span *ngIf="openings.curr_status.next_change"> {{ translateCode('nde.custom.opening_hours.next_closed').replace('{hour}', parse_status_change(openings.curr_status.next_change.closed))}}</span>
             </span>
         }
-        @else {
+        @else if (getStatus() === 'closed'){
           <span>{{ translateCode('nde.custom.opening_hours.closed') }}</span><span *ngIf="openings.curr_status.next_change">{{ translateCode('nde.custom.opening_hours.next_open').replace('{day}', weekdays()[openings.curr_status.next_change.open.getDay()]).replace('{hour}', parse_status_change(openings.curr_status.next_change.open)) }}</span>
+        }
+        @else {
+          <span>{{ translateCode('nde.custom.opening_hours.status_unknown') }}</span>
         }
       </div>
     </div>
@@ -211,6 +224,7 @@
     <mat-icon class="mat-icon gap-05" [svgIcon]="icon.icon_name"></mat-icon>
     }
 </ng-template>
+}
 
 <!--<div class="opening-hours-wrapper">
   @if (opening_hours(); as openings){

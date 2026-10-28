@@ -134,12 +134,14 @@ export class LibisOpeningHoursComponent {
 
   // Calculate opening status
   getStatus(){
+    console.log('General info: ', this.general_info());
     const OH_overview = this.opening_hours();
+    const OH_general = this.general_info();
     if(OH_overview){
-      if(OH_overview.general['appointment_only'] && OH_overview.general['appointment_only'].value === 'true'){
+      if(OH_general && OH_general['appointment_only'] && OH_general['appointment_only'].value === 'true'){
         return 'appointment';
       }
-      else if (OH_overview.curr_status.open_now){
+      else if (OH_overview && OH_overview.curr_status.open_now){
         return 'open';
       }
       else {

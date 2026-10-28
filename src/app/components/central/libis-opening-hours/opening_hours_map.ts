@@ -22,12 +22,12 @@ export const OPENING_HOURS_MAP: Opening_Hours_Map = {
     appointment_only: {
       field_name: 'appointment_only',
       field_source: 'database',
-      default: false,
+      default: 'false',
     },
     activate_OH: {
-      field_name: '',
-      field_source: 'None',
-      default: false,
+      field_name: 'show_in_limo',
+      field_source: 'database',
+      default: 'false',
     },
   },
   contact_details: {
@@ -106,6 +106,6 @@ export const OPENING_HOURS_MAP: Opening_Hours_Map = {
     ],
   },
   opening_hours_config: {
-    start_day: 1,
+    start_day: 1
   },
 };

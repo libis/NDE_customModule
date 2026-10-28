@@ -104,7 +104,7 @@ export class LIBISOpeningHoursService {
     let general_section: {[key:string]: General_Display_Field} = {};
     
     for(const field in OPENING_HOURS_MAP.general){
-      //console.log(`Parsing general field ${field} with value ${OPENING_HOURS_MAP.general[field]}`);
+      console.log(`Parsing general field ${field} with value ${OPENING_HOURS_MAP.general[field]}`);
       switch(OPENING_HOURS_MAP.general[field].field_source){
         case 'NDE':
           general_section[field] = {'value':OPENING_HOURS_MAP.general[field].field_name, 'type': 'NDE'}
@@ -115,6 +115,9 @@ export class LIBISOpeningHoursService {
           if(field_value !== undefined){
             general_section[field] = {'value': field_value, 'type': 'database'};
           }
+        }
+          else if (OPENING_HOURS_MAP.general[field].default){
+            general_section[field] = {'value': OPENING_HOURS_MAP.general[field].default, 'type': 'database'};
           }
         break;
         case 'text':
