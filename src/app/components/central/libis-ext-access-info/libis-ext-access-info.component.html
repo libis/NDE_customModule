@@ -8,7 +8,8 @@
     }@else{
     <span>Access via {{ curr_access_info()?.source_name }}</span>
     }
-    @if(curr_access_info()?.display_label){}
+    @if(curr_access_info()?.display_label){
     <span> - {{ curr_access_info()?.display_label}}</span>
+    }
     </div>
 }
