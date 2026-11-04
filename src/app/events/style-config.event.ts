@@ -293,6 +293,16 @@ export class styleConfigEvent extends NDEEventBase {
     return `nde-search-within-journal { display: none !important; }`;
   }
 
+  private getHideRequestSectionStyles(): string {
+    if (!this.isActive(this.config.HideRequestSection)) return '';
+    return `
+    mat-expansion-panel:has(nde-requests),
+    mat-expansion-panel:has([id="title-nde.request.title"]) {
+      display: none !important;
+    }
+  `;
+  }
+
   /**
    * Associatie-views: "Report a problem" enkel tonen als de gebruiker aangemeld is.
    * Andere views: niets doen -> altijd zichtbaar.
@@ -364,12 +374,13 @@ export class styleConfigEvent extends NDEEventBase {
       this.getHideVirtualBrowseStyles(),
       this.getHideSearchInsideStyles(),
       this.getHideLoginBannerStyles(),
-      this.getHideReportAProblemStyles(),
+      this.getHideRequestSectionStyles(),
       this.getHideNativeLandingPageStyles(),
       // `nde-landing-page > *:not(custom-landing-about) { display: none !important; }`,
     ].join('\n');
 
     document.head.appendChild(style);
+    this.getHideReportAProblemStyles();
 
     this.injectHideHowToGetItStyles();
     this.injectHideWhereToFindItStyles();

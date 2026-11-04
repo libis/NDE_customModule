@@ -90,10 +90,13 @@ export class CustomLandingQuickLinksComponent implements OnInit {
           links,
         );
 
+
         this.links = links.filter(
-          (link) =>
+          link =>
             link.enabled !== false &&
-            !link.label?.startsWith('nde.custom.landing.links.'),
+            link.label !== "" &&
+            link.label !== "NOT_DEFINED" &&
+            !link.label?.startsWith('nde.custom.landing.links.')
         );
 
         console.log(
