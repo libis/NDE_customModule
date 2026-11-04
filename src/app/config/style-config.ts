@@ -37,7 +37,7 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
     '32KUL_GSG:GSG_NDE',
     '32KUL_KMMR:KMKG_NDE',
     '32KUL_KUL:sportimonium_NDE',
-    '32KUL_GRM:GRM_NDE',
+    '32KUL_GRM:GRM',
     '32KUL_DOCVB:docvlaamsbrabant_NDE',
   ], // if a view is included -> value will be true needs for : GSG, KMKG, Sportimonium, GRM. docvb
   HideLinksInLiriasRecords: ['32KUL_KUL:Lirias_NDE'], // if a view is included -> value will be true
@@ -45,7 +45,7 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
     '32KUL_GSG:GSG_NDE',
     '32KUL_KMMR:KMKG_NDE',
     '32KUL_KUL:sportimonium_NDE',
-    '32KUL_GRM:GRM_NDE',
+    '32KUL_GRM:GRM',
     '32KUL_DOCVB:docvlaamsbrabant_NDE',
   ], // if a view is included -> value will be true needs for : GSG, KMKG, Sportimonium, GRM.
   HideHowToGetIt: ['32KUL_KATHO:VIVES_NDE'], // if a view is included -> value will be true
@@ -58,7 +58,12 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
     '32KUL_LIBS:PLEC',
   ],
   CloseBannerIconWhite: ['32KUL_KUL:KULeuven_NDE'],
-  HideLandingPageOverlay: ['32KUL_KUL:KULeuven_NDE', '32KUL_HUB:ODISEE_NDE', '32KUL_VLER:VBS_NDE','32KUL_KUL:sportimonium_NDE' ], // vlerick, leuven, odisse and sportimonium
+  HideLandingPageOverlay: [
+    '32KUL_KUL:KULeuven_NDE',
+    '32KUL_HUB:ODISEE_NDE',
+    '32KUL_VLER:VBS_NDE',
+    '32KUL_KUL:sportimonium_NDE',
+  ], // vlerick, leuven, odisse and sportimonium
   // HideVirtualBrowse: ['32KUL_KATHO:VIVES_NDE'], // moet voor iedereen verborgen behalve : ODISEE, VIVES, VLERICK EN GRM
   // Hidden for everyone EXCEPT: ODISEE, VIVES, VLERICK and GRM (they are simply not in this list)
   HideVirtualBrowse: [
