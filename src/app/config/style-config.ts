@@ -22,6 +22,7 @@ export interface StyleConfig {
   HideSearchInside?: BooleanOrViews;
   HideReportAProblemWhenLoggedOut?: BooleanOrViews;
   HideBannerButtonWithoutUrl?: BooleanOrViews;
+  HideRequestSection: BooleanOrViews;
 }
 
 export const TOPBAR_STYLE_MAP = {
@@ -106,11 +107,11 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
     '32KUL_LIBS:PLEC_NDE',
     '49ECB_INST:ECB_NDE',
     '32SCKCEN_INST:SCKCEN_INST_NDE',
+    '32KUL_GRM:GRM',
     // NOT in the list on purpose (browse shelf stays visible):
     // '32KUL_HUB:ODISEE_NDE'
     // '32KUL_KATHO:VIVES_NDE'
     // '32KUL_VLER:VBS_NDE'
-    // GRM
   ],
   HideSearchInside: true, // hidden for ALL institutions: not ready to be shown yet
   HideReportAProblemWhenLoggedOut: false,
@@ -124,6 +125,13 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
   //   '32KUL_KHL:UCLL_NDE', // UCLL
   // ],
   HideBannerButtonWithoutUrl: true, // all views: hide the banner button when it has no text
+  HideRequestSection: [
+    '32KUL_GSG:GSG_NDE',
+    '32KUL_KMMR:KMKG_NDE',
+    '32KUL_KUL:sportimonium_NDE',
+    '32KUL_GRM:GRM',
+    '32KUL_DOCVB:docvlaamsbrabant_NDE',
+  ], // for now the same as hide sign in but cna change in fuure when they can sign in but can not do a request
 };
 
 export const STYLE_CONFIG = new InjectionToken<StyleConfig>('STYLE_CONFIG', {
