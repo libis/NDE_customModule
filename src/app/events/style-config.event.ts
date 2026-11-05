@@ -189,7 +189,10 @@ export class styleConfigEvent extends NDEEventBase {
 
   private getHideSignInStyles(): string {
     if (!this.isActive(this.config.HideSignIn)) return '';
-    return `nde-user-area { display: none !important; }`;
+    return `
+    nde-user-area { display: none !important; }
+    button[data-qa="save-and-export-all-dropdown"] { display: none !important; }
+  `;
   }
 
   private getHideLiriasLinksStyles(): string {
@@ -320,8 +323,8 @@ export class styleConfigEvent extends NDEEventBase {
     if (!this.isActive(this.config.SearchBarBackdrop)) return '';
     return `
     nde-search-bar-container .search-bar-container {
-     background: rgba(255, 0, 0, 0.8) !important;
-      padding: 1rem !important;
+      background: rgba(255, 255, 255, 0.8) !important;
+      padding: 0.7rem !important;
       border-radius: 1.5rem !important;
     }
   `;
@@ -401,6 +404,7 @@ export class styleConfigEvent extends NDEEventBase {
       this.getHideRequestSectionStyles(),
       this.getLandingButtonsColorStyles(),
       this.getHideNativeLandingPageStyles(),
+      this.getSearchBarBackdropStyles(),
       // `nde-landing-page > *:not(custom-landing-about) { display: none !important; }`,
     ].join('\n');
 
