@@ -23,6 +23,8 @@ export interface StyleConfig {
   HideReportAProblemWhenLoggedOut?: BooleanOrViews;
   HideBannerButtonWithoutUrl?: BooleanOrViews;
   HideRequestSection: BooleanOrViews;
+  LandingButtonsColor?: Record<string, 'primary' | 'secondary'>;
+  SearchBarBackdrop?: BooleanOrViews;
 }
 
 export const TOPBAR_STYLE_MAP = {
@@ -132,6 +134,10 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
     '32KUL_GRM:GRM',
     '32KUL_DOCVB:docvlaamsbrabant_NDE',
   ], // for now the same as hide sign in but cna change in fuure when they can sign in but can not do a request
+  LandingButtonsColor: {
+    '32KUL_VLER:VBS_NDE': 'primary', // pick whichever of their two is dark
+  },
+  SearchBarBackdrop: ['32KUL_VLER:VBS_NDE'],
 };
 
 export const STYLE_CONFIG = new InjectionToken<StyleConfig>('STYLE_CONFIG', {

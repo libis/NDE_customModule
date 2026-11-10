@@ -120,3 +120,24 @@
     }
   }
 }
+table {
+  border-collapse: collapse;
+}
+
+td {
+  padding: 0.25rem 0.75rem 0.25rem 0;
+  vertical-align: top;
+}
+
+td:last-child {
+  padding-right: 0;
+}
+.landing-block-description {
+  ::ng-deep {
+    td:first-child {
+      padding-right: 1rem;
+      white-space: nowrap;
+      vertical-align: top;
+    }
+  }
+}

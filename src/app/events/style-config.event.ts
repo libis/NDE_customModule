@@ -86,6 +86,20 @@ export class styleConfigEvent extends NDEEventBase {
     }
   `;
   }
+
+  private getLandingButtonsColorStyles(): string {
+    const token = this.config.LandingButtonsColor?.[this.currentView];
+    if (!token) return '';
+    return `
+    .advanced-search-btn-home-page,
+    .advanced-search-btn-home-page .mdc-button__label {
+      color: var(--mat-sys-${token}) !important;
+    }
+    .advanced-search-btn-home-page mat-icon svg path {
+      fill: var(--mat-sys-${token}) !important;
+    }
+  `;
+  }
   private injectPrimaryColor(): void {
     const baseKey = 'nde.custom.primaryColor';
     const vid = new URLSearchParams(window.location.search).get('vid') ?? '';
@@ -175,7 +189,10 @@ export class styleConfigEvent extends NDEEventBase {
 
   private getHideSignInStyles(): string {
     if (!this.isActive(this.config.HideSignIn)) return '';
-    return `nde-user-area { display: none !important; }`;
+    return `
+    nde-user-area { display: none !important; }
+    button[data-qa="save-and-export-all-dropdown"] { display: none !important; }
+  `;
   }
 
   private getHideLiriasLinksStyles(): string {
@@ -302,6 +319,16 @@ export class styleConfigEvent extends NDEEventBase {
     }
   `;
   }
+  private getSearchBarBackdropStyles(): string {
+    if (!this.isActive(this.config.SearchBarBackdrop)) return '';
+    return `
+    nde-search-bar-container .search-bar-container {
+      background: rgba(255, 255, 255, 0.8) !important;
+      padding: 0.7rem !important;
+      border-radius: 1.5rem !important;
+    }
+  `;
+  }
 
   /**
    * Associatie-views: "Report a problem" enkel tonen als de gebruiker aangemeld is.
@@ -375,7 +402,9 @@ export class styleConfigEvent extends NDEEventBase {
       this.getHideSearchInsideStyles(),
       this.getHideLoginBannerStyles(),
       this.getHideRequestSectionStyles(),
+      this.getLandingButtonsColorStyles(),
       this.getHideNativeLandingPageStyles(),
+      this.getSearchBarBackdropStyles(),
       // `nde-landing-page > *:not(custom-landing-about) { display: none !important; }`,
     ].join('\n');
 
