@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { NDEComponent } from 'src/app/decorators/nde-component.decorator';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { String } from 'lodash';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 export interface credentialResponse {
   credentials: string;
@@ -14,7 +15,7 @@ export interface credentialResponse {
 @Component({
   selector: 'custom-libis-password-note',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './libis-password-note.component.html',
   styleUrl: './libis-password-note.component.scss'
 })
@@ -25,9 +26,11 @@ export class LibisPasswordNoteComponent {
   private recID: Signal<string|undefined> = this.store.selectSignal(selectFullDisplayRecordId);
   credentials: string = '';
   isLoading: boolean = false;
+  error: boolean = false;
   private loggedIn = this.primo.user.isLoggedInSignal();
   private userJWT = this.primo.user.jwtSignal();
   private inst = this.primo.config.institutionCodeSignal();
+  private pwLink: string = 'https://eu-workflows.hosted.exlibrisgroup.com/19868343-9f49-454d-b9b5-84e5dba9923f/webhook/81395dff-f4f4-4855-b6e1-3b2e2f8322c7';
   hasCredentials: Signal<boolean> = computed(() => {
     console.log('Verifying if credentials are needed');
     if(this.loggedIn() && /login required/i.test(this.electronicService.authNote)){
@@ -42,13 +45,23 @@ export class LibisPasswordNoteComponent {
 
   constructor(
     private primo: PrimoStateService,
-    private http: HttpClient) {}
+    private http: HttpClient,
+    private transl: TranslateService) {}
 
   ngOnInit() {
-    console.log('Starting LIBIS Password Note component');
+    //console.log('Starting LIBIS Password Note component');
     this.electronicService = this.hostComponent.electronicService;
-    console.log('Electronic Service:', this.electronicService);
-    console.log('Record ID from store:', this.recID());
+    console.log('current link:', window.location.href);
+    if (window.location.href.match(/-psb.primo.exlibrisgroup.com/)){
+      this.pwLink = this.pwLink.replace('.com/', '.com/PSB-');
+    }
+    console.log(this.pwLink);
+    //console.log('Electronic Service:', this.electronicService);
+    //console.log('Record ID from store:', this.recID());
+  }
+
+translateCode(NDE_code: string){
+    return this.transl.instant(NDE_code);
   }
 
   // Extract MMS ID from authNote using regex pattern
@@ -59,16 +72,17 @@ export class LibisPasswordNoteComponent {
   // Collect credentials - triggered by explicit button click to maximally protect credentials
   public collectCredentials(): void {
     this.isLoading = true;
+    this.error = false;
     console.log('Collecting credentials for view it card:', this.hostComponent);
       const portfolioId = this.electronicService.ilsApiId;
-      console.log('Portfolio ID:', portfolioId);
+      //console.log('Portfolio ID:', portfolioId);
       const MmsID = this.getMmsID();
-      console.log('Extracted MMS ID:', MmsID);
+      //console.log('Extracted MMS ID:', MmsID);
       const inst = this.inst() !== undefined ? this.inst() as string: '';
-      console.log('Institution code:', inst);
+      //console.log('Institution code:', inst);
       const userJWT: string = this.userJWT() !== undefined ? JSON.parse(this.userJWT() as string) : '';
       //const userJWT = sessionStorage.getItem('primoExploreJwt') || '';
-      console.log('User JWT:', userJWT);
+      //console.log('User JWT:', userJWT);
 
       if (MmsID){      
       const params = new HttpParams()
@@ -85,24 +99,24 @@ export class LibisPasswordNoteComponent {
 
       this.http.get(
         //LibOW Password Note link
-        'https://eu-workflows.hosted.exlibrisgroup.com/PSB-19868343-9f49-454d-b9b5-84e5dba9923f/webhook/e8df7a08-a017-4ecb-84b3-0c94e4dc2767',
-        //'https://eu-workflows.hosted.exlibrisgroup.com/19868343-9f49-454d-b9b5-84e5dba9923f/webhook/e8df7a08-a017-4ecb-84b3-0c94e4dc2767',
+        this.pwLink,
         {
           params: params,
           headers: headers
         }
       ).subscribe({
         next: (response: any) => {
-          console.log('Credentials response:', response.credentials);
-          console.log('Response type:', typeof response);
+          //console.log('Credentials response:', response.credentials);
+          //console.log('Response type:', typeof response);
           this.credentials = response['credentials'];
           this.isLoading = false;
         },
         error: err => {
           console.error('Error fetching credentials:', err);
+          this.error=true;
           this.isLoading = false;},
         complete: () => {
-          console.log('Credential request completed')
+          //console.log('Credential request completed')
           this.isLoading = false;
                 }
   });
