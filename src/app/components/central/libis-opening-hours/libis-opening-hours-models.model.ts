@@ -39,6 +39,8 @@ export const WEEKDAYS: {[key:string]:string[]}= {
     ]
 }
 
+export type LabelType = 'NDE'|'database'|'text';
+
 /* Block 1: Opening hours API fields - raw or minimally parsed data */
 // Base format for opening hours timeslots - empty entries 
 export interface HoursRange {
@@ -55,20 +57,20 @@ export interface current_OH_field {
     hours: HoursRange[]
 }
 
-// [currently not in use] Base format for opening hours week info
+// Base format for opening hours week info
 export interface OH_week_field {
     number: number,
     start: string,
     end: string
 }
 
-// [currently not in use] Base format for default opening hours schedule
+// Base format for default opening hours schedule
 export interface default_OH_field {
     week_day: number,
     hours: HoursRange[]
 }
 
-// [currently not in use] Base format for opening hours exceptions
+// Base format for opening hours exceptions
 export interface exception_OH_field {
     date: {
         from: string,
@@ -96,6 +98,9 @@ export interface OH_Data {
     code: string,
     name: string,
     data: {[key:string]:OH_DatabaseField},
+    week: OH_week_field,
+    defaults: default_OH_field[],
+    exceptions: exception_OH_field[],
     current: current_OH_field[]
 }
 
@@ -103,7 +108,7 @@ export interface OH_Data {
 
 // Custom labels
 export interface Label_Mapping_Field {
-    label_type: 'NDE'|'database'|'text',
+    label_type: LabelType,
     label_name: string
 }
 
@@ -116,10 +121,12 @@ export interface Data_Mapping_Field {
     default?: any
 }
 
+export type dataFieldType = 'database'|'NDE'|'text'|'None';
+export type dataFieldTypeNullable = dataFieldType|'None';
 // Mapping fields for general section
 export interface General_Mapping_Field {
     field_name:string,
-    field_source: 'NDE'|'database'|'text'|'None',
+    field_source: dataFieldTypeNullable,
     default?: string|boolean|null
 }
 
@@ -141,7 +148,7 @@ export interface IconField {
 
 /* Block 3: Display field models (including translated fields) */
 export interface Label_Display_Field {
-    type: 'database'|'NDE'|'text',
+    type: LabelType,
     value: string|{[key:string]:string},
 }
 
@@ -149,9 +156,10 @@ export interface Transl_Label_Field extends Label_Display_Field {
     value: string
 }
 
+
 export interface General_Display_Field {
     value: string|{[key:string]:string}|boolean,
-    type: 'database'|'NDE'|'text'
+    type: LabelType
 }
 
 export interface Transl_General_Display_Field {
@@ -188,6 +196,7 @@ export interface OpeningHoursOverview {
     contact_details: {[key:string]: Data_Display_Field[]},
     this_week: current_OH_field[],
     next_week: current_OH_field[],
+    default_empty: boolean,
     curr_status: OH_Status_Field,
     occupancy?: OccupancyField
 }
@@ -214,6 +223,7 @@ export const EMPTY_OH_OVERVIEW: OpeningHoursOverview = {
     contact_details: {},
     this_week: [],
     next_week: [],
+    default_empty: true,
     curr_status: {
         open_now: false,
         next_change: undefined

@@ -19,6 +19,7 @@ import {
   General_Display_Field,
   Transl_Data_Display_Field,
   Transl_General_Display_Field,
+  default_OH_field,
 } from './libis-opening-hours-models.model';
 import { TranslateService } from '@ngx-translate/core';
 
@@ -82,6 +83,13 @@ export class LIBISOpeningHoursService {
         }
       }
     }
+
+    // Verify if all opening hours are empty by default. If not, set default_empty to false
+        raw_OH.defaults.forEach((day: default_OH_field) => {
+          if(day.hours.filter((h) => h.open !== '' && h.closed !== '').length > 0){
+            opening_hours_data.default_empty = false;
+          }
+    });
 
     // Revised method: Copy opening hours of the current week and filter out empty timeslots
     opening_hours_data.this_week = structuredClone(raw_OH.current);

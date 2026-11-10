@@ -106,7 +106,7 @@ export const OPENING_HOURS_MAP: Opening_Hours_Map = {
           label_name: 'nde.custom.opening_hours.consultation_note',
         },
       },
-    ],
+    ]
   },
   opening_hours_config: {
     start_day: 1
