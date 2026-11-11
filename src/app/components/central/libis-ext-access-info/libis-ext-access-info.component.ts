@@ -71,7 +71,7 @@ export class LibisExtAccessInfoComponent {
     //console.log('Calculating current access info based on infoset: ', all_access_info);
     //console.log('Current serviceURL: ', this.electronicService.serviceUrl);
     if((currExt) && (this.electronicService.serviceUrl.trim() in all_access_info)){
-      console.log('Matching access info found');
+      //console.log('Matching access info found');
       return this.calc_curr_access_info(all_access_info[this.electronicService.serviceUrl], currRec);
     }  
   return undefined;
@@ -80,14 +80,14 @@ export class LibisExtAccessInfoComponent {
 constructor() {}
 
   ngOnInit() {
-    console.log('Starting LIBIS External access info component');
-    console.log('Ext info host component: ', this.hostComponent);
+    //console.log('Starting LIBIS External access info component');
+    //console.log('Ext info host component: ', this.hostComponent);
     this.electronicService = this.hostComponent.electronicService;
-    console.log('Electronic Service:', this.electronicService);
-    console.log('Record ID from store:', this.recID());
-    console.log('Bib Record from store:', this.bibRec());
-    console.log('Record info set: ', this.rec_access_info());
-    console.log('Current access info: ', this.curr_access_info());
+    //console.log('Electronic Service:', this.electronicService);
+    //console.log('Record ID from store:', this.recID());
+    //console.log('Bib Record from store:', this.bibRec());
+    //console.log('Record info set: ', this.rec_access_info());
+    //console.log('Current access info: ', this.curr_access_info());
   }
 
   parse_access_info(bibRec: Doc): AccessInfo {

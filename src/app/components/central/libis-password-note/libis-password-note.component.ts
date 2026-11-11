@@ -32,9 +32,9 @@ export class LibisPasswordNoteComponent {
   private inst = this.primo.config.institutionCodeSignal();
   private pwLink: string = 'https://eu-workflows.hosted.exlibrisgroup.com/19868343-9f49-454d-b9b5-84e5dba9923f/webhook/81395dff-f4f4-4855-b6e1-3b2e2f8322c7';
   hasCredentials: Signal<boolean> = computed(() => {
-    console.log('Verifying if credentials are needed');
+    //console.log('Verifying if credentials are needed');
     if(this.loggedIn() && /login required/i.test(this.electronicService.authNote)){
-      console.log('Triggering credentials check');
+      //console.log('Triggering credentials check');
     return true;
     }
     return false;
@@ -51,11 +51,11 @@ export class LibisPasswordNoteComponent {
   ngOnInit() {
     //console.log('Starting LIBIS Password Note component');
     this.electronicService = this.hostComponent.electronicService;
-    console.log('current link:', window.location.href);
+    //console.log('current link:', window.location.href);
     if (window.location.href.match(/-psb.primo.exlibrisgroup.com/)){
       this.pwLink = this.pwLink.replace('.com/', '.com/PSB-');
     }
-    console.log(this.pwLink);
+    //console.log(this.pwLink);
     //console.log('Electronic Service:', this.electronicService);
     //console.log('Record ID from store:', this.recID());
   }
@@ -73,7 +73,7 @@ translateCode(NDE_code: string){
   public collectCredentials(): void {
     this.isLoading = true;
     this.error = false;
-    console.log('Collecting credentials for view it card:', this.hostComponent);
+    //console.log('Collecting credentials for view it card:', this.hostComponent);
       const portfolioId = this.electronicService.ilsApiId;
       //console.log('Portfolio ID:', portfolioId);
       const MmsID = this.getMmsID();
@@ -90,12 +90,12 @@ translateCode(NDE_code: string){
         .set('institution', inst)
         .set('portfolioID', this.electronicService.ilsApiId);
 
-        console.log('Constructed HTTP params:', params.toString());
+        //console.log('Constructed HTTP params:', params.toString());
 
       const headers = new HttpHeaders({
       Authorization: `Bearer ${userJWT}`
     });
-    console.log('Constructed HTTP headers:', headers.toString());
+    //console.log('Constructed HTTP headers:', headers.toString());
 
       this.http.get(
         //LibOW Password Note link
