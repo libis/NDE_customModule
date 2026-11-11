@@ -6,7 +6,8 @@ import {
   Input,
   signal,
   Signal,
-  effect
+  effect,
+  ChangeDetectorRef
 } from '@angular/core';
 import { createFeatureSelector, createSelector, Store } from '@ngrx/store';
 import { CommonModule } from '@angular/common';
@@ -67,7 +68,7 @@ export class LibisOpeningHoursComponent {
   // UI controls
   show_info_card: boolean = false;
   //lang_code: Signal<string> = this.store.selectSignal(selectCurrentLanguage);
-  lang_code = signal<string|undefined>(undefined);
+  lang_code = signal<string>(this.transl.currentLang);
   default_lang: Signal<string|undefined> = this.store.selectSignal(selectViewDefaultLang);
 
   // Supporting fields
@@ -96,11 +97,12 @@ export class LibisOpeningHoursComponent {
       const def_lang = this.default_lang();
       const OH_data = this.opening_hours();
       if(OH_data !== undefined){
+        //console.log('Effectively recalculating contact details for language: ', curr_lang, def_lang, OH_data);
         return this.openingHoursService.translateContactDetails(
-        OH_data,
-        curr_lang ?? def_lang ?? this.openingHoursService.getOpeningHoursDefaultLang(),
-        def_lang !== undefined ? def_lang : this.openingHoursService.getOpeningHoursDefaultLang()
-      );
+          OH_data,
+          curr_lang ?? def_lang ?? this.openingHoursService.getOpeningHoursDefaultLang(),
+          def_lang !== undefined ? def_lang : this.openingHoursService.getOpeningHoursDefaultLang()
+        );
       }
       return {}
     }
@@ -134,7 +136,7 @@ export class LibisOpeningHoursComponent {
 
   // Calculate opening status
   getStatus(){
-    console.log('General info: ', this.general_info());
+    //console.log('General info: ', this.general_info());
     const OH_overview = this.opening_hours();
     const OH_general = this.general_info();
     if(OH_overview){
@@ -188,6 +190,7 @@ this.sanitizer.bypassSecurityTrustResourceUrl(
     this.transl.onLangChange.subscribe((event) => {
       //console.log('Language changed');
       this.lang_code.set(event.lang);
+      //console.log('New language code: ', this.lang_code());
     });
 
     }
