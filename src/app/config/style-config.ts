@@ -25,6 +25,10 @@ export interface StyleConfig {
   HideRequestSection: BooleanOrViews;
   LandingButtonsColor?: Record<string, 'primary' | 'secondary'>;
   SearchBarBackdrop?: BooleanOrViews;
+  ExtraSpaceAfterLogoInTopbar?: BooleanOrViews;
+  ActiveMenuItemInBold?: BooleanOrViews; // actieve pagina in de topbar vet ipv enkel onderlijnd
+  HideAboutImageOnMobile?: BooleanOrViews;
+  QuickLinksStackedOnMobile?: BooleanOrViews;
 }
 
 export const TOPBAR_STYLE_MAP = {
@@ -54,7 +58,7 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
   HideHowToGetIt: ['32KUL_KATHO:VIVES_NDE'], // if a view is included -> value will be true
   HideWhereToFindIt: ['32KUL_KATHO:VIVES_NDE'], // if a view is included -> value will be true
   // DefaultListView: ['32KUL_KUL:KULeuven_NDE'], // kuleuven want galley view so turned of...
-  LocationNumberInBold: ['32KUL_KUL:KULeuven_NDE'],
+  LocationNumberInBold: true,
   AutoLoginFirstOption: [
     '32KUL_LIBS:LIBS',
     '32KUL_LIBS:RVAONEM',
@@ -101,7 +105,6 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
     '32KUL_KHM:TMOREMA_NDE',
     '32KUL_KHK:TMOREK_NDE',
     '32KUL_KHL:UCLL_NDE',
-    '32KUL_GSB:GSB_NDE',
     '32KUL_GSG:GSG_NDE',
     '32KUL_DOCVB:docvlaamsbrabant_NDE',
     '32KUL_LIBS:LIBS_NDE',
@@ -111,6 +114,7 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
     '32SCKCEN_INST:SCKCEN_INST_NDE',
     '32KUL_GRM:GRM',
     // NOT in the list on purpose (browse shelf stays visible):
+    // '32KUL_GSB:GSB_NDE',
     // '32KUL_HUB:ODISEE_NDE'
     // '32KUL_KATHO:VIVES_NDE'
     // '32KUL_VLER:VBS_NDE'
@@ -138,6 +142,10 @@ export const DEFAULT_STYLE_CONFIG: StyleConfig = {
     '32KUL_VLER:VBS_NDE': 'primary', // pick whichever of their two is dark
   },
   SearchBarBackdrop: ['32KUL_VLER:VBS_NDE'],
+  ExtraSpaceAfterLogoInTopbar: true,
+  ActiveMenuItemInBold: true,
+  HideAboutImageOnMobile: true,
+  QuickLinksStackedOnMobile: true,
 };
 
 export const STYLE_CONFIG = new InjectionToken<StyleConfig>('STYLE_CONFIG', {

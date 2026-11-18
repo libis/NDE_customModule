@@ -1,6 +1,7 @@
 import { Injectable, Inject, effect } from '@angular/core';
 import { NDEEvent, NDEEventBase } from '../decorators/nde-event.decorator';
 import { GlobalHttpEventService } from '../services/global-http-event.service';
+import { merge } from 'rxjs';
 
 import {
   STYLE_CONFIG,
@@ -55,6 +56,7 @@ export class styleConfigEvent extends NDEEventBase {
         keysLoaded: Object.keys(t.translations?.[t.currentLang] ?? {}).length,
         shellLabel: t.instant('nui.getit.service_getit'),
         customLabel: t.instant('nde.custom.footer.copyright'),
+        overlay: t.instant('nde.custom.landing.overlayHidden'),
       });
     }, 4000);
   }
@@ -83,6 +85,24 @@ export class styleConfigEvent extends NDEEventBase {
     return `
     nde-landing-page-config:has(nde-landing-page-from-remote-0) > nde-landing-page {
       display: none !important;
+    }
+  `;
+  }
+  private getExtraSpaceAfterLogoStyles(): string {
+    if (!this.isActive(this.config.ExtraSpaceAfterLogoInTopbar)) return '';
+    return `
+    nde-logo-from-remote-0 {
+      display: block;
+      margin-right: 1rem !important;
+      margin-left: -1rem !important;
+    }
+  `;
+  }
+  private getHideAboutImageOnMobileStyles(): string {
+    if (!this.isActive(this.config.HideAboutImageOnMobile)) return '';
+    return `
+    @media (max-width: 959.98px) {
+      #custom-about .about-image { display: none !important; }
     }
   `;
   }
@@ -178,13 +198,51 @@ export class styleConfigEvent extends NDEEventBase {
     `;
   }
 
-  private getHideLandingPageOverlayStyles(): string {
-    if (!this.isActive(this.config.HideLandingPageOverlay)) return '';
+  private getActiveMenuItemInBoldStyles(): string {
+    if (!this.isActive(this.config.ActiveMenuItemInBold)) return '';
     return `
-    .background-overlay {
-      display: none !important;
+    a.main-menu-label.selected-page,
+    a.main-menu-label.selected-page * {
+      font-weight: bold !important;
     }
   `;
+  }
+  // private getHideLandingPageOverlayStyles(): string {
+  //   if (!this.isActive(this.config.HideLandingPageOverlay)) return '';
+  //   return `
+  //   .background-overlay {
+  //     display: none !important;
+  //   }
+  // `;
+  // }
+  private injectOverlayFromCodeTable(): void {
+    const baseKey = 'nde.custom.landing.overlayHidden';
+    const viewKey = `${this.currentView}.${baseKey}`;
+    const styleId = 'style_landing_overlay_hidden';
+
+    const getValue = (key: string): string => {
+      const v = this.translate.instant(key)?.trim();
+      return v && v !== 'NOT_DEFINED' && v !== key ? v : '';
+    };
+
+    const apply = () => {
+      const value =
+        (this.currentView && getValue(viewKey)) || getValue(baseKey);
+      if (value.toLowerCase() !== 'true') return;
+      if (document.getElementById(styleId)) return;
+
+      const s = document.createElement('style');
+      s.id = styleId;
+      s.textContent = `.background-overlay { display: none !important; }`;
+      document.head.appendChild(s);
+    };
+
+    apply();
+    merge(
+      this.translate.onLangChange,
+      this.translate.onTranslationChange,
+      this.translate.onDefaultLangChange,
+    ).subscribe(() => apply());
   }
 
   private getHideSignInStyles(): string {
@@ -284,7 +342,26 @@ export class styleConfigEvent extends NDEEventBase {
     }
   `;
   }
-
+  private getQuickLinksStackedOnMobileStyles(): string {
+    if (!this.isActive(this.config.QuickLinksStackedOnMobile)) return '';
+    return `
+  @media (max-width: 959.98px) {
+    main.main-landing-page > custom-landing-quick-links { align-self: stretch !important; width: 100% !important; max-width: 100% !important; }
+    .quick-links-landing-page.menu-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; box-sizing: border-box !important; }
+    .quick-links-landing-page ul.menu { display: flex !important; flex-direction: column !important; align-items: center !important; gap: .75rem !important; width: 100% !important; padding: 0 1rem !important; margin: 0 !important; box-sizing: border-box !important; }
+    .quick-links-landing-page ul.menu li { width: 100% !important; max-width: none !important; min-width: 0 !important; }
+    .quick-links-landing-page ul.menu li a { width: 100% !important; max-width: 100% !important; min-width: 0 !important; height: auto !important; min-height: 56px !important; flex-direction: row !important; justify-content: flex-start !important; align-items: center !important; gap: 1rem !important; padding: .75rem 1rem !important; box-sizing: border-box !important; }
+    .quick-links-landing-page ul.menu li a .quick-link-icon { width: 32px !important; height: 32px !important; flex: 0 0 32px !important; }
+    .quick-links-landing-page ul.menu li a span { white-space: normal !important; text-align: left !important; hyphens: auto !important; }
+  }
+  @media (max-width: 449.98px) {
+    main.main-landing-page { padding-left: .5rem !important; padding-right: .5rem !important; box-sizing: border-box !important; }
+    .quick-links-landing-page.menu-container { padding-left: 0 !important; padding-right: 0 !important; }
+    .quick-links-landing-page ul.menu { padding: 0 !important; }
+    .quick-links-landing-page ul.menu li { width: 100% !important; max-width: 100% !important; }
+  }
+  `;
+  }
   private getCloseBannerIconStyles(): string {
     return `
     .banner-close-button mat-icon {
@@ -395,7 +472,8 @@ export class styleConfigEvent extends NDEEventBase {
       // this.getTopbarStyles(specs),
       this.getHideSignInStyles(),
       this.getHideLiriasLinksStyles(), // niet zeker? lirias in kuleuven relevant?
-      this.getHideLandingPageOverlayStyles(),
+      // this.getHideLandingPageOverlayStyles(),// reopced by injectOverlayFromCodeTable
+      this.injectOverlayFromCodeTable(),
       this.getLocationNumberInBoldStyles(),
       this.getCloseBannerIconStyles(),
       this.getHideVirtualBrowseStyles(),
@@ -403,8 +481,12 @@ export class styleConfigEvent extends NDEEventBase {
       this.getHideLoginBannerStyles(),
       this.getHideRequestSectionStyles(),
       this.getLandingButtonsColorStyles(),
-      this.getHideNativeLandingPageStyles(),
+      // this.getHideNativeLandingPageStyles(),/// turned of for suppor ticket
+      this.getExtraSpaceAfterLogoStyles(),
+      this.getActiveMenuItemInBoldStyles(),
       this.getSearchBarBackdropStyles(),
+      this.getHideAboutImageOnMobileStyles(),
+      this.getQuickLinksStackedOnMobileStyles(),
       // `nde-landing-page > *:not(custom-landing-about) { display: none !important; }`,
     ].join('\n');
 
